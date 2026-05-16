@@ -13,7 +13,7 @@ const ManageRevisions = () => {
           id: item.id_cours,
           name: `${item.professeur?.prenom || ""} ${item.professeur?.nom || ""}`.trim() || "Professeur",
           subject: item.matiere,
-          price: `${item.prix} MAD / ${item.type_prix}`,
+          price: `${item.prix} ${item.type_prix}`,
           image: `https://i.pravatar.cc/150?u=${item.id_cours}`
         }));
         setRevisions(mappedData);

@@ -55,7 +55,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/colocations" element={<Colocations />} />
           <Route path="/revisions" element={<Revisions />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:id?" element={<Profile />} />
           <Route path="/support" element={<Support />} />
           <Route path="/home/:id" element={<InfoHome />} />
           <Route path="/register" element={<ChooseRole />} />

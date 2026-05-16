@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { API_URLS, fetchData } from "../api/api";
 import {
   FaCheckCircle,
   FaUserCheck,
@@ -8,7 +10,7 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 
-function ReportModal({ onClose }) {
+function ReportModal({ onClose, user }) {
   const [selected, setSelected] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -49,13 +51,15 @@ function ReportModal({ onClose }) {
             <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 mb-4">
               <img
                 className="w-9 h-9 rounded-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0R8LiAUhxRG4hpImRC1eZUy4kfZU5i9ljpsATWbQlSyD7Eh5e37Bh1zmnHAkWJM6fD1mNb_jMkp9CcbSFJeqy4maafxdAq06-fVbLNuPmmbHMIyHWgAljNzW2xOnRW1LAFEpW5zwpcSP88sTZsMHjG4itjXm932IUfn3sSHIToqaWROhCDrAMP6F1QfsQibqqtLJjqrVFEhDNDVoImNeC4prU_3m9nZq2rF7Q_IL8zDRrHXYG8a5VWU-mDbF305yhi2mSwgMhV24"
-                alt="student"
+                src={`https://i.pravatar.cc/150?u=${user?.id_user}`}
+                alt="user"
               />
               <div>
-                <p className="text-sm font-semibold">Alexandre Dubois</p>
+                <p className="text-sm font-semibold">
+                  {user?.prenom} {user?.nom}
+                </p>
                 <p className="text-xs text-gray-500">
-                  Sorbonne University · Engineering
+                  {user?.role} · {user?.niveau_etude}
                 </p>
               </div>
             </div>
@@ -123,68 +127,117 @@ function ReportModal({ onClose }) {
 }
 
 export default function StudentProfile() {
+  const { id } = useParams();
   const [showReport, setShowReport] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        setLoading(true);
+        // If an ID is provided, fetch that user. Otherwise fetch the current logged-in user.
+        const url = id
+          ? `http://127.0.0.1:8000/api/users/${id}`
+          : API_URLS.USER;
+        const data = await fetchData(url);
+        setUser(data.data || data);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUser();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">
+          Failed to load profile. Please login again.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f8f9ff] mt-20 min-h-screen font-sans">
-      {showReport && <ReportModal onClose={() => setShowReport(false)} />}
+      {showReport && (
+        <ReportModal onClose={() => setShowReport(false)} user={user} />
+      )}
 
       <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           {/* PROFILE CARD */}
-          <section className="md:col-span-4 rounded-2xl shadow p-4 flex flex-col items-center text-center">
+          <section className="md:col-span-4 rounded-2xl shadow p-4 flex flex-col items-center text-center bg-white">
             <div className="relative mb-6">
               <img
-                className="w-40 h-40 rounded-full border-4 shadow"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0R8LiAUhxRG4hpImRC1eZUy4kfZU5i9ljpsATWbQlSyD7Eh5e37Bh1zmnHAkWJM6fD1mNb_jMkp9CcbSFJeqy4maafxdAq06-fVbLNuPmmbHMIyHWgAljNzW2xOnRW1LAFEpW5zwpcSP88sTZsMHjG4itjXm932IUfn3sSHIToqaWROhCDrAMP6F1QfsQibqqtLJjqrVFEhDNDVoImNeC4prU_3m9nZq2rF7Q_IL8zDRrHXYG8a5VWU-mDbF305yhi2mSwgMhV24"
-                alt="student"
+                className="w-40 h-40 rounded-full border-4 shadow object-cover"
+                src={`https://i.pravatar.cc/150?u=${user.id_user}`}
+                alt="user"
               />
-              <span className="absolute bottom-2 right-2 text-green-500 text-xl">
+              <span className="absolute bottom-2 right-2 text-green-500 text-xl bg-white rounded-full">
                 <FaCheckCircle />
               </span>
             </div>
-            <h1 className="text-2xl font-bold">Alexandre Dubois</h1>
-            <p className="text-gray-500 text-lg">21 years</p>
+            <h1 className="text-2xl font-bold">
+              {user.prenom} {user.nom}
+            </h1>
+            <p className="text-gray-500 text-lg">{user.email}</p>
             <div className="flex gap-2 mt-4">
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                Engineering
+              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold capitalize">
+                {user.role}
               </span>
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                Active
+              <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                {user.niveau_etude}
               </span>
             </div>
           </section>
 
           {/* EDUCATION */}
-          <section className="md:col-span-8 rounded-2xl shadow p-8">
-            <div className="flex items-center  gap-40 mb-4">
-              <h2 className="text-lg text-emerald-600 uppercase mb-2">
-                Education Status
+          <section className="md:col-span-8 rounded-2xl shadow p-8 bg-white">
+            <div className="flex items-center gap-60 mb-4">
+              <h2 className="text-lg text-emerald-600 uppercase mb-2 font-bold">
+                Profile Status
               </h2>
               <div className="flex items-center gap-3">
                 <FaUserCheck className="text-xl text-emerald-600" />
-                <span className="text-lg text-emerald-600">
-                  University Email Verified
+                <span className="text-lg text-emerald-600 font-medium">
+                  Verified {user.role}
                 </span>
               </div>
             </div>
-            <h3 className="text-2xl font-bold mb-6">Sorbonne University</h3>
+            <h3 className="text-2xl font-bold mb-6 capitalize">
+              {user.prenom} {user.nom}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <p className="text-gray-500">Field of Study</p>
-                <p className="font-semibold">AI & Data Science</p>
+                <p className="text-gray-500">Email Address</p>
+                <p className="font-semibold">{user.email}</p>
               </div>
               <div>
                 <p className="text-gray-500">Degree Level</p>
-                <p className="font-semibold">3rd Year Engineering</p>
+                <p className="font-semibold">{user.niveau_etude}</p>
               </div>
               <div>
-                <p className="text-gray-500">Campus</p>
-                <p className="font-semibold">Paris, France</p>
+                <p className="text-gray-500">Phone Number</p>
+                <p className="font-semibold">
+                  {user.telephone || "Not provided"}
+                </p>
               </div>
               <div>
-                <p className="text-gray-500">Academic Standing</p>
-                <p className="font-semibold">Dean's List 2023</p>
+                <p className="text-gray-500">Account Role</p>
+                <p className="font-semibold capitalize">{user.role}</p>
               </div>
             </div>
           </section>
@@ -192,17 +245,17 @@ export default function StudentProfile() {
           {/* CONTACT */}
           <section className="md:col-span-12 bg-white rounded-2xl shadow p-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
-              <h2 className="text-xl font-bold">Get in Touch</h2>
-              <p className="text-gray-500">Connect for collaboration</p>
+              <h2 className="text-xl font-bold">Manage Account</h2>
+              <p className="text-gray-500">Update your profile or settings</p>
             </div>
             <div className="flex flex-wrap gap-4">
-              <button className="bg-emerald-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200">
+              <button className="bg-emerald-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-md font-medium">
                 <FaCommentDots className="mr-2" />
-                Message
+                Edit Profile
               </button>
               <button
                 onClick={() => setShowReport(true)}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-105 shadow-md transition-all duration-200"
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-105 shadow-md transition-all duration-200 font-medium"
               >
                 <FaExclamationCircle />
                 Report Issue

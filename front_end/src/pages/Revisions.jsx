@@ -6,12 +6,12 @@ import { motion } from "framer-motion";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 const staggerContainer = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const availabilityIcon = (availability) => {
@@ -46,17 +46,21 @@ const Revisions = () => {
       try {
         const result = await fetchData(API_URLS.COURS);
         // Map backend data to frontend structure
-        const mappedData = result.data.map(item => ({
+        const mappedData = result.data.map((item) => ({
           id: item.id_cours,
-          name: `${item.professeur?.prenom || ""} ${item.professeur?.nom || ""}`.trim() || "Professeur",
+          name:
+            `${item.professeur?.prenom || ""} ${item.professeur?.nom || ""}`.trim() ||
+            "Professeur",
           level: item.niveau_etude,
           school: item.professeur?.niveau_etude || "EMSI", // Fallback
           subject: item.matiere,
-          price: `${item.prix} MAD / ${item.type_prix}`,
-          availability: item.mode_enseignement === "en_ligne" ? "En ligne" : "Présentiel",
+          price: `${item.prix} ${item.type_prix}`,
+          availability:
+            item.mode_enseignement === "en_ligne" ? "En ligne" : "Présentiel",
           image: `https://i.pravatar.cc/150?u=${item.id_cours}`,
           description: item.description,
-          rating: 5.0 // Mock rating as it's not in DB yet
+          rating: 5.0, // Mock rating as it's not in DB yet
+          id_prof: item.id_professeur,
         }));
         setRevisions(mappedData);
       } catch (error) {
@@ -76,7 +80,6 @@ const Revisions = () => {
     item.subject.toLowerCase().includes(search.toLowerCase()),
   );
 
-
   return (
     <>
       {/* Google Fonts */}
@@ -95,7 +98,7 @@ const Revisions = () => {
       >
         <div className="max-w-300 mx-auto">
           {/* Hero Header */}
-          <motion.section 
+          <motion.section
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -163,7 +166,7 @@ const Revisions = () => {
           </section>
 
           {/* Instructor Grid */}
-          <motion.section 
+          <motion.section
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
             initial="hidden"
             animate="visible"
@@ -188,14 +191,24 @@ const Revisions = () => {
                   </div>
 
                   <div className="flex justify-between items-end">
-                    <div>
-                      <h3 className="text-lg font-bold text-[#0b1c30]">
-                        {profile.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {profile.school}
-                      </p>
-                    </div>
+                    <Link
+                      to={`/profile/${profile.id_prof}`}
+                      className="flex items-center gap-2 group"
+                    >
+                      <img
+                        className="w-10 h-10 rounded-full object-cover border-2 border-transparent group-hover:border-emerald-500 transition-all shadow-sm"
+                        src={profile.image}
+                        alt={profile.name}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 leading-tight group-hover:text-emerald-600 transition-colors">
+                          {profile.name}
+                        </span>
+                        <span className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+                          {profile.school}
+                        </span>
+                      </div>
+                    </Link>
                     <div className="flex items-center text-amber-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm shrink-0 ml-2">
                       <span
                         className="material-symbols-outlined"

@@ -114,4 +114,11 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Utilisateur supprimé avec succès']);
     }
+
+    // Voir le profil public d'un utilisateur
+    public function showProfile(int $id)
+    {
+        $user = Utilisateur::findOrFail($id);
+        return new \App\Http\Resources\UtilisateurResource($user);
+    }
 }

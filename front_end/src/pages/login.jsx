@@ -44,13 +44,14 @@ const LoginPage = () => {
 
       if (response.ok) {
         // Save token to localStorage
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.access_token);
         localStorage.setItem("user", JSON.stringify(data.user));
         // Redirect based on role
         if (data.user?.role === "admin") {
           navigate("/admin");
         } else {
-          navigate("/profile");
+          // Redirect to profile with user ID
+          navigate(`/profile/${data.user.id_user}`);
         }
       } else {
         setError(data.error || "Login failed");

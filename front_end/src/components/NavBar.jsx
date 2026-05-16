@@ -39,12 +39,33 @@ const Navbar = () => {
           <span>Connect, Study, Live Better.</span>
         </div>
         <div className="flex items-center gap-5">
-          <Link
-            to="/login"
-            className="flex items-center gap-2 hover:text-emerald-400 transition-colors uppercase tracking-wider text-[10px] font-bold"
-          >
-            <FaUser className="text-emerald-500" /> Login
-          </Link>
+          {localStorage.getItem("token") ? (
+            <>
+              <Link
+                to={`/profile/${JSON.parse(localStorage.getItem("user"))?.id_user}`}
+                className="flex items-center gap-2 hover:text-emerald-400 transition-colors uppercase tracking-wider text-[10px] font-bold"
+              >
+                <FaUser className="text-emerald-500" /> Mon Profil
+              </Link>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  window.location.href = "/login";
+                }}
+                className="hover:text-red-400 transition-colors uppercase tracking-wider text-[10px] font-bold cursor-pointer"
+              >
+                Déconnexion
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-2 hover:text-emerald-400 transition-colors uppercase tracking-wider text-[10px] font-bold"
+            >
+              <FaUser className="text-emerald-500" /> Login
+            </Link>
+          )}
         </div>
       </div>
 

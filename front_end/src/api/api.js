@@ -10,19 +10,25 @@ export const API_URLS = {
 };
 
 export const fetchData = async (url, options = {}) => {
+  const token = localStorage.getItem("token");
   const response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
   if (!response.ok) {
+    if (response.status === 401) {
+      // Optional: handle logout or redirect to login
+    }
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   return await response.json();
 };
+
 
 export default API_BASE_URL;
 
