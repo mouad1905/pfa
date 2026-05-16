@@ -10,19 +10,22 @@ class HebergementResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id_hebergement' => $this->id_hebergement,
-            'type' => $this->type,
-            'nbr_chambres' => $this->nbr_chambres,
-            'meuble' => (bool)$this->meuble,
-            'superficie' => $this->superficie,
-            'nb_locataires' => $this->nb_locataires,
-            'localisation' => $this->localisation,
-            'description' => $this->description,
-            'prix' => $this->prix,
-            'statut' => $this->statut,
-            'proprietaire' => new UtilisateurResource($this->whenLoaded('proprietaire')),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'id_hebergement'  => $this->id_hebergement,
+            'type'            => $this->type,
+            'nbr_chambres'    => $this->nbr_chambres,
+            'meuble'          => (bool)$this->meuble,
+            'superficie'      => $this->superficie,
+            'nb_locataires'   => $this->nb_locataires,
+            'localisation'    => $this->localisation,
+            'description'     => $this->description,
+            'prix'            => $this->prix,
+            'statut'          => $this->statut,
+            // Images hébergées sur Cloudinary
+            'image'           => $this->image_principale,
+            'images'          => $this->images_galerie ?? [],
+            'proprietaire'    => new UtilisateurResource($this->whenLoaded('proprietaire')),
+            'created_at'      => $this->created_at,
+            'updated_at'      => $this->updated_at,
         ];
     }
 }

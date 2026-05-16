@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Utilisateur;
+use App\Services\CloudinaryService;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Support\Facades\Hash;
@@ -12,33 +13,68 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    public function __construct(protected CloudinaryService $cloudinary) {}
     public function register(RegisterRequest $request)
     {
         try {
             $validated = $request->validated();
 
-            $user = Utilisateur::create([
-                'nom' => $request->nom,
-                'prenom' => $request->prenom,
-                'cin' => $request->cin,
-                'email' => $request->email,
+            $userData = [
+                'nom'          => $request->nom,
+                'prenom'       => $request->prenom,
+                'cin'          => $request->cin,
+                'email'        => $request->email,
                 'mot_de_passe' => Hash::make($request->password),
-                'role' => $request->role,
+                'role'         => $request->role,
                 'niveau_etude' => $request->niveau_etude,
-            ]);
+            ];
 
-            // Générer le token immédiatement après l'inscription (optionnel mais pratique)
+            // Upload photo de profil (tous les rôles)
+            if ($request->hasFile('photo_profil')) {
+                $userData['photo_profil'] = $this->cloudinary->upload(
+                    $request->file('photo_profil'),
+                    'uniconnect/profils'
+                );
+            }
+
+            // Upload document d'identité CIN / Passeport (tous les rôles)
+            if ($request->hasFile('document_identite')) {
+                $userData['document_identite'] = $this->cloudinary->upload(
+                    $request->file('document_identite'),
+                    'uniconnect/documents'
+                );
+            }
+
+            // Upload certificat / diplôme (Professeurs)
+            if ($request->hasFile('certificat')) {
+                $userData['certificat'] = $this->cloudinary->upload(
+                    $request->file('certificat'),
+                    'uniconnect/certificats'
+                );
+            }
+
+            // Upload carte étudiante (Étudiants)
+            if ($request->hasFile('carte_etudiant')) {
+                $userData['carte_etudiant'] = $this->cloudinary->upload(
+                    $request->file('carte_etudiant'),
+                    'uniconnect/cartes'
+                );
+            }
+
+            $user = Utilisateur::create($userData);
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Utilisateur créé avec succès !',
+                'status'       => 'success',
+                'message'      => 'Utilisateur créé avec succès !',
                 'access_token' => $token,
-                'user' => $user
+                'user'         => $user
             ], 201);
+
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'erreur',
+                'status'  => 'erreur',
                 'message' => $e->getMessage()
             ], 500);
         }

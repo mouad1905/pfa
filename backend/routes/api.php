@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/signalements/{id}/statut', [SignalementController::class, 'updateStatus']);
         Route::get('/reclamations', [ReclamationController::class, 'index']);
         Route::get('/utilisateurs', [AuthController::class, 'allUsers']);
+        Route::put('/utilisateurs/{id}/statut', [AdminDashboardController::class, 'updateUtilisateurStatus']);
         Route::delete('/utilisateurs/{id}', [AuthController::class, 'deleteUser']);
     });
 });

@@ -87,4 +87,22 @@ class AdminDashboardController extends Controller
             'data' => new CoursResource($cours)
         ]);
     }
+
+    /**
+     * Valider ou rejeter un utilisateur
+     */
+    public function updateUtilisateurStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'statut' => 'required|in:actif,suspendu,en_attente'
+        ]);
+
+        $utilisateur = Utilisateur::findOrFail($id);
+        $utilisateur->update(['statut' => $validated['statut']]);
+
+        return response()->json([
+            'message' => 'Statut de l\'utilisateur mis à jour',
+            'data' => new \App\Http\Resources\UtilisateurResource($utilisateur)
+        ]);
+    }
 }

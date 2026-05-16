@@ -15,13 +15,16 @@ class UtilisateurResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id_user' => $this->id_user,
-            'nom' => $this->nom,
-            'prenom' => $this->prenom,
-            'email' => $this->email,
-            'telephone' => $this->telephone,
-            'role' => $this->role,
-            'niveau_etude' => $this->niveau_etude,
+            'id_user'     => $this->id_user,
+            'nom'         => $this->nom,
+            'prenom'      => $this->prenom,
+            'email'       => $this->email,
+            'telephone'   => $this->telephone,
+            'role'        => $this->role,
+            'statut'      => $this->statut,
+            'niveau_etude'=> $this->niveau_etude,
+            // Photo de profil hébergée sur Cloudinary
+            'photo_profil'=> $this->photo_profil,
         ];
     }
 }

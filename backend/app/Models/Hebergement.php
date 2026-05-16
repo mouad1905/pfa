@@ -26,12 +26,15 @@ class Hebergement extends Model
         'localisation',
         'description',
         'prix',
-        'statut'
+        'statut',
+        'image_principale',
+        'images_galerie',
     ];
 
     protected $casts = [
-        'prix'   => 'decimal:2',
-        'meuble' => 'boolean',
+        'prix'           => 'decimal:2',
+        'meuble'         => 'boolean',
+        'images_galerie' => 'array',
     ];
 
     /**

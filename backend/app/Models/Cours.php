@@ -21,6 +21,7 @@ class Cours extends Model
         'description',
         'mode_enseignement',
         'statut',
+        'image_cours',
     ];
 
     protected $casts = [
