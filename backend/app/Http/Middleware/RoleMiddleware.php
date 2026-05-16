@@ -13,11 +13,10 @@ class RoleMiddleware
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $roles): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $allowedRoles = explode(',', $roles);
-
-        if (!$request->user() || !in_array($request->user()->role, $allowedRoles)) {
+        // Laravel passe chaque rôle comme argument séparé (ex: role:proprietaire,admin)
+        if (!$request->user() || !in_array($request->user()->role, $roles)) {
             return response()->json(['message' => 'Accès refusé. Rôle insuffisant.'], 403);
         }
 

@@ -12,7 +12,6 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\MatiereController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Models\Reclamation;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,20 +23,8 @@ Route::get('/cours', [CoursController::class, 'index']);
 Route::get('/cours/{id}', [CoursController::class, 'show']);
 Route::get('/matieres', [MatiereController::class, 'index']);
 
-Route::post('/reclamations', function (Request $request) {
-    $validated = $request->validate([
-        'id_auteur'   => 'required|integer',
-        'type_cible'  => 'required|in:cours,hebergement,utilisateur',
-        'description' => 'required|string',
-        'sujet'       => 'nullable|string'
-    ]);
-    $reclamation = Reclamation::create($validated);
-    return response()->json([
-        'status' => 'Success',
-        'message' => 'Réclamation enregistrée dans PostgreSQL',
-        'data' => $reclamation
-    ], 201);
-});
+// Réclamations publiques (soumission sans compte obligatoire)
+Route::post('/reclamations', [ReclamationController::class, 'store']);
 
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
@@ -46,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return new \App\Http\Resources\UtilisateurResource($request->user());
     });
 
-    // Réservations (pour les étudiants)
+    // Réservations (pour les étudiants uniquement)
     Route::middleware('role:etudiant')->group(function () {
         Route::get('/reservations', [ReservationController::class, 'index']);
         Route::post('/reservations', [ReservationController::class, 'store']);
@@ -62,9 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cours', [CoursController::class, 'store']);
     });
 
-    Route::post('/evaluations', [EvaluationController::class, 'store']);
+    // Évaluations (étudiants uniquement — un étudiant évalue un professeur/propriétaire)
+    Route::middleware('role:etudiant')->group(function () {
+        Route::post('/evaluations', [EvaluationController::class, 'store']);
+    });
+
+    // Paiements (tous les utilisateurs connectés)
     Route::post('/paiements', [PaiementController::class, 'store']);
-    
+
     // Signalements
     Route::post('/signalements', [SignalementController::class, 'store']);
     Route::get('/signalements/mes-envois', [SignalementController::class, 'mesSignalements']);
@@ -75,7 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/paiements', [AdminDashboardController::class, 'getPaiements']);
         Route::put('/hebergements/{id}/statut', [AdminDashboardController::class, 'updateHebergementStatus']);
         Route::put('/cours/{id}/statut', [AdminDashboardController::class, 'updateCoursStatus']);
-        
+
         Route::post('/matieres', [MatiereController::class, 'store']);
         Route::delete('/matieres/{id}', [MatiereController::class, 'destroy']);
 

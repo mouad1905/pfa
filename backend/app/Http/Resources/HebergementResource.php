@@ -19,6 +19,7 @@ class HebergementResource extends JsonResource
             'localisation' => $this->localisation,
             'description' => $this->description,
             'prix' => $this->prix,
+            'statut' => $this->statut,
             'proprietaire' => new UtilisateurResource($this->whenLoaded('proprietaire')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

@@ -22,6 +22,7 @@ class CoursResource extends JsonResource
             'niveau_etude' => $this->niveau_etude,
             'description' => $this->description,
             'mode_enseignement' => $this->mode_enseignement,
+            'statut' => $this->statut,
             'professeur' => new UtilisateurResource($this->whenLoaded('professeur')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

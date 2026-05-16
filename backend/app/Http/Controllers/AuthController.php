@@ -87,7 +87,7 @@ class AuthController extends Controller
     public function allUsers()
     {
         $users = Utilisateur::all();
-        return response()->json($users);
+        return \App\Http\Resources\UtilisateurResource::collection($users);
     }
 
     // Supprimer un utilisateur (Bannissement)

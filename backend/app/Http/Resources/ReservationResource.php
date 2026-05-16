@@ -11,8 +11,8 @@ class ReservationResource extends JsonResource
     {
         return [
             'id_reservation' => $this->id_reservation,
-            'date_debut' => $this->date_debut->format('Y-m-d'),
-            'date_fin' => $this->date_fin->format('Y-m-d'),
+            'date_debut' => $this->date_debut?->format('Y-m-d'),
+            'date_fin'   => $this->date_fin?->format('Y-m-d'),
             'statut' => $this->statut,
             'etudiant' => new UtilisateurResource($this->whenLoaded('etudiant')),
             'hebergement' => new HebergementResource($this->whenLoaded('hebergement')),

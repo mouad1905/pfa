@@ -30,7 +30,8 @@ class Hebergement extends Model
     ];
 
     protected $casts = [
-        'prix' => 'decimal:2',
+        'prix'   => 'decimal:2',
+        'meuble' => 'boolean',
     ];
 
     /**

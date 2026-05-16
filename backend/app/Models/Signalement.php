@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Signalement extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'signalement';
     protected $primaryKey = 'id_signalement';
 
@@ -16,6 +19,7 @@ class Signalement extends Model
         'details',
         'statut'
     ];
+
     public function auteur()
     {
         return $this->belongsTo(Utilisateur::class, 'id_auteur', 'id_user');

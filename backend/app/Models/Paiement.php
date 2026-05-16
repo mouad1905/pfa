@@ -23,7 +23,23 @@ class Paiement extends Model
     ];
 
     protected $casts = [
-        'montant' => 'decimal:2',
+        'montant'       => 'decimal:2',
         'date_paiement' => 'datetime'
     ];
+
+    /**
+     * L'utilisateur (étudiant) qui a effectué le paiement
+     */
+    public function etudiant()
+    {
+        return $this->belongsTo(Utilisateur::class, 'id_user', 'id_user');
+    }
+
+    /**
+     * La réservation associée (uniquement si type = 'hebergement')
+     */
+    public function reservation()
+    {
+        return $this->belongsTo(Reservation::class, 'id_reference', 'id_reservation');
+    }
 }

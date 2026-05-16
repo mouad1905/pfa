@@ -31,6 +31,11 @@ class Utilisateur extends Authenticatable // <--- DOIT ÉTENDRE Authenticatable
 
     protected $hidden = [
         'mot_de_passe',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'date_naissance' => 'date',
     ];
 
     /**
@@ -39,5 +44,13 @@ class Utilisateur extends Authenticatable // <--- DOIT ÉTENDRE Authenticatable
     public function getAuthPassword()
     {
         return $this->mot_de_passe;
+    }
+
+    /**
+     * Spécifie le nom de la colonne identifiant pour Laravel Auth / Sanctum
+     */
+    public function getAuthIdentifierName(): string
+    {
+        return 'id_user';
     }
 }
