@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { API_URLS, fetchData } from "../api/api";
 import { filters } from "../data/filtersData";
 import {
@@ -103,9 +103,13 @@ const ColocationCard = ({ c, onClick }) => {
           <div className="flex items-center gap-1.5 text-sm text-gray-500">
             <span>Par</span>
             <span className="text-gray-300">•</span>
-            <span className="font-bold text-gray-900 underline underline-offset-2">
+            <Link 
+              to={`/profile/${c.id_poster}`}
+              onClick={(e) => e.stopPropagation()}
+              className="font-bold text-gray-900 underline underline-offset-2 hover:text-emerald-600 transition-colors"
+            >
               {c.poster}
-            </span>
+            </Link>
           </div>
           <span className="text-sm text-gray-400">
             {c.postedAt || "Récemment"}
@@ -220,6 +224,7 @@ const Colocations = () => {
           image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600",
           images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800"],
           poster: `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() || "Propriétaire",
+          id_poster: item.proprietaire?.id_user,
           description: item.description,
         }));
         setColocations(mappedData);

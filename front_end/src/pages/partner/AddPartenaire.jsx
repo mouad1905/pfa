@@ -1,13 +1,14 @@
 import { useState } from "react";
+import { API_URLS, fetchData } from "../../api/api";
+import { useNavigate } from "react-router-dom";
 
 const SUBJECTS = [
-  { icon: "∑", label: "Mathématiques", key: "math" },
-  { icon: "< />", label: "Programming", key: "code" },
-  { icon: "⚗", label: "Physique", key: "physics" },
-  { icon: "A", label: "Langues", key: "lang" },
-  { icon: "₿", label: "Économie", key: "eco" },
-  { icon: "✦", label: "Design UI/UX", key: "design" },
-  { icon: "🧠", label: "IA & Data", key: "ai" },
+  { icon: "∑", label: "Mathématiques", key: "Mathématiques" },
+  { icon: "< />", label: "Informatique", key: "Informatique" },
+  { icon: "⚗", label: "Physique", key: "Physique" },
+  { icon: "A", label: "Anglais", key: "Anglais" },
+  { icon: "F", label: "Français", key: "Français" },
+  { icon: "✦", label: "Philosophie", key: "Philosophie" },
 ];
 
 const BentoCard = ({ children, className = "" }) => (
@@ -26,22 +27,53 @@ const StepLabel = ({ num }) => (
 
 const steps = [
   { label: "Expertise", icon: "✏️" },
-  { label: "Preuve", icon: "📄" },
+  { label: "Détails", icon: "📄" },
   { label: "Logistique", icon: "🚌" },
   { label: "Tarification", icon: "💳" },
 ];
 
 export default function DevenirPartenaire() {
-  const [selected, setSelected] = useState(["math"]);
-  const [mode, setMode] = useState("online");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [mode, setMode] = useState("en_ligne");
   const [rate, setRate] = useState("");
-  const [fileName, setFileName] = useState(null);
+  const [niveau, setNiveau] = useState("L1");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [activeStep] = useState(0);
+  const navigate = useNavigate();
 
-  const toggle = (key) =>
-    setSelected((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
+  const handleContinue = async () => {
+    if (!selectedSubject || !rate || !niveau || !description) {
+      setError("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetchData(API_URLS.COURS, {
+        method: "POST",
+        body: JSON.stringify({
+          matiere: selectedSubject,
+          prix: rate,
+          type_prix: "DH/h",
+          niveau_etude: niveau,
+          description: description,
+          mode_enseignement: mode,
+        }),
+      });
+
+      alert("Cours ajouté avec succès !");
+      navigate("/revisions");
+    } catch (err) {
+      console.error("Error adding course:", err);
+      setError(err.message || "Erreur lors de l'ajout du cours. Vérifiez vos informations.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const net = rate ? (parseFloat(rate) * 0.85).toFixed(2) : "0.00";
 
@@ -51,7 +83,7 @@ export default function DevenirPartenaire() {
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold tracking-tight mb-6">
-            Devenir Partenaire — Onboarding
+            Ajouter un Cours de Révision
           </h1>
 
           {/* Stepper */}
@@ -85,6 +117,12 @@ export default function DevenirPartenaire() {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-6 bg-red-100 text-red-600 p-4 rounded-xl text-sm font-medium">
+            {error}
+          </div>
+        )}
+
         {/* Body Grid */}
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column */}
@@ -93,19 +131,18 @@ export default function DevenirPartenaire() {
             <BentoCard className="p-6">
               <StepLabel num={1} />
               <h2 className="text-2xl font-semibold mt-1 mb-1">
-                Domaines d'Expertise
+                Matière du Cours
               </h2>
               <p className="text-slate-500 text-sm mb-5">
-                Sélectionnez les matières que vous maîtrisez pour aider les
-                étudiants.
+                Quelle matière souhaitez-vous enseigner ?
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {SUBJECTS.map(({ icon, label, key }) => {
-                  const active = selected.includes(key);
+                  const active = selectedSubject === key;
                   return (
                     <button
                       key={key}
-                      onClick={() => toggle(key)}
+                      onClick={() => setSelectedSubject(key)}
                       className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-150
                         ${active ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-slate-100 hover:border-emerald-300 text-slate-600"}`}
                     >
@@ -114,42 +151,42 @@ export default function DevenirPartenaire() {
                     </button>
                   );
                 })}
-                <button className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-slate-300 text-slate-400 hover:text-emerald-600 hover:border-emerald-400 transition-all">
-                  <span className="text-2xl">＋</span>
-                  <span className="text-xs font-semibold">Autre</span>
-                </button>
               </div>
             </BentoCard>
 
-            {/* Step 2 — Upload */}
+            {/* Step 2 — Détails */}
             <BentoCard className="p-6">
               <StepLabel num={2} />
               <h2 className="text-2xl font-semibold mt-1 mb-5">
-                Preuve de Compétence
+                Détails du Cours
               </h2>
-              <label className="border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center text-center bg-slate-50/50 hover:bg-emerald-50/40 hover:border-emerald-300 transition-all cursor-pointer group">
-                <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow">
-                  <span className="text-3xl">☁️</span>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Niveau d'étude cible</label>
+                  <select 
+                    value={niveau}
+                    onChange={(e) => setNiveau(e.target.value)}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-emerald-500 transition"
+                  >
+                    <option value="L1">Licence 1 (L1)</option>
+                    <option value="L2">Licence 2 (L2)</option>
+                    <option value="L3">Licence 3 (L3)</option>
+                    <option value="Master 1">Master 1</option>
+                    <option value="Master 2">Master 2</option>
+                    <option value="Doctorat">Doctorat</option>
+                  </select>
                 </div>
-                <p className="font-semibold text-base text-slate-800">
-                  {fileName
-                    ? fileName
-                    : "Télécharger vos diplômes ou relevés de notes"}
-                </p>
-                <p className="text-slate-500 text-sm mt-1">
-                  PDF, JPG ou PNG (Max 5MB par fichier)
-                </p>
-                <span className="mt-6 bg-emerald-600 text-white px-8 py-2.5 rounded-full text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-md active:scale-95 inline-block">
-                  Parcourir les fichiers
-                </span>
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) =>
-                    e.target.files[0] && setFileName(e.target.files[0].name)
-                  }
-                />
-              </label>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Description du cours</label>
+                  <textarea 
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Décrivez votre méthodologie, les sujets abordés, etc."
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-emerald-500 transition resize-none"
+                  />
+                </div>
+              </div>
             </BentoCard>
 
             {/* Steps 3 & 4 side by side */}
@@ -161,13 +198,13 @@ export default function DevenirPartenaire() {
                 <div className="space-y-3">
                   {[
                     {
-                      value: "online",
+                      value: "en_ligne",
                       label: "En Ligne",
                       sub: "Via Zoom, Teams ou Google Meet",
                     },
                     {
-                      value: "campus",
-                      label: "Sur Campus",
+                      value: "presentiel",
+                      label: "Présentiel",
                       sub: "Bibliothèques ou espaces coworking",
                     },
                   ].map((opt) => (
@@ -216,7 +253,7 @@ export default function DevenirPartenaire() {
                   </div>
                   <p className="text-xs text-slate-500 flex gap-1 items-start">
                     <span className="mt-0.5">ℹ️</span>
-                    Le tarif moyen pour les Mathématiques est de 150 MAD/h.
+                    Tarif par heure (DH/h).
                   </p>
                   <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
                     <span className="text-sm font-medium text-slate-600">
@@ -232,21 +269,25 @@ export default function DevenirPartenaire() {
 
             {/* Footer Actions */}
             <div className="flex justify-between items-center pt-2 pb-8">
-              <button className="px-8 py-3 rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
-                Sauvegarder et quitter
+              <button 
+                onClick={() => navigate("/revisions")}
+                className="px-8 py-3 rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Annuler
               </button>
-              <button className="bg-emerald-600 text-white px-12 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center gap-2">
-                Continuer
+              <button 
+                onClick={handleContinue}
+                disabled={loading}
+                className="bg-emerald-600 text-white px-12 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? "Chargement..." : "Publier le Cours"}
                 <span>→</span>
               </button>
             </div>
           </div>
 
           {/* Right Sidebar */}
-
-          {/* Right Sidebar */}
           <aside className="col-span-12 lg:col-span-4 space-y-6">
-            {/* Why UniConnect */}
             <BentoCard className="overflow-hidden">
               <div className="h-44 bg-emerald-600 relative overflow-hidden flex items-end">
                 <img
@@ -258,30 +299,25 @@ export default function DevenirPartenaire() {
                 <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/60 to-transparent" />
                 <div className="relative z-10 p-4 pb-4">
                   <span className="bg-white/90 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-widest">
-                    Rejoignez la communauté
+                    Conseil d'Expert
                   </span>
                 </div>
               </div>
               <div className="p-6">
                 <h4 className="text-xl font-semibold mb-4">
-                  Pourquoi UniConnect?
+                  Conseils pour réussir
                 </h4>
                 <ul className="space-y-4">
                   {[
                     {
-                      icon: "🛡️",
-                      title: "Visibilité Garantie",
-                      sub: "Accédez à plus de 5,000 étudiants actifs.",
+                      icon: "📝",
+                      title: "Détails Clairs",
+                      sub: "Une bonne description augmente vos chances de 40%.",
                     },
                     {
-                      icon: "🕐",
-                      title: "Flexibilité Totale",
-                      sub: "Gérez votre emploi du temps en un clic.",
-                    },
-                    {
-                      icon: "💳",
-                      title: "Paiements Sécurisés",
-                      sub: "Recevez vos gains chaque semaine.",
+                      icon: "💰",
+                      title: "Prix Juste",
+                      sub: "Comparez vos tarifs avec d'autres professeurs.",
                     },
                   ].map((item) => (
                     <li key={item.title} className="flex gap-3">
@@ -300,14 +336,12 @@ export default function DevenirPartenaire() {
               </div>
             </BentoCard>
 
-            {/* Support */}
             <BentoCard className="p-6 bg-emerald-50/60 border-emerald-100">
               <h4 className="text-sm font-bold text-emerald-700 mb-2 flex items-center gap-2">
                 <span>🎧</span> Besoin d'aide ?
               </h4>
               <p className="text-sm text-emerald-900/70 leading-relaxed">
-                Nos conseillers sont disponibles pour vous accompagner dans
-                votre inscription.
+                Contactez notre support si vous avez des questions sur l'ajout de cours.
               </p>
               <button className="mt-4 w-full py-2.5 bg-white border border-emerald-200 text-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-100 transition-colors">
                 Contacter le Support
@@ -319,3 +353,4 @@ export default function DevenirPartenaire() {
     </div>
   );
 }
+

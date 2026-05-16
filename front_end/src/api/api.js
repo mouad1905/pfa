@@ -21,13 +21,22 @@ export const fetchData = async (url, options = {}) => {
     },
   });
   if (!response.ok) {
-    if (response.status === 401) {
-      // Optional: handle logout or redirect to login
+    let errorMessage = `HTTP error! status: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch (e) {
+      // Not JSON
     }
-    throw new Error(`HTTP error! status: ${response.status}`);
+    
+    if (response.status === 401) {
+      // Optional: handle logout
+    }
+    throw new Error(errorMessage);
   }
   return await response.json();
 };
+
 
 
 export default API_BASE_URL;

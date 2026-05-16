@@ -60,7 +60,7 @@ const Revisions = () => {
           image: `https://i.pravatar.cc/150?u=${item.id_cours}`,
           description: item.description,
           rating: 5.0, // Mock rating as it's not in DB yet
-          id_prof: item.id_professeur,
+          id_prof: item.professeur?.id_user,
         }));
         setRevisions(mappedData);
       } catch (error) {
@@ -240,13 +240,13 @@ const Revisions = () => {
                       {availabilityIcon(profile.availability)}
                       {profile.availability}
                     </span>
-                    <a
-                      href="#"
-                      className="text-emerald-600 font-bold text-sm duration-200 flex items-center gap-1"
+                    <Link
+                      to={`/profile/${profile.id_prof}`}
+                      className="text-emerald-600 font-bold text-sm duration-200 flex items-center gap-1 hover:gap-2 transition-all"
                     >
                       Voir Profil
                       <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </motion.div>
