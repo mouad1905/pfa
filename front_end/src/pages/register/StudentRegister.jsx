@@ -295,6 +295,8 @@ const StepIdentityVerification = ({ data, setData }) => {
 };
 
 /* ── MAIN ── */
+import { API_URLS } from "../../api/api";
+
 const CreateAccount = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -345,18 +347,20 @@ const CreateAccount = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/register", {
+      const response = await fetch(API_URLS.REGISTER, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify({
-          firstName: step1.firstName,
-          lastName: step1.lastName,
+          nom: step1.lastName,
+          prenom: step1.firstName,
           email: step1.email,
-          phone: step1.phone,
-          dob: step1.dob,
           password: step1.password,
+          role: "etudiant",
+          niveau_etude: step2.degree,
+          cin: step3.idNumber,
         }),
       });
 

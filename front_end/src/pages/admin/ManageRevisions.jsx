@@ -1,14 +1,38 @@
-import { useState } from "react";
-import { revisionsData } from "../../data/revisionsData";
+import React, { useState, useEffect } from "react";
+import { API_URLS, fetchData } from "../../api/api";
 
 const ManageRevisions = () => {
-  const [revisions, setRevisions] = useState(revisionsData);
+  const [revisions, setRevisions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await fetchData(API_URLS.COURS);
+        const mappedData = result.data.map(item => ({
+          id: item.id_cours,
+          name: `${item.professeur?.prenom || ""} ${item.professeur?.nom || ""}`.trim() || "Professeur",
+          subject: item.matiere,
+          price: `${item.prix} MAD / ${item.type_prix}`,
+          image: `https://i.pravatar.cc/150?u=${item.id_cours}`
+        }));
+        setRevisions(mappedData);
+      } catch (error) {
+        console.error("Error fetching revisions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleDelete = (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette annonce ?")) {
+      // In a real app, you would call the DELETE API here
       setRevisions(revisions.filter((r) => r.id !== id));
     }
   };
+
 
   return (
     <div>

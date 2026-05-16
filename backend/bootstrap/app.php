@@ -15,9 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
-            'test-inscription',
-            'register',
-            'hebergements',
+            'api/login',
+            'api/register',
+            'api/hebergements',
         ]);
         $middleware->statefulApi();
         $middleware->alias([

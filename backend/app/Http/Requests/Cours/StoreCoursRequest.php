@@ -24,7 +24,7 @@ class StoreCoursRequest extends FormRequest
         return [
             'matiere' => 'required|string|max:100|exists:matiere,nom',
             'prix' => 'required|numeric|min:0',
-            'type_prix' => 'required|in:heure,semaine,mois',
+            'type_prix' => 'required|in:DH/h',
             'niveau_etude' => 'required|string|max:100',
             'description' => 'nullable|string',
             'mode_enseignement' => 'required|in:en_ligne,presentiel',

@@ -12,11 +12,10 @@ class CoursController extends Controller
 {
     public function index()
     {
-        $cours = Cours::with('professeur')
-            ->where('statut', 'valide')
-            ->get();
+        $cours = Cours::with('professeur')->get();
         return CoursResource::collection($cours);
     }
+
 
     public function store(StoreCoursRequest $request)
     {

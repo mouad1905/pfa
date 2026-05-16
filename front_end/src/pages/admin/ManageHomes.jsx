@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { API_URLS } from "../../api/api";
 
 const ManageHomes = () => {
   const [homes, setHomes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/homes")
+    fetch(API_URLS.HEBERGEMENTS)
       .then((res) => res.json())
       .then((data) => {
-        setHomes(data);
+        // Laravel usually returns data in a 'data' wrapper if using Resources
+        const homesData = data.data || data;
+        setHomes(homesData);
         setLoading(false);
       })
       .catch((err) => {
@@ -19,9 +22,15 @@ const ManageHomes = () => {
 
   const handleDelete = (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette annonce ?")) {
-      fetch(`http://localhost:5000/homes/${id}`, { method: "DELETE" })
+      fetch(`${API_URLS.HEBERGEMENTS}/${id}`, { 
+        method: "DELETE",
+        headers: {
+          "Accept": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      })
         .then(() => {
-          setHomes(homes.filter((h) => h.id !== id));
+          setHomes(homes.filter((h) => (h.id_hebergement || h.id) !== id));
         })
         .catch(err => console.error("Failed to delete home", err));
     }
@@ -50,30 +59,33 @@ const ManageHomes = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {homes.map((home) => (
-              <tr key={home.id} className="hover:bg-gray-50/50 transition">
-                <td className="p-4 text-gray-400">#{home.id < 10 ? `0${home.id}` : home.id}</td>
-                <td className="p-4 font-medium flex items-center gap-3">
-                  <img src={home.image} alt="home" className="w-10 h-10 rounded object-cover" />
-                  {home.title}
-                </td>
-                <td className="p-4 text-teal-600 font-semibold">{home.price}</td>
-                <td className="p-4 text-gray-500">{home.location}</td>
-                <td className="p-4">
-                  <div className="flex justify-center gap-3">
-                    <button className="text-blue-500 hover:underline text-sm">
-                      Modifier
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(home.id)}
-                      className="text-red-500 hover:underline text-sm"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {homes.map((home) => {
+              const id = home.id_hebergement || home.id;
+              return (
+                <tr key={id} className="hover:bg-gray-50/50 transition">
+                  <td className="p-4 text-gray-400">#{id < 10 ? `0${id}` : id}</td>
+                  <td className="p-4 font-medium flex items-center gap-3">
+                    <img src={home.image || "https://placehold.co/400x300"} alt="home" className="w-10 h-10 rounded object-cover" />
+                    {home.type || home.title} {home.nbr_chambres ? `- ${home.nbr_chambres} ch.` : ""}
+                  </td>
+                  <td className="p-4 text-teal-600 font-semibold">{home.prix || home.price} DH</td>
+                  <td className="p-4 text-gray-500">{home.localisation || home.location}</td>
+                  <td className="p-4">
+                    <div className="flex justify-center gap-3">
+                      <button className="text-blue-500 hover:underline text-sm">
+                        Modifier
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(id)}
+                        className="text-red-500 hover:underline text-sm"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {homes.length === 0 && (
               <tr>
                 <td colSpan="5" className="p-8 text-center text-gray-500">

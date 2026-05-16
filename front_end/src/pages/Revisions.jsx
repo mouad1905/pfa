@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-
-import { revisionsData } from "../data/revisionsData";
+import { API_URLS, fetchData } from "../api/api";
 import { FaArrowRight } from "react-icons/fa";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -23,7 +22,7 @@ const availabilityIcon = (availability) => {
         videocam
       </span>
     );
-  if (v?.includes("campus"))
+  if (v?.includes("campus") || v?.includes("presentiel"))
     return (
       <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
         location_on
@@ -38,16 +37,45 @@ const availabilityIcon = (availability) => {
 
 const Revisions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-
   const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [revisions, setRevisions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await fetchData(API_URLS.COURS);
+        // Map backend data to frontend structure
+        const mappedData = result.data.map(item => ({
+          id: item.id_cours,
+          name: `${item.professeur?.prenom || ""} ${item.professeur?.nom || ""}`.trim() || "Professeur",
+          level: item.niveau_etude,
+          school: item.professeur?.niveau_etude || "EMSI", // Fallback
+          subject: item.matiere,
+          price: `${item.prix} MAD / ${item.type_prix}`,
+          availability: item.mode_enseignement === "en_ligne" ? "En ligne" : "Présentiel",
+          image: `https://i.pravatar.cc/150?u=${item.id_cours}`,
+          description: item.description,
+          rating: 5.0 // Mock rating as it's not in DB yet
+        }));
+        setRevisions(mappedData);
+      } catch (error) {
+        console.error("Error fetching revisions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
   }, [searchParams]);
 
-  const filteredData = revisionsData.filter((item) =>
+  const filteredData = revisions.filter((item) =>
     item.subject.toLowerCase().includes(search.toLowerCase()),
   );
+
 
   return (
     <>

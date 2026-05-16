@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { colocationData } from "../data/colocationData";
+import { API_URLS, fetchData } from "../api/api";
 import { filters } from "../data/filtersData";
 import {
   FaSearch,
@@ -200,12 +200,42 @@ const Colocations = () => {
   const [priceRange, setPriceRange] = useState("all_prices");
   const [roomFilter, setRoomFilter] = useState("all");
   const [sortBy, setSortBy] = useState("default");
+  const [colocations, setColocations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await fetchData(API_URLS.HEBERGEMENTS);
+        const mappedData = result.data.map(item => ({
+          id: item.id_hebergement,
+          title: `${item.type} - ${item.localisation}`,
+          price: `${item.prix} MAD`,
+          priceNum: parseFloat(item.prix),
+          location: item.localisation,
+          rooms: item.nbr_chambres,
+          area: item.superficie,
+          zone: "campus", // Fallback
+          image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600",
+          images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800"],
+          poster: `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() || "Propriétaire",
+          description: item.description,
+        }));
+        setColocations(mappedData);
+      } catch (error) {
+        console.error("Error fetching colocations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Build room options dynamically from data
   const roomOptions = useMemo(() => {
     const counts = [
-      ...new Set(colocationData.map((c) => c.rooms).filter(Boolean)),
+      ...new Set(colocations.map((c) => c.rooms).filter(Boolean)),
     ].sort((a, b) => a - b);
     return [
       { id: "all", label: "Toutes chambres" },
@@ -214,10 +244,10 @@ const Colocations = () => {
         label: `${r} chambre${r > 1 ? "s" : ""}`,
       })),
     ];
-  }, []);
+  }, [colocations]);
 
   const visible = useMemo(() => {
-    let result = [...colocationData];
+    let result = [...colocations];
 
     // Zone tab
     if (active === "campus") result = result.filter((c) => c.zone === "campus");
@@ -257,7 +287,7 @@ const Colocations = () => {
     if (sortBy === "price_desc") result.sort((a, b) => b.priceNum - a.priceNum);
 
     return result;
-  }, [active, search, priceRange, roomFilter, sortBy]);
+  }, [colocations, active, search, priceRange, roomFilter, sortBy]);
 
   const activeFilterCount = [
     search.trim() !== "",

@@ -19,24 +19,39 @@ class DatabaseSeeder extends Seeder
         // Créer les matières par défaut
         $matieres = ['Mathématiques', 'Physique', 'Informatique', 'Anglais', 'Français', 'Philosophie'];
         foreach ($matieres as $nom) {
-            Matiere::create(['nom' => $nom]);
+            Matiere::firstOrCreate(['nom' => $nom]);
         }
 
         // Créer un administrateur
-        Utilisateur::factory()->create([
-            'nom' => 'Admin',
-            'prenom' => 'Super',
-            'email' => 'admin@uniconnect.com',
-            'role' => 'admin',
-        ]);
+        Utilisateur::updateOrCreate(
+            ['email' => 'admin@uniconnect.com'],
+            [
+                'nom' => 'Admin',
+                'prenom' => 'Super',
+                'role' => 'admin',
+                'date_naissance' => '1990-01-01',
+                'cin' => 'AB123456',
+                'telephone' => '0600000000',
+                'mot_de_passe' => \Illuminate\Support\Facades\Hash::make('password'),
+                'niveau_etude' => 'Bac+5',
+            ]
+        );
 
         // Créer un propriétaire par défaut
-        $proprietaireDefaut = Utilisateur::factory()->create([
-            'nom' => 'Proprio',
-            'prenom' => 'Test',
-            'email' => 'proprietaire@uniconnect.com',
-            'role' => 'proprietaire',
-        ]);
+        $proprietaireDefaut = Utilisateur::updateOrCreate(
+            ['email' => 'proprietaire@uniconnect.com'],
+            [
+                'nom' => 'Proprio',
+                'prenom' => 'Test',
+                'role' => 'proprietaire',
+                'date_naissance' => '1985-01-01',
+                'cin' => 'CD789012',
+                'telephone' => '0611111111',
+                'mot_de_passe' => \Illuminate\Support\Facades\Hash::make('password'),
+                'niveau_etude' => 'Bac+3',
+            ]
+        );
+
         Hebergement::factory(2)->create(['id_createur' => $proprietaireDefaut->id_user]);
 
         // Créer d'autres propriétaires avec des hébergements
