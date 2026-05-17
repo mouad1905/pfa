@@ -72,4 +72,15 @@ class SignalementController extends Controller
             'data' => $signalement
         ]);
     }
+
+    // Supprimer un signalement
+    public function destroy(int $id)
+    {
+        $signalement = Signalement::findOrFail($id);
+        $signalement->delete();
+
+        return response()->json([
+            'message' => 'Signalement supprimé avec succès'
+        ]);
+    }
 }

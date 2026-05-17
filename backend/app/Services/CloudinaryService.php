@@ -7,22 +7,43 @@ use Cloudinary\Configuration\Configuration;
 
 class CloudinaryService
 {
-    protected Cloudinary $cloudinary;
+    protected ?Cloudinary $cloudinary = null;
 
     public function __construct()
     {
-        $this->cloudinary = new Cloudinary(
-            Configuration::instance([
-                'cloud' => [
-                    'cloud_name' => config('cloudinary.cloud_name'),
-                    'api_key'    => config('cloudinary.api_key'),
-                    'api_secret' => config('cloudinary.api_secret'),
-                ],
-                'url' => [
-                    'secure' => true,
-                ],
-            ])
-        );
+        // Ne fait rien à l'instanciation pour éviter de lever des exceptions 
+        // si les clés Cloudinary ne sont pas encore configurées dans le .env
+    }
+
+    /**
+     * Obtenir ou initialiser l'instance de Cloudinary à la demande (lazy-loading).
+     */
+    protected function getCloudinary(): Cloudinary
+    {
+        if ($this->cloudinary === null) {
+            $cloudName = config('cloudinary.cloud_name');
+            $apiKey = config('cloudinary.api_key');
+            $apiSecret = config('cloudinary.api_secret');
+
+            if (!$cloudName || !$apiKey || !$apiSecret) {
+                throw new \Exception("Configuration Cloudinary manquante ou invalide. Veuillez ajouter CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET dans votre fichier .env");
+            }
+
+            $this->cloudinary = new Cloudinary(
+                Configuration::instance([
+                    'cloud' => [
+                        'cloud_name' => $cloudName,
+                        'api_key'    => $apiKey,
+                        'api_secret' => $apiSecret,
+                    ],
+                    'url' => [
+                        'secure' => true,
+                    ],
+                ])
+            );
+        }
+
+        return $this->cloudinary;
     }
 
     /**
@@ -34,7 +55,7 @@ class CloudinaryService
      */
     public function upload($file, string $folder = 'uniconnect'): string
     {
-        $result = $this->cloudinary->uploadApi()->upload(
+        $result = $this->getCloudinary()->uploadApi()->upload(
             $file->getRealPath(),
             [
                 'folder'         => $folder,
@@ -61,7 +82,8 @@ class CloudinaryService
         $pattern = '/\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i';
         if (preg_match($pattern, $url, $matches)) {
             $publicId = $matches[1];
-            $this->cloudinary->uploadApi()->destroy($publicId);
+            $this->getCloudinary()->uploadApi()->destroy($publicId);
         }
     }
 }
+

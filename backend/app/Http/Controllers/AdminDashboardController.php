@@ -105,4 +105,26 @@ class AdminDashboardController extends Controller
             'data' => new \App\Http\Resources\UtilisateurResource($utilisateur)
         ]);
     }
+
+    /**
+     * Obtenir tous les cours pour l'administration
+     */
+    public function getAllCours()
+    {
+        $cours = Cours::with('professeur')->orderBy('created_at', 'desc')->get();
+        return CoursResource::collection($cours);
+    }
+
+    /**
+     * Supprimer un cours
+     */
+    public function deleteCours($id)
+    {
+        $cours = Cours::findOrFail($id);
+        $cours->delete();
+
+        return response()->json([
+            'message' => 'Cours supprimé avec succès'
+        ]);
+    }
 }

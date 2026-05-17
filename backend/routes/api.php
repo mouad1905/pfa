@@ -68,12 +68,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/paiements', [AdminDashboardController::class, 'getPaiements']);
         Route::put('/hebergements/{id}/statut', [AdminDashboardController::class, 'updateHebergementStatus']);
         Route::put('/cours/{id}/statut', [AdminDashboardController::class, 'updateCoursStatus']);
+        Route::get('/cours', [AdminDashboardController::class, 'getAllCours']);
+        Route::delete('/cours/{id}', [AdminDashboardController::class, 'deleteCours']);
 
         Route::post('/matieres', [MatiereController::class, 'store']);
         Route::delete('/matieres/{id}', [MatiereController::class, 'destroy']);
 
         Route::get('/signalements', [SignalementController::class, 'index']);
         Route::put('/signalements/{id}/statut', [SignalementController::class, 'updateStatus']);
+        Route::delete('/signalements/{id}', [SignalementController::class, 'destroy']);
         Route::get('/reclamations', [ReclamationController::class, 'index']);
         Route::get('/utilisateurs', [AuthController::class, 'allUsers']);
         Route::put('/utilisateurs/{id}/statut', [AdminDashboardController::class, 'updateUtilisateurStatus']);

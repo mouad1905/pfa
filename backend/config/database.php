@@ -35,7 +35,22 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'database' => (function() {
+                $db = env('DB_DATABASE');
+                if (!$db) {
+                    return database_path('database.sqlite');
+                }
+                // Si le chemin est absolu (commence par / ou \ ou a un lecteur Windows comme C:)
+                if (str_starts_with($db, '/') || str_starts_with($db, '\\') || (strlen($db) > 1 && $db[1] === ':')) {
+                    return $db;
+                }
+                // Si c'est un nom relatif, on le résout dans le dossier database
+                // en ajoutant une extension .sqlite si elle n'est pas déjà présente
+                if (!str_ends_with($db, '.sqlite')) {
+                    $db .= '.sqlite';
+                }
+                return database_path($db);
+            })(),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,

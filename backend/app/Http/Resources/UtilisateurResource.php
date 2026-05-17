@@ -25,6 +25,9 @@ class UtilisateurResource extends JsonResource
             'niveau_etude'=> $this->niveau_etude,
             // Photo de profil hébergée sur Cloudinary
             'photo_profil'=> $this->photo_profil,
+            'document_identite' => $this->document_identite,
+            'certificat'        => $this->certificat,
+            'carte_etudiant'    => $this->carte_etudiant,
         ];
     }
 }

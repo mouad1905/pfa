@@ -18,7 +18,7 @@ class CoursController extends Controller
      */
     public function index()
     {
-        $cours = Cours::with('professeur')->get();
+        $cours = Cours::where('statut', 'valide')->with('professeur')->get();
         return CoursResource::collection($cours);
     }
 
@@ -58,6 +58,17 @@ class CoursController extends Controller
     public function show(int $id)
     {
         $cours = Cours::with('professeur')->findOrFail($id);
+        
+        // Prevent guests/students from viewing unvalidated courses
+        if ($cours->statut !== 'valide') {
+            $user = Auth::user();
+            $isOwner = $user && $user->id_user === $cours->id_professeur;
+            $isAdmin = $user && $user->role === 'admin';
+            if (!$isOwner && !$isAdmin) {
+                return response()->json(['error' => 'Ce cours n\'est pas encore validé par l\'administration.'], 403);
+            }
+        }
+        
         return new CoursResource($cours);
     }
 

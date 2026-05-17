@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { API_URLS, fetchData } from "../api/api";
 import {
   FaCheckCircle,
@@ -8,13 +8,89 @@ import {
   FaExclamationCircle,
   FaTimes,
   FaPaperPlane,
+  FaShieldAlt,
+  FaUserCircle
 } from "react-icons/fa";
 
-function ReportModal({ onClose, user }) {
-  const [selected, setSelected] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+// Role styling system mapping custom colors to each role
+const getRoleTheme = (role) => {
+  const normalizedRole = role ? role.toLowerCase() : "";
+  switch (normalizedRole) {
+    case "admin":
+      return {
+        primaryBg: "bg-purple-100 border-purple-200",
+        primaryText: "text-purple-700",
+        accentText: "text-purple-600",
+        accentBg: "bg-purple-50",
+        accentBorder: "border-purple-150",
+        badgeText: "Administrateur UniConnect",
+        profileBadgeColor: "text-purple-600",
+        interestsBg: "bg-purple-50/50 text-purple-700 border-purple-100",
+        avatarBorder: "border-purple-100",
+        interests: ["Supervision Système", "Sécurité Cloud", "Modération", "Contrôle Qualité"],
+        about: "Administrateur principal d'UniConnect. Responsable de la supervision de la plateforme, de l'audit de sécurité des utilisateurs et de l'approbation des publications académiques et résidentielles."
+      };
+    case "professeur":
+      return {
+        primaryBg: "bg-emerald-100 border-emerald-200",
+        primaryText: "text-emerald-800",
+        accentText: "text-emerald-650",
+        accentBg: "bg-emerald-50/60",
+        accentBorder: "border-emerald-150",
+        badgeText: "Enseignant Certifié",
+        profileBadgeColor: "text-emerald-500",
+        interestsBg: "bg-emerald-50/50 text-emerald-800 border-emerald-100",
+        avatarBorder: "border-emerald-100",
+        interests: ["Pédagogie Active", "Soutien Scolaire", "Mentorat Étudiant", "Recherche Académique"],
+        about: "Professeur dévoué sur la plateforme UniConnect. Je propose des cours de soutien scolaire interactifs et personnalisés pour accompagner les étudiants vers l'excellence académique."
+      };
+    case "proprietaire":
+    case "locateur":
+      return {
+        primaryBg: "bg-amber-100 border-amber-200",
+        primaryText: "text-amber-850",
+        accentText: "text-amber-600",
+        accentBg: "bg-amber-50/60",
+        accentBorder: "border-amber-150",
+        badgeText: "Bailleur Partenaire",
+        profileBadgeColor: "text-amber-500",
+        interestsBg: "bg-amber-50/50 text-amber-800 border-amber-100",
+        avatarBorder: "border-amber-100",
+        interests: ["Gestion Immobilière", "Accueil Locataire", "Colocation Étudiante", "Entretien Résidence"],
+        about: "Propriétaire partenaire agréé par UniConnect. Je mets à disposition des étudiants des appartements et des colocations meublés, confortables et idéalement situés à proximité des écoles."
+      };
+    case "etudiant":
+    default:
+      return {
+        primaryBg: "bg-blue-100 border-blue-200",
+        primaryText: "text-blue-800",
+        accentText: "text-blue-600",
+        accentBg: "bg-blue-50/60",
+        accentBorder: "border-blue-150",
+        badgeText: "Étudiant EMSI",
+        profileBadgeColor: "text-blue-500",
+        interestsBg: "bg-blue-50/50 text-blue-800 border-blue-100",
+        avatarBorder: "border-blue-100",
+        interests: ["Machine Learning", "Cybersécurité", "Développement Web", "UI / UX Design"],
+        about: "Étudiant passionné par l'innovation technologique sur UniConnect. J'aime échanger sur les projets scolaires, réviser en groupe pour les examens et trouver les meilleures colocations d'études."
+      };
+  }
+};
 
-  const reasons = [
+function ReportModal({ onClose, user, isOwnProfile }) {
+  const [selected, setSelected] = useState(null);
+  const [detailsText, setDetailsText] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const reasons = isOwnProfile ? [
+    "Compte bloqué",
+    "Erreur d'affichage",
+    "Données incorrectes",
+    "Problème d'abonnement",
+    "Bug technique",
+    "Autre souci",
+  ] : [
     "Fake profile",
     "Inappropriate content",
     "Spam or scam",
@@ -23,12 +99,37 @@ function ReportModal({ onClose, user }) {
     "Other",
   ];
 
+  const handleSendReport = async () => {
+    if (!selected) {
+      alert("Veuillez sélectionner un motif de signalement.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await fetchData(`http://127.0.0.1:8000/api/signalements`, {
+        method: "POST",
+        body: JSON.stringify({
+          id_cible: user.id_user,
+          raison: selected,
+          details: detailsText
+        })
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Error submitting report:", err);
+      alert(`Erreur: ${err.message || "Impossible de soumettre le signalement."}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.45)" }}
     >
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4 animate-in zoom-in-95 duration-150">
         {!submitted ? (
           <>
             <div className="flex items-center justify-between mb-4">
@@ -36,13 +137,13 @@ function ReportModal({ onClose, user }) {
                 <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
                   <FaExclamationCircle className="text-red-500" />
                 </div>
-                <h2 className="font-semibold text-gray-800">
-                  Report a problem
+                <h2 className="font-semibold text-gray-800 text-sm sm:text-base">
+                  {isOwnProfile ? "Signaler un problème" : "Signaler ce profil"}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 <FaTimes />
               </button>
@@ -53,28 +154,31 @@ function ReportModal({ onClose, user }) {
                 className="w-9 h-9 rounded-full object-cover"
                 src={`https://i.pravatar.cc/150?u=${user?.id_user}`}
                 alt="user"
+                onError={(e) => {
+                  e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
+                }}
               />
               <div>
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold text-slate-800">
                   {user?.prenom} {user?.nom}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {user?.role} · {user?.niveau_etude}
+                <p className="text-xs text-gray-500 capitalize">
+                  {user?.role}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-              Reason
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+              Motif du signalement
             </p>
             <div className="grid grid-cols-2 gap-2 mb-4">
               {reasons.map((r) => (
                 <button
                   key={r}
                   onClick={() => setSelected(r)}
-                  className={`text-sm px-3 py-2 rounded-lg border transition-all ${
+                  className={`text-xs px-3 py-2 rounded-lg border transition-all cursor-pointer font-bold ${
                     selected === r
-                      ? "border-red-500 bg-red-50 text-red-700"
+                      ? "border-red-500 bg-red-50 text-red-750"
                       : "border-gray-200 text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -85,22 +189,29 @@ function ReportModal({ onClose, user }) {
 
             <textarea
               rows={3}
-              placeholder="Additional details (optional)..."
-              className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:border-red-400 mb-4"
+              value={detailsText}
+              onChange={(e) => setDetailsText(e.target.value)}
+              placeholder="Fournissez des détails supplémentaires si nécessaire..."
+              className="w-full border border-gray-200 rounded-xl p-3 text-xs resize-none focus:outline-none focus:border-red-400 mb-4"
             />
 
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
-                onClick={() => setSubmitted(true)}
-                className="flex-2 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                onClick={handleSendReport}
+                disabled={submitting}
+                className="flex-2 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <FaPaperPlane size={12} /> Send report
+                {submitting ? "Envoi..." : (
+                  <>
+                    <FaPaperPlane size={10} /> Envoyer le signalement
+                  </>
+                )}
               </button>
             </div>
           </>
@@ -109,15 +220,15 @@ function ReportModal({ onClose, user }) {
             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
               <FaCheckCircle className="text-green-500 text-xl" />
             </div>
-            <p className="font-semibold text-gray-800 mb-1">Report submitted</p>
-            <p className="text-sm text-gray-500 mb-4">
-              Our team will review this profile shortly.
+            <p className="font-semibold text-gray-800 mb-1">Signalement soumis</p>
+            <p className="text-xs text-gray-500 mb-4">
+              L'administration a été notifiée et va examiner ce profil dans les plus brefs délais.
             </p>
             <button
               onClick={onClose}
-              className="w-full py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium"
+              className="w-full py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold cursor-pointer transition-colors"
             >
-              Close
+              Fermer
             </button>
           </div>
         )}
@@ -128,9 +239,14 @@ function ReportModal({ onClose, user }) {
 
 export default function StudentProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [showReport, setShowReport] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Retrieve details of the current logged-in user
+  const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
+  const currentIsAdmin = loggedInUser && loggedInUser.role === "admin";
 
   useEffect(() => {
     const loadUser = async () => {
@@ -154,138 +270,178 @@ export default function StudentProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading profile...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+        <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-500 text-sm mt-4 font-semibold">Chargement du profil...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">
-          Failed to load profile. Please login again.
-        </p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+        <p className="text-red-500 font-bold text-lg">Profil introuvable</p>
+        <p className="text-slate-400 text-sm mt-1">L'utilisateur demandé n'existe pas ou a été suspendu.</p>
       </div>
     );
   }
 
+  const isOwnProfile = !id || (loggedInUser && loggedInUser.id_user === user.id_user);
+  const isProfileAdmin = user.role === "admin";
+
+  // Load the dynamic theme based on the profile's role
+  const theme = getRoleTheme(user.role);
+
   return (
     <div className="bg-[#f8f9ff] mt-20 min-h-screen font-sans">
       {showReport && (
-        <ReportModal onClose={() => setShowReport(false)} user={user} />
+        <ReportModal onClose={() => setShowReport(false)} user={user} isOwnProfile={isOwnProfile} />
       )}
 
       <main className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          
           {/* PROFILE CARD */}
-          <section className="md:col-span-4 rounded-2xl shadow p-4 flex flex-col items-center text-center bg-white">
+          <section className="md:col-span-4 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center bg-white border border-slate-100">
             <div className="relative mb-6">
               <img
-                className="w-40 h-40 rounded-full border-4 shadow object-cover"
+                className={`w-40 h-40 rounded-full border-4 shadow-md object-cover ${theme.avatarBorder}`}
                 src={`https://i.pravatar.cc/150?u=${user.id_user}`}
                 alt="user"
+                onError={(e) => {
+                  e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
+                }}
               />
-              <span className="absolute bottom-2 right-2 text-green-500 text-xl bg-white rounded-full">
-                <FaCheckCircle />
+              <span className={`absolute bottom-2 right-2 text-xl bg-white rounded-full p-0.5 shadow-sm ${theme.profileBadgeColor}`}>
+                {isProfileAdmin ? <FaShieldAlt /> : <FaCheckCircle />}
               </span>
             </div>
-            <h1 className="text-2xl font-bold">
+            
+            <h1 className="text-2xl font-bold text-slate-800">
               {user.prenom} {user.nom}
             </h1>
-            <p className="text-gray-500 text-lg">{user.email}</p>
-            <div className="flex gap-2 mt-4">
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold capitalize">
+            <p className="text-slate-400 text-sm font-medium mt-1">{user.email}</p>
+            
+            <div className="flex gap-2 mt-5">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${theme.primaryBg} ${theme.primaryText}`}>
                 {user.role}
               </span>
-              <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-                {user.niveau_etude}
-              </span>
+              {!isProfileAdmin && user.niveau_etude && (
+                <span className="bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1 rounded-full text-xs font-semibold">
+                  {user.niveau_etude}
+                </span>
+              )}
             </div>
           </section>
 
-          {/* EDUCATION */}
-          <section className="md:col-span-8 rounded-2xl shadow p-8 bg-white">
-            <div className="flex items-center gap-60 mb-4">
-              <h2 className="text-lg text-emerald-600 uppercase mb-2 font-bold">
-                Profile Status
+          {/* ACCOUNT DETAILS */}
+          <section className="md:col-span-8 rounded-2xl shadow-sm p-8 bg-white border border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-6 gap-3">
+              <h2 className={`text-xs font-bold uppercase tracking-wider ${theme.accentText}`}>
+                Informations du compte
               </h2>
-              <div className="flex items-center gap-3">
-                <FaUserCheck className="text-xl text-emerald-600" />
-                <span className="text-lg text-emerald-600 font-medium">
-                  Verified {user.role}
+              <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold w-max ${theme.accentBg} ${theme.accentText} ${theme.accentBorder}`}>
+                {isProfileAdmin ? <FaShieldAlt /> : <FaUserCheck />}
+                <span>
+                  {theme.badgeText}
                 </span>
               </div>
             </div>
-            <h3 className="text-2xl font-bold mb-6 capitalize">
+            
+            <h3 className="text-2xl font-black text-slate-800 mb-6 capitalize">
               {user.prenom} {user.nom}
             </h3>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <p className="text-gray-500">Email Address</p>
-                <p className="font-semibold">{user.email}</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Adresse Email</p>
+                <p className="font-bold text-slate-700 mt-1">{user.email}</p>
               </div>
               <div>
-                <p className="text-gray-500">Degree Level</p>
-                <p className="font-semibold">{user.niveau_etude}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Phone Number</p>
-                <p className="font-semibold">
-                  {user.telephone || "Not provided"}
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                  {isProfileAdmin ? "Niveau de privilèges" : "Niveau d'études"}
+                </p>
+                <p className="font-bold text-slate-700 mt-1">
+                  {isProfileAdmin ? "Administration Globale" : (user.niveau_etude || "Non spécifié")}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Account Role</p>
-                <p className="font-semibold capitalize">{user.role}</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Numéro de Téléphone</p>
+                <p className="font-bold text-slate-700 mt-1">
+                  {user.telephone || "Non renseigné"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Rôle d'utilisateur</p>
+                <p className="font-bold text-slate-700 capitalize mt-1">{user.role}</p>
               </div>
             </div>
           </section>
 
-          {/* CONTACT */}
-          <section className="md:col-span-12 bg-white rounded-2xl shadow p-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          {/* MANAGE & ACTIONS */}
+          <section className="md:col-span-12 bg-white rounded-2xl shadow-sm p-8 flex flex-col sm:flex-row justify-between items-center gap-6 border border-slate-100">
             <div>
-              <h2 className="text-xl font-bold">Manage Account</h2>
-              <p className="text-gray-500">Update your profile or settings</p>
+              <h2 className="text-xl font-bold text-slate-800">Gestion du compte</h2>
+              <p className="text-slate-400 text-sm mt-0.5">Mettez à jour vos informations ou accédez aux raccourcis correspondants.</p>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <button className="bg-emerald-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200 shadow-md font-medium">
-                <FaCommentDots className="mr-2" />
-                Edit Profile
-              </button>
-              <button
-                onClick={() => setShowReport(true)}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-105 shadow-md transition-all duration-200 font-medium"
-              >
-                <FaExclamationCircle />
-                Report Issue
-              </button>
+            <div className="flex flex-wrap gap-3">
+              {/* Shortcut to Admin Panel for Admin users */}
+              {currentIsAdmin && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-md font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition duration-200"
+                >
+                  <FaShieldAlt />
+                  Panel Administration
+                </button>
+              )}
+
+              {/* Edit Profile button */}
+              {isOwnProfile && (
+                <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl flex items-center gap-2 cursor-pointer font-bold text-sm hover:scale-[1.02] transition duration-200">
+                  <FaCommentDots />
+                  Modifier le profil
+                </button>
+              )}
+
+              {/* Report button: visible for ALL users (Locateur, Etudiant, Professeur) except administrators */}
+              {/* If it's the own profile, they can report a system bug/problem ('Signaler un problème') */}
+              {!currentIsAdmin && !isProfileAdmin && (
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3.5 rounded-xl flex items-center gap-2 cursor-pointer hover:scale-[1.02] shadow-sm transition duration-200 font-bold text-sm"
+                >
+                  <FaExclamationCircle />
+                  {isOwnProfile ? "Signaler un problème" : "Signaler ce profil"}
+                </button>
+              )}
             </div>
           </section>
 
           {/* INTERESTS */}
-          <section className="md:col-span-6 bg-white rounded-2xl shadow p-6">
-            <h2 className="text-lg text-emerald-600 uppercase mb-2">
-              Interests
+          <section className="md:col-span-6 bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+            <h2 className={`text-xs font-bold uppercase tracking-wider mb-4 ${theme.accentText}`}>
+              Centres d'intérêt
             </h2>
             <div className="flex flex-wrap gap-2">
-              <span className="bg-gray-100 px-3 py-1 rounded-lg">
-                Machine Learning
-              </span>
-              <span className="bg-gray-100 px-3 py-1 rounded-lg">AI</span>
-              <span className="bg-gray-100 px-3 py-1 rounded-lg">
-                Cybersecurity
-              </span>
-              <span className="bg-gray-100 px-3 py-1 rounded-lg">UI/UX</span>
+              {theme.interests.map((interest, index) => (
+                <span 
+                  key={index}
+                  className={`border px-3 py-1 rounded-lg text-xs font-semibold ${theme.interestsBg}`}
+                >
+                  {interest}
+                </span>
+              ))}
             </div>
           </section>
 
           {/* ABOUT */}
-          <section className="md:col-span-6 bg-white rounded-2xl shadow p-6">
-            <h2 className="text-lg text-emerald-600 uppercase mb-2">About</h2>
-            <p className="text-gray-600">
-              Passionate AI student who enjoys helping others understand complex
-              concepts.
+          <section className="md:col-span-6 bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+            <h2 className={`text-xs font-bold uppercase tracking-wider mb-4 ${theme.accentText}`}>
+              À propos
+            </h2>
+            <p className="text-slate-650 text-sm leading-relaxed font-medium">
+              {theme.about}
             </p>
           </section>
         </div>
