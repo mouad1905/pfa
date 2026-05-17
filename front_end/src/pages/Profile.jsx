@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import { API_URLS, fetchData } from "../api/api";
 import {
   FaCheckCircle,
@@ -102,7 +103,7 @@ function ReportModal({ onClose, user, isOwnProfile }) {
 
   const handleSendReport = async () => {
     if (!selected) {
-      alert("Veuillez sélectionner un motif de signalement.");
+      Swal.fire("Attention", "Veuillez sélectionner un motif de signalement.", "warning");
       return;
     }
 
@@ -119,7 +120,7 @@ function ReportModal({ onClose, user, isOwnProfile }) {
       setSubmitted(true);
     } catch (err) {
       console.error("Error submitting report:", err);
-      alert(`Erreur: ${err.message || "Impossible de soumettre le signalement."}`);
+      Swal.fire("Erreur", `Erreur: ${err.message || "Impossible de soumettre le signalement."}`, "error");
     } finally {
       setSubmitting(false);
     }
@@ -259,7 +260,7 @@ function EvaluationForm({ targetUserId, onSubmitted }) {
       onSubmitted();
     } catch (err) {
       console.error("Error submitting evaluation:", err);
-      alert(`Erreur: ${err.message || "Impossible de soumettre l'évaluation."}`);
+      Swal.fire("Erreur", `Erreur: ${err.message || "Impossible de soumettre l'évaluation."}`, "error");
     } finally {
       setSubmitting(false);
     }
@@ -521,32 +522,7 @@ export default function StudentProfile() {
             </div>
           </section>
 
-          {/* INTERESTS */}
-          <section className="md:col-span-6 bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-            <h2 className={`text-xs font-bold uppercase tracking-wider mb-4 ${theme.accentText}`}>
-              Centres d'intérêt
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {theme.interests.map((interest, index) => (
-                <span 
-                  key={index}
-                  className={`border px-3 py-1 rounded-lg text-xs font-semibold ${theme.interestsBg}`}
-                >
-                  {interest}
-                </span>
-              ))}
-            </div>
-          </section>
 
-          {/* ABOUT */}
-          <section className="md:col-span-6 bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-            <h2 className={`text-xs font-bold uppercase tracking-wider mb-4 ${theme.accentText}`}>
-              À propos
-            </h2>
-            <p className="text-slate-650 text-sm leading-relaxed font-medium">
-              {theme.about}
-            </p>
-          </section>
 
           {/* EVALUATIONS & REVIEWS SECTION */}
           {user.role === "professeur" && (

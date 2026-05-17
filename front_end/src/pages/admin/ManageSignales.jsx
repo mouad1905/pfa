@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API_BASE_URL, { fetchData } from "../../api/api";
+import Swal from "sweetalert2";
 import { 
   FaExclamationTriangle, 
   FaSpinner, 
@@ -53,7 +54,7 @@ const ManageSignales = () => {
       setSignales(signales.map(s => s.id_signalement === reportId ? { ...s, statut: newStatus } : s));
     } catch (err) {
       console.error("Error updating status:", err);
-      alert(`Erreur de mise à jour: ${err.message}`);
+      Swal.fire("Erreur", `Erreur de mise à jour: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }
@@ -61,9 +62,18 @@ const ManageSignales = () => {
 
   // Delete report
   const handleDeleteReport = async (reportId) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce signalement ?")) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: "Êtes-vous sûr de vouloir supprimer ce signalement ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer !",
+      cancelButtonText: "Annuler"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setActionLoading(reportId);
@@ -74,9 +84,10 @@ const ManageSignales = () => {
       // Remove locally
       setSignales(signales.filter(s => s.id_signalement !== reportId));
       if (expandedId === reportId) setExpandedId(null);
+      Swal.fire("Succès", "Signalement supprimé avec succès.", "success");
     } catch (err) {
       console.error("Error deleting report:", err);
-      alert(`Erreur de suppression: ${err.message}`);
+      Swal.fire("Erreur", `Erreur de suppression: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API_BASE_URL, { fetchData } from "../../api/api";
+import Swal from "sweetalert2";
 import { 
   FaUserCheck, 
   FaTimes, 
@@ -19,6 +20,8 @@ const ManageUsers = () => {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  const [filterRole, setFilterRole] = useState("all");
+  const [searchEmail, setSearchEmail] = useState("");
 
   // States for creating a new administrator
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
@@ -34,7 +37,7 @@ const ManageUsers = () => {
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
     if (!adminForm.nom || !adminForm.prenom || !adminForm.email || !adminForm.password) {
-      alert("Veuillez remplir tous les champs obligatoires.");
+      Swal.fire("Attention", "Veuillez remplir tous les champs obligatoires.", "warning");
       return;
     }
 
@@ -56,10 +59,10 @@ const ManageUsers = () => {
         telephone: ""
       });
       setShowCreateAdminModal(false);
-      alert("Nouvel administrateur créé avec succès !");
+      Swal.fire("Succès", "Nouvel administrateur créé avec succès !", "success");
     } catch (err) {
       console.error("Error creating admin:", err);
-      alert(`Erreur de création de l'admin: ${err.message || "Erreur de connexion."}`);
+      Swal.fire("Erreur", `Erreur de création de l'admin: ${err.message || "Erreur de connexion."}`, "error");
     } finally {
       setCreateAdminLoading(false);
     }
@@ -102,7 +105,7 @@ const ManageUsers = () => {
       }
     } catch (err) {
       console.error("Error updating user status:", err);
-      alert(`Erreur lors de la mise à jour du statut: ${err.message}`);
+      Swal.fire("Erreur", `Erreur lors de la mise à jour du statut: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }
@@ -110,9 +113,18 @@ const ManageUsers = () => {
 
   // Delete user from database
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur définitivement ? Cette action est irréversible.")) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: "Êtes-vous sûr de vouloir supprimer cet utilisateur définitivement ? Cette action est irréversible.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer !",
+      cancelButtonText: "Annuler"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setActionLoading(userId);
@@ -125,10 +137,10 @@ const ManageUsers = () => {
       if (selectedUser && selectedUser.id_user === userId) {
         setSelectedUser(null);
       }
-      alert("Utilisateur supprimé avec succès.");
+      Swal.fire("Succès", "Utilisateur supprimé avec succès.", "success");
     } catch (err) {
       console.error("Error deleting user:", err);
-      alert(`Erreur lors de la suppression: ${err.message}`);
+      Swal.fire("Erreur", `Erreur lors de la suppression: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }
@@ -148,6 +160,17 @@ const ManageUsers = () => {
         return <span className="px-2.5 py-1 bg-teal-100 text-teal-800 rounded-full text-xs font-bold tracking-wide uppercase">Étudiant</span>;
     }
   };
+
+  const filteredUsers = users.filter((user) => {
+    // Check Role
+    const roleMatch = filterRole === "all" || 
+                      (filterRole === "locateur" ? (user.role === "locateur" || user.role === "proprietaire") : user.role === filterRole);
+    
+    // Check Email Search
+    const searchMatch = user.email.toLowerCase().includes(searchEmail.toLowerCase());
+    
+    return roleMatch && searchMatch;
+  });
 
   return (
     <div className="relative">
@@ -169,6 +192,55 @@ const ManageUsers = () => {
           >
             Rafraîchir les données
           </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 bg-slate-50 p-2 rounded-xl border border-slate-100">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
+          {/* Email Search Bar */}
+          <div className="flex items-center w-full sm:w-auto bg-white rounded-lg border border-slate-200 overflow-hidden focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500 transition-all">
+            <div className="pl-3 pr-2 text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              placeholder="Rechercher par email..." 
+              value={searchEmail}
+              onChange={(e) => setSearchEmail(e.target.value)}
+              className="py-2 pr-3 w-full sm:w-64 text-sm focus:outline-none bg-transparent"
+            />
+          </div>
+
+          <div className="w-px h-6 bg-slate-200 hidden sm:block"></div>
+
+          {/* Role Filter */}
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mr-1">Rôle:</span>
+            <div className="flex bg-slate-200/50 p-1 rounded-lg">
+            {[
+              { id: "all", label: "Tous" },
+              { id: "etudiant", label: "Étudiants" },
+              { id: "professeur", label: "Professeurs" },
+              { id: "locateur", label: "Locateurs" },
+              { id: "admin", label: "Admins" }
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFilterRole(f.id)}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                  filterRole === f.id ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            </div>
+          </div>
+        </div>
+        <div className="text-xs font-semibold text-slate-400 whitespace-nowrap px-3 mt-2 lg:mt-0">
+          Total filtré: <span className="text-slate-700 font-bold">{filteredUsers.length}</span> utilisateurs
         </div>
       </div>
 
@@ -202,14 +274,14 @@ const ManageUsers = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="p-8 text-center text-gray-500">
-                      Aucun utilisateur trouvé dans la base de données.
+                      Aucun utilisateur ne correspond à ce filtre.
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  filteredUsers.map((user) => (
                     <tr key={user.id_user} className="hover:bg-slate-50/50 transition">
                       <td className="p-4">
                         <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API_BASE_URL, { fetchData } from "../../api/api";
+import Swal from "sweetalert2";
 import { 
   FaBookOpen, 
   FaCheck, 
@@ -48,16 +49,25 @@ const ManageRevisions = () => {
       setCourses(courses.map(c => c.id_cours === courseId ? { ...c, statut: newStatus } : c));
     } catch (err) {
       console.error("Error updating course status:", err);
-      alert(`Erreur de mise à jour: ${err.message}`);
+      Swal.fire("Erreur", `Erreur de mise à jour: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDelete = async (courseId) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce cours définitivement ?")) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: "Êtes-vous sûr de vouloir supprimer ce cours définitivement ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer !",
+      cancelButtonText: "Annuler"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setActionLoading(courseId);
@@ -67,9 +77,10 @@ const ManageRevisions = () => {
 
       // Update state locally
       setCourses(courses.filter(c => c.id_cours !== courseId));
+      Swal.fire("Succès", "Cours supprimé avec succès.", "success");
     } catch (err) {
       console.error("Error deleting course:", err);
-      alert(`Erreur de suppression: ${err.message}`);
+      Swal.fire("Erreur", `Erreur de suppression: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }

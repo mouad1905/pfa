@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { API_URLS, fetchData } from "../../api/api";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const SUBJECTS = [
   { icon: "∑", label: "Mathématiques", key: "Mathématiques" },
@@ -40,8 +41,19 @@ export default function DevenirPartenaire() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [activeStep] = useState(0);
   const navigate = useNavigate();
+
+  // Dynamically calculate the active step based on filled fields
+  const getActiveStep = () => {
+    let step = 0;
+    if (selectedSubject) step = 1;
+    if (selectedSubject && description.trim().length > 0) step = 2;
+    if (selectedSubject && description.trim().length > 0 && rate) step = 3;
+    if (selectedSubject && description.trim().length > 0 && rate && niveau) step = 4;
+    return step;
+  };
+  
+  const currentStep = getActiveStep();
 
   const handleContinue = async () => {
     if (!selectedSubject || !rate || !niveau || !description) {
@@ -65,7 +77,12 @@ export default function DevenirPartenaire() {
         }),
       });
 
-      alert("Cours ajouté avec succès !");
+      Swal.fire({
+        title: "Cours soumis !",
+        text: "Votre cours a été enregistré et est en attente de vérification par l'administration. Il sera visible dès sa validation.",
+        icon: "success",
+        confirmButtonColor: "#059669"
+      });
       navigate("/revisions");
     } catch (err) {
       console.error("Error adding course:", err);
@@ -89,8 +106,8 @@ export default function DevenirPartenaire() {
           {/* Stepper */}
           <div className="flex items-center max-w-2xl">
             {steps.map((step, i) => {
-              const isActive = i === activeStep;
-              const isDone = i < activeStep;
+              const isActive = i === currentStep || (i === 3 && currentStep === 4);
+              const isDone = i < currentStep;
               return (
                 <div key={i} className="flex items-center">
                   <div className="flex flex-col items-center gap-1.5">
@@ -108,7 +125,7 @@ export default function DevenirPartenaire() {
                   </div>
                   {i < steps.length - 1 && (
                     <div
-                      className={`h-0.5 w-16 md:w-24 mx-3 mb-5 rounded-full ${i < activeStep ? "bg-emerald-500" : "bg-slate-200"}`}
+                      className={`h-0.5 w-16 md:w-24 mx-3 mb-5 rounded-full ${i < currentStep ? "bg-emerald-500" : "bg-slate-200"}`}
                     />
                   )}
                 </div>

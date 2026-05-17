@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API_BASE_URL, { fetchData } from "../../api/api";
+import Swal from "sweetalert2";
 import { 
   FaHome, 
   FaCheck, 
@@ -52,16 +53,25 @@ const ManageHomes = () => {
       }));
     } catch (err) {
       console.error("Error updating home status:", err);
-      alert(`Erreur de mise à jour: ${err.message}`);
+      Swal.fire("Erreur", `Erreur de mise à jour: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDelete = async (homeId) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet hébergement définitivement ? Cette action est irréversible.")) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: "Êtes-vous sûr de vouloir supprimer cet hébergement définitivement ? Cette action est irréversible.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer !",
+      cancelButtonText: "Annuler"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setActionLoading(homeId);
@@ -71,10 +81,10 @@ const ManageHomes = () => {
 
       // Update state locally
       setHomes(homes.filter(h => (h.id_hebergement || h.id) !== homeId));
-      alert("Hébergement supprimé avec succès.");
+      Swal.fire("Succès", "Hébergement supprimé avec succès.", "success");
     } catch (err) {
       console.error("Error deleting home:", err);
-      alert(`Erreur de suppression: ${err.message}`);
+      Swal.fire("Erreur", `Erreur de suppression: ${err.message}`, "error");
     } finally {
       setActionLoading(null);
     }
