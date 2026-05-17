@@ -18,7 +18,7 @@ class CoursController extends Controller
      */
     public function index()
     {
-        $cours = Cours::where('statut', 'valide')->with('professeur')->get();
+        $cours = Cours::where('statut', 'valide')->with(['professeur.evaluationsRecues'])->get();
         return CoursResource::collection($cours);
     }
 
@@ -57,7 +57,7 @@ class CoursController extends Controller
      */
     public function show(int $id)
     {
-        $cours = Cours::with('professeur')->findOrFail($id);
+        $cours = Cours::with(['professeur.evaluationsRecues'])->findOrFail($id);
         
         // Prevent guests/students from viewing unvalidated courses
         if ($cours->statut !== 'valide') {

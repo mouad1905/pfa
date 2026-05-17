@@ -9,7 +9,8 @@ import {
   FaTimes,
   FaPaperPlane,
   FaShieldAlt,
-  FaUserCircle
+  FaUserCircle,
+  FaStar
 } from "react-icons/fa";
 
 // Role styling system mapping custom colors to each role
@@ -237,6 +238,87 @@ function ReportModal({ onClose, user, isOwnProfile }) {
   );
 }
 
+function EvaluationForm({ targetUserId, onSubmitted }) {
+  const [note, setNote] = useState(5);
+  const [hoveredNote, setHoveredNote] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await fetchData(`http://127.0.0.1:8000/api/evaluations`, {
+        method: "POST",
+        body: JSON.stringify({
+          id_cible: targetUserId,
+          note: note,
+          commentaire: comment
+        })
+      });
+      onSubmitted();
+    } catch (err) {
+      console.error("Error submitting evaluation:", err);
+      alert(`Erreur: ${err.message || "Impossible de soumettre l'évaluation."}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-slate-50/30 border border-slate-100 rounded-2xl p-5 flex flex-col gap-4">
+      <div>
+        <p className="text-sm font-bold text-slate-800">Évaluez ce professeur</p>
+        <p className="text-xs text-slate-400 mt-0.5">Votre évaluation aide d'autres étudiants à choisir leur tuteur.</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Note :</span>
+        <div className="flex gap-1.5">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              type="button"
+              key={star}
+              onClick={() => setNote(star)}
+              onMouseEnter={() => setHoveredNote(star)}
+              onMouseLeave={() => setHoveredNote(0)}
+              className="focus:outline-none transition-transform hover:scale-110 cursor-pointer"
+            >
+              <FaStar
+                className={star <= (hoveredNote || note) ? "text-amber-500" : "text-slate-200"}
+                size={22}
+              />
+            </button>
+          ))}
+        </div>
+        <span className="text-xs font-bold text-amber-600 ml-2 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+          {(hoveredNote || note)}.0 / 5
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Votre Commentaire :</span>
+        <textarea
+          rows={2}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Décrivez votre expérience (méthodes pédagogiques, clarté, disponibilité...)"
+          className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 bg-white"
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-max bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition duration-200 cursor-pointer flex items-center gap-2 self-end shadow-sm"
+      >
+        {submitting ? "Envoi..." : "Soumettre mon avis"}
+      </button>
+    </form>
+  );
+}
+
 export default function StudentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -321,6 +403,27 @@ export default function StudentProfile() {
               {user.prenom} {user.nom}
             </h1>
             <p className="text-slate-400 text-sm font-medium mt-1">{user.email}</p>
+
+            {/* Display rating only for teachers (professeur) */}
+            {user.role === "professeur" && (
+              <div className="flex flex-col items-center gap-1 mt-4">
+                <div className="flex items-center gap-1 text-amber-500">
+                  <span className="text-xl font-black">{user.avg_rating || "0.0"}</span>
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FaStar
+                        key={star}
+                        className={star <= Math.round(user.avg_rating || 0) ? "text-amber-500" : "text-slate-200"}
+                        size={16}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-[11px] font-bold text-slate-400">
+                  ({user.evaluations_count || 0} {user.evaluations_count === 1 ? "évaluation" : "évaluations"})
+                </p>
+              </div>
+            )}
             
             <div className="flex gap-2 mt-5">
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${theme.primaryBg} ${theme.primaryText}`}>
@@ -444,6 +547,118 @@ export default function StudentProfile() {
               {theme.about}
             </p>
           </section>
+
+          {/* EVALUATIONS & REVIEWS SECTION */}
+          {user.role === "professeur" && (
+            <section className="md:col-span-12 bg-white rounded-2xl shadow-sm p-8 border border-slate-100 mt-2">
+              <div className="border-b border-slate-100 pb-4 mb-6">
+                <h2 className="text-xl font-bold text-slate-800">Évaluations & Avis</h2>
+                <p className="text-slate-400 text-sm mt-0.5">Consultez les retours des étudiants ou évaluez les compétences pédagogiques de ce professeur.</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Score breakdown card */}
+                <div className="lg:col-span-4 bg-slate-50/50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center justify-center text-center">
+                  <span className="text-5xl font-black text-slate-800">{user.avg_rating || "0.0"}</span>
+                  <div className="flex gap-1 my-3 text-amber-500">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FaStar
+                        key={star}
+                        className={star <= Math.round(user.avg_rating || 0) ? "text-amber-500" : "text-slate-200"}
+                        size={20}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm font-bold text-slate-500">
+                    Basé sur {user.evaluations_count || 0} {user.evaluations_count === 1 ? "évaluation" : "évaluations"}
+                  </p>
+                </div>
+
+                {/* Form to submit review */}
+                <div className="lg:col-span-8">
+                  {loggedInUser && loggedInUser.role === "etudiant" && !isOwnProfile ? (
+                    <EvaluationForm targetUserId={user.id_user} onSubmitted={() => {
+                      window.location.reload();
+                    }} />
+                  ) : (
+                    <div className="bg-emerald-50/55 rounded-xl border border-emerald-100/50 p-5 flex flex-col justify-center h-full text-slate-700">
+                      <p className="text-sm font-bold text-emerald-800 flex items-center gap-2">
+                        <FaCheckCircle className="text-emerald-500" />
+                        Charte de confiance UniConnect
+                      </p>
+                      <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                        {!loggedInUser 
+                          ? "Veuillez vous connecter pour soumettre une évaluation." 
+                          : isOwnProfile 
+                            ? "Vous ne pouvez pas évaluer votre propre profil enseignant." 
+                            : "Seuls les étudiants inscrits peuvent soumettre des évaluations aux enseignants partenaires."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reviews List */}
+              <div className="mt-8 border-t border-slate-100 pt-6">
+                <h3 className="text-base font-bold text-slate-800 mb-4">
+                  Avis récents ({user.evaluations?.length || 0})
+                </h3>
+
+                {user.evaluations && user.evaluations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {user.evaluations.map((evalItem) => (
+                      <div key={evalItem.id_evaluation} className="bg-white border border-slate-100 rounded-xl p-5 shadow-sm transition hover:shadow">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex items-center gap-3">
+                            <img
+                              className="w-9 h-9 rounded-full object-cover shadow-sm"
+                              src={`https://i.pravatar.cc/150?u=${evalItem.id_auteur}`}
+                              alt="auteur"
+                              onError={(e) => {
+                                e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
+                              }}
+                            />
+                            <div>
+                              <p className="font-bold text-slate-800 text-sm">
+                                {evalItem.auteur ? `${evalItem.auteur.prenom} ${evalItem.auteur.nom}` : "Étudiant"}
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-semibold">
+                                {evalItem.date_evaluation ? new Date(evalItem.date_evaluation).toLocaleDateString("fr-FR", {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric"
+                                }) : "Récemment"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-0.5 text-amber-500">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <FaStar
+                                key={star}
+                                className={star <= evalItem.note ? "text-amber-500" : "text-slate-200"}
+                                size={12}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {evalItem.commentaire && (
+                          <p className="text-xs text-slate-600 mt-3.5 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-50 italic">
+                            "{evalItem.commentaire}"
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-slate-50/55 rounded-xl border border-dashed border-slate-200">
+                    <p className="text-slate-400 text-sm font-semibold">Aucune évaluation pour le moment.</p>
+                    <p className="text-slate-400 text-xs mt-1">Soyez le premier à partager votre expérience académique !</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
         </div>
       </main>
     </div>

@@ -58,4 +58,20 @@ class Utilisateur extends Authenticatable // <--- DOIT ÉTENDRE Authenticatable
     {
         return 'id_user';
     }
+
+    /**
+     * Les évaluations reçues par cet utilisateur (professeur)
+     */
+    public function evaluationsRecues()
+    {
+        return $this->hasMany(Evaluation::class, 'id_cible', 'id_user');
+    }
+
+    /**
+     * Les évaluations données par cet utilisateur (étudiant)
+     */
+    public function evaluationsDonnees()
+    {
+        return $this->hasMany(Evaluation::class, 'id_auteur', 'id_user');
+    }
 }

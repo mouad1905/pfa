@@ -5,6 +5,7 @@ import { FaUser, FaArrowRight, FaBars, FaTimes } from "react-icons/fa";
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
 
   const isHome = location.pathname === "/";
@@ -15,9 +16,10 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
+    setDropdownOpen(false);
   }, [location]);
 
   const isScrolledOrNotHome = scrolled || !isHome;
@@ -25,6 +27,9 @@ const Navbar = () => {
   const navLinkStyles = `font-semibold text-lg transition-colors duration-300 hover:text-emerald-500 ${
     isScrolledOrNotHome ? "text-slate-800" : "text-white"
   }`;
+
+  const token = localStorage.getItem("token");
+  const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
 
   return (
     <header className="fixed w-full top-0 z-50 transition-all duration-500">
@@ -39,26 +44,7 @@ const Navbar = () => {
           <span>Connect, Study, Live Better.</span>
         </div>
         <div className="flex items-center gap-5">
-          {localStorage.getItem("token") ? (
-            <>
-              <Link
-                to={`/profile/${JSON.parse(localStorage.getItem("user"))?.id_user}`}
-                className="flex items-center gap-2 hover:text-emerald-400 transition-colors uppercase tracking-wider text-[10px] font-bold"
-              >
-                <FaUser className="text-emerald-500" /> Mon Profil
-              </Link>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                  window.location.href = "/login";
-                }}
-                className="hover:text-red-400 transition-colors uppercase tracking-wider text-[10px] font-bold cursor-pointer"
-              >
-                Déconnexion
-              </button>
-            </>
-          ) : (
+          {!token && (
             <Link
               to="/login"
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors uppercase tracking-wider text-[10px] font-bold"
@@ -71,7 +57,7 @@ const Navbar = () => {
 
       {/* MAIN NAV */}
       <nav
-        className={`transition-all duration-500 px-4  md:px-12 py-3 flex justify-between items-center ${
+        className={`transition-all duration-500 px-4 md:px-12 py-3 flex justify-between items-center ${
           isScrolledOrNotHome || menuOpen
             ? "bg-white/95 backdrop-blur-xl border-b border-emerald-900/10 shadow-xl"
             : "bg-transparent"
@@ -105,16 +91,88 @@ const Navbar = () => {
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="flex items-center gap-3">
-          {/* Get Started — always visible */}
-          <Link to="/login">
-            <button className="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2 rounded-full font-bold text-sm tracking-tight cursor-pointer transition-all duration-300 flex items-center gap-2 group shadow-lg shadow-emerald-500/20">
-              Get Started
-              <div className="bg-white/20 p-1.5 rounded-full  group-hover:translate-x-1 transition-transform">
-                <FaArrowRight className="text-[10px]" />
-              </div>
-            </button>
-          </Link>
+        <div className="flex items-center ml-25 gap-3">
+          {token && loggedInUser ? (
+            /* Logged in state - replace "Get Started" with rounded avatar leading to profile dropdown */
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center focus:outline-none cursor-pointer group"
+                aria-label="User menu"
+              >
+                <img
+                  className={`w-10 h-10 rounded-full border-2 object-cover shadow-md transition hover:scale-105 duration-300 ${
+                    dropdownOpen
+                      ? "border-[#10b981] ring-2 ring-emerald-550/20"
+                      : isScrolledOrNotHome
+                        ? "border-slate-200"
+                        : "border-white"
+                  }`}
+                  src={`https://i.pravatar.cc/150?u=${loggedInUser.id_user}`}
+                  alt="profile"
+                  onError={(e) => {
+                    e.target.src =
+                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
+                  }}
+                />
+              </button>
+
+              {/* DROPDOWN MENU */}
+              {dropdownOpen && (
+                <>
+                  {/* Overlay to close when clicking outside */}
+                  <div
+                    className="fixed inset-0 z-40 cursor-default"
+                    onClick={() => setDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-3 w-56 rounded-2xl bg-white border border-slate-105 shadow-xl py-2.5 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
+                    {/* User Info Header */}
+                    <div className="px-4 py-2.5 border-b border-slate-50 mb-1.5">
+                      <p className="font-bold text-slate-800 text-sm truncate capitalize">
+                        {loggedInUser.prenom} {loggedInUser.nom}
+                      </p>
+                      <p className="text-[10px] font-extrabold uppercase text-emerald-600 tracking-wider mt-0.5">
+                        {loggedInUser.role}
+                      </p>
+                    </div>
+
+                    {/* Menu Options */}
+                    <Link
+                      to={`/profile/${loggedInUser.id_user}`}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
+                    >
+                      <FaUser className="text-emerald-500 text-sm" />
+                      Voir mon profil
+                    </Link>
+
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "/login";
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition cursor-pointer text-left"
+                    >
+                      <FaArrowRight className="text-rose-500 text-sm rotate-180" />
+                      Se déconnecter
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            /* Logged out state - show "Get Started" button */
+            <Link to="/login">
+              <button className="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2 rounded-full font-bold text-sm tracking-tight cursor-pointer transition-all duration-300 flex items-center gap-2 group shadow-lg shadow-emerald-500/20">
+                Get Started
+                <div className="bg-white/20 p-1.5 rounded-full group-hover:translate-x-1 transition-transform">
+                  <FaArrowRight className="text-[10px]" />
+                </div>
+              </button>
+            </Link>
+          )}
 
           {/* Hamburger — tablet & mobile */}
           <button
@@ -156,15 +214,46 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {/* Divider + Login for mobile */}
+          {/* Divider + Login/Profile for mobile */}
           <div className="border-t border-slate-100 mt-2 pt-3">
-            <Link
-              to="/login"
-              className="py-3 px-3 rounded-xl font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200 flex items-center gap-2"
-            >
-              <FaUser className="text-emerald-500 text-sm" />
-              Login
-            </Link>
+            {token && loggedInUser ? (
+              <div className="flex flex-col gap-1">
+                <Link
+                  to={`/profile/${loggedInUser.id_user}`}
+                  className="py-3 px-3 rounded-xl font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200 flex items-center gap-2"
+                >
+                  <img
+                    className="w-7 h-7 rounded-full object-cover"
+                    src={`https://i.pravatar.cc/150?u=${loggedInUser.id_user}`}
+                    alt="profile"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
+                    }}
+                  />
+                  Mon profil
+                </Link>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "/login";
+                  }}
+                  className="py-3 px-3 rounded-xl font-semibold text-rose-600 hover:bg-rose-50 transition-all duration-200 flex items-center gap-2 cursor-pointer text-left w-full"
+                >
+                  <FaArrowRight className="text-rose-500 text-sm rotate-180" />
+                  Se déconnecter
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="py-3 px-3 rounded-xl font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200 flex items-center gap-2"
+              >
+                <FaUser className="text-emerald-500 text-sm" />
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </div>

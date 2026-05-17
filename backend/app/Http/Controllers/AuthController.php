@@ -177,7 +177,14 @@ class AuthController extends Controller
     // Voir le profil public d'un utilisateur
     public function showProfile(int $id)
     {
-        $user = Utilisateur::findOrFail($id);
+        $user = Utilisateur::with(['evaluationsRecues.auteur'])->findOrFail($id);
+        
+        $avg_rating = round($user->evaluationsRecues()->avg('note'), 1) ?: 0.0;
+        $evaluations_count = $user->evaluationsRecues()->count();
+
+        $user->avg_rating = $avg_rating;
+        $user->evaluations_count = $evaluations_count;
+
         return new \App\Http\Resources\UtilisateurResource($user);
     }
 }

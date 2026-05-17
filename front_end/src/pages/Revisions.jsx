@@ -59,8 +59,8 @@ const Revisions = () => {
             item.mode_enseignement === "en_ligne" ? "En ligne" : "Présentiel",
           image: `https://i.pravatar.cc/150?u=${item.id_cours}`,
           description: item.description,
-          rating: 5.0, // Mock rating as it's not in DB yet
           id_prof: item.professeur?.id_user,
+          rating: item.professeur?.avg_rating || "0.0",
         }));
         setRevisions(mappedData);
       } catch (error) {
