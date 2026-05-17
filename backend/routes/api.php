@@ -67,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/statistiques', [AdminDashboardController::class, 'getStats']);
         Route::get('/paiements', [AdminDashboardController::class, 'getPaiements']);
         Route::put('/hebergements/{id}/statut', [AdminDashboardController::class, 'updateHebergementStatus']);
+        Route::get('/hebergements', [AdminDashboardController::class, 'getAllHebergements']);
+        Route::delete('/hebergements/{id}', [AdminDashboardController::class, 'deleteHebergement']);
         Route::put('/cours/{id}/statut', [AdminDashboardController::class, 'updateCoursStatus']);
         Route::get('/cours', [AdminDashboardController::class, 'getAllCours']);
         Route::delete('/cours/{id}', [AdminDashboardController::class, 'deleteCours']);
@@ -79,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/signalements/{id}', [SignalementController::class, 'destroy']);
         Route::get('/reclamations', [ReclamationController::class, 'index']);
         Route::get('/utilisateurs', [AuthController::class, 'allUsers']);
+        Route::post('/utilisateurs/admin', [AdminDashboardController::class, 'storeAdmin']);
         Route::put('/utilisateurs/{id}/statut', [AdminDashboardController::class, 'updateUtilisateurStatus']);
         Route::delete('/utilisateurs/{id}', [AuthController::class, 'deleteUser']);
     });

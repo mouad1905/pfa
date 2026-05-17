@@ -18,7 +18,7 @@ class HebergementController extends Controller
      */
     public function index()
     {
-        $hebergements = Hebergement::with('proprietaire')->get();
+        $hebergements = Hebergement::where('statut', 'valide')->with('proprietaire')->get();
         return HebergementResource::collection($hebergements);
     }
 

@@ -8,6 +8,7 @@ use App\Models\Hebergement;
 use App\Models\Cours;
 use App\Models\Reservation;
 use App\Models\Paiement;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\HebergementResource;
 use App\Http\Resources\CoursResource;
 
@@ -125,6 +126,58 @@ class AdminDashboardController extends Controller
 
         return response()->json([
             'message' => 'Cours supprimé avec succès'
+        ]);
+    }
+
+    /**
+     * Créer un nouvel administrateur (Admin only)
+     */
+    public function storeAdmin(Request $request)
+    {
+        $validated = $request->validate([
+            'nom'      => 'required|string|max:50',
+            'prenom'   => 'required|string|max:50',
+            'email'    => 'required|email|unique:utilisateur,email',
+            'password' => 'required|string|min:6',
+            'telephone'=> 'nullable|string|max:20',
+        ]);
+
+        $admin = Utilisateur::create([
+            'nom'          => $validated['nom'],
+            'prenom'       => $validated['prenom'],
+            'email'        => $validated['email'],
+            'mot_de_passe' => Hash::make($validated['password']),
+            'telephone'    => $validated['telephone'] ?? null,
+            'role'         => 'admin',
+            'statut'       => 'actif', // L'admin créé est actif par défaut
+            'cin'          => 'ADMIN_' . strtoupper(uniqid()), // Pour satisfaire les contraintes d'unicité éventuelles du CIN
+        ]);
+
+        return response()->json([
+            'message' => 'Administrateur créé avec succès',
+            'data'    => new \App\Http\Resources\UtilisateurResource($admin)
+        ], 201);
+    }
+
+    /**
+     * Obtenir tous les hébergements (Admin moderation list)
+     */
+    public function getAllHebergements()
+    {
+        $hebergements = Hebergement::with('proprietaire')->orderBy('created_at', 'desc')->get();
+        return HebergementResource::collection($hebergements);
+    }
+
+    /**
+     * Supprimer un hébergement (Admin)
+     */
+    public function deleteHebergement($id)
+    {
+        $hebergement = Hebergement::findOrFail($id);
+        $hebergement->delete();
+
+        return response()->json([
+            'message' => 'Hébergement supprimé avec succès'
         ]);
     }
 }

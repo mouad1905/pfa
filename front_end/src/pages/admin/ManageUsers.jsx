@@ -9,7 +9,8 @@ import {
   FaUserSlash, 
   FaCheck, 
   FaIdCard, 
-  FaFileInvoice 
+  FaFileInvoice,
+  FaUserShield
 } from "react-icons/fa";
 
 const ManageUsers = () => {
@@ -18,6 +19,51 @@ const ManageUsers = () => {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+
+  // States for creating a new administrator
+  const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    nom: "",
+    prenom: "",
+    email: "",
+    password: "",
+    telephone: ""
+  });
+  const [createAdminLoading, setCreateAdminLoading] = useState(false);
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    if (!adminForm.nom || !adminForm.prenom || !adminForm.email || !adminForm.password) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
+
+    try {
+      setCreateAdminLoading(true);
+      const data = await fetchData(`${API_BASE_URL}/admin/utilisateurs/admin`, {
+        method: "POST",
+        body: JSON.stringify(adminForm)
+      });
+      
+      const newAdmin = data.data || data;
+      setUsers([newAdmin, ...users]);
+      
+      setAdminForm({
+        nom: "",
+        prenom: "",
+        email: "",
+        password: "",
+        telephone: ""
+      });
+      setShowCreateAdminModal(false);
+      alert("Nouvel administrateur créé avec succès !");
+    } catch (err) {
+      console.error("Error creating admin:", err);
+      alert(`Erreur de création de l'admin: ${err.message || "Erreur de connexion."}`);
+    } finally {
+      setCreateAdminLoading(false);
+    }
+  };
 
   // Fetch users from database on load
   const loadUsers = async () => {
@@ -110,12 +156,20 @@ const ManageUsers = () => {
           <h1 className="text-2xl font-extrabold text-slate-800">Gestion des utilisateurs</h1>
           <p className="text-slate-500 text-sm mt-1">Gérez les profils, vérifiez les pièces d'identité et gérez les accès.</p>
         </div>
-        <button 
-          onClick={loadUsers} 
-          className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 text-sm font-semibold"
-        >
-          Rafraîchir les données
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setShowCreateAdminModal(true)} 
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 text-sm font-semibold cursor-pointer"
+          >
+            <FaUserShield /> + Ajouter un Admin
+          </button>
+          <button 
+            onClick={loadUsers} 
+            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 text-sm font-semibold cursor-pointer"
+          >
+            Rafraîchir les données
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -452,6 +506,117 @@ const ManageUsers = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Admin Modal */}
+      {showCreateAdminModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.45)" }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                  <FaUserShield size={16} />
+                </div>
+                <h2 className="font-extrabold text-slate-800 text-lg">Ajouter un Administrateur</h2>
+              </div>
+              <button 
+                onClick={() => setShowCreateAdminModal(false)}
+                className="text-gray-400 hover:text-gray-650 cursor-pointer"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAdmin} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Prénom *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={adminForm.prenom}
+                    onChange={(e) => setAdminForm({...adminForm, prenom: e.target.value})}
+                    placeholder="Prénom"
+                    className="w-full border border-slate-205 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Nom *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={adminForm.nom}
+                    onChange={(e) => setAdminForm({...adminForm, nom: e.target.value})}
+                    placeholder="Nom"
+                    className="w-full border border-slate-205 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-400"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Email *</label>
+                <input 
+                  type="email" 
+                  required
+                  value={adminForm.email}
+                  onChange={(e) => setAdminForm({...adminForm, email: e.target.value})}
+                  placeholder="admin@uniconnect.ma"
+                  className="w-full border border-slate-205 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Mot de passe *</label>
+                <input 
+                  type="password" 
+                  required
+                  minLength={6}
+                  value={adminForm.password}
+                  onChange={(e) => setAdminForm({...adminForm, password: e.target.value})}
+                  placeholder="••••••••"
+                  className="w-full border border-slate-205 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Téléphone (Optionnel)</label>
+                <input 
+                  type="text" 
+                  value={adminForm.telephone}
+                  onChange={(e) => setAdminForm({...adminForm, telephone: e.target.value})}
+                  placeholder="+212 600-000000"
+                  className="w-full border border-slate-205 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-400"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-slate-100 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateAdminModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={createAdminLoading}
+                  className="flex-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-750 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  {createAdminLoading ? (
+                    <FaSpinner className="animate-spin" />
+                  ) : (
+                    <>
+                      <FaUserShield /> Enregistrer l'Admin
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
