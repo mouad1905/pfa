@@ -83,29 +83,52 @@ class AuthController extends Controller
     // --- CONNEXION (LOGIN) ---
     public function login(LoginRequest $request)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        // On cherche l'utilisateur par son email
-        $user = Utilisateur::where('email', $request->email)->first();
+            // On cherche l'utilisateur par son email
+            $user = Utilisateur::where('email', $request->email)->first();
 
-        // On vérifie si l'utilisateur existe et si le mot de passe correspond
-        if (!$user || !Hash::check($request->password, $user->mot_de_passe)) {
+            // On vérifie si l'utilisateur existe et si le mot de passe correspond
+            if (!$user || !Hash::check($request->password, $user->mot_de_passe)) {
+                return response()->json([
+                    'status'  => 'erreur',
+                    'message' => 'Identifiants incorrects. Email ou mot de passe invalide.'
+                ], 401);
+            }
+
+            // Vérification du statut du compte
+            if ($user->statut === 'suspendu') {
+                return response()->json([
+                    'status'  => 'erreur',
+                    'message' => 'Votre compte a été suspendu. Contactez l\'administrateur.'
+                ], 403);
+            }
+
+            if ($user->statut === 'en_attente') {
+                return response()->json([
+                    'status'  => 'erreur',
+                    'message' => 'Votre compte est en attente de validation. Veuillez patienter.'
+                ], 403);
+            }
+
+            // Création du token (Laravel Sanctum)
+            $token = $user->createToken('auth_token')->plainTextToken;
+
             return response()->json([
-                'status' => 'erreur',
-                'message' => 'Identifiants incorrects'
-            ], 401);
+                'status'       => 'success',
+                'message'      => 'Connexion réussie',
+                'access_token' => $token,
+                'token_type'   => 'Bearer',
+                'user'         => new \App\Http\Resources\UtilisateurResource($user)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'erreur',
+                'message' => 'Erreur serveur : ' . $e->getMessage()
+            ], 500);
         }
-
-        // Création du token (Laravel Sanctum, installé avec install:api)
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Connexion réussie',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user
-        ]);
     }
 
     // --- DÉCONNEXION (LOGOUT) ---

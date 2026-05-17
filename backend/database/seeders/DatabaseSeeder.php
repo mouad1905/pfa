@@ -26,12 +26,13 @@ class DatabaseSeeder extends Seeder
         Utilisateur::updateOrCreate(
             ['email' => 'admin@uniconnect.com'],
             [
-                'nom' => 'Admin',
-                'prenom' => 'Super',
-                'role' => 'admin',
+                'nom'          => 'Admin',
+                'prenom'       => 'Super',
+                'role'         => 'admin',
+                'statut'       => 'actif',
                 'date_naissance' => '1990-01-01',
-                'cin' => 'AB123456',
-                'telephone' => '0600000000',
+                'cin'          => 'AB123456',
+                'telephone'    => '0600000000',
                 'mot_de_passe' => \Illuminate\Support\Facades\Hash::make('password'),
                 'niveau_etude' => 'Bac+5',
             ]
@@ -41,12 +42,13 @@ class DatabaseSeeder extends Seeder
         $proprietaireDefaut = Utilisateur::updateOrCreate(
             ['email' => 'proprietaire@uniconnect.com'],
             [
-                'nom' => 'Proprio',
-                'prenom' => 'Test',
-                'role' => 'proprietaire',
+                'nom'          => 'Proprio',
+                'prenom'       => 'Test',
+                'role'         => 'proprietaire',
+                'statut'       => 'actif',
                 'date_naissance' => '1985-01-01',
-                'cin' => 'CD789012',
-                'telephone' => '0611111111',
+                'cin'          => 'CD789012',
+                'telephone'    => '0611111111',
                 'mot_de_passe' => \Illuminate\Support\Facades\Hash::make('password'),
                 'niveau_etude' => 'Bac+3',
             ]

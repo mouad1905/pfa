@@ -54,7 +54,7 @@ const LoginPage = () => {
           navigate(`/profile/${data.user.id_user}`);
         }
       } else {
-        setError(data.error || "Login failed");
+        setError(data.message || data.error || "Identifiants incorrects. Vérifiez votre email et mot de passe.");
       }
     } catch (err) {
       console.error("Error during login:", err);
