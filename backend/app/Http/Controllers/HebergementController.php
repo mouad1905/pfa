@@ -14,37 +14,69 @@ class HebergementController extends Controller
     public function __construct(protected CloudinaryService $cloudinary) {}
 
     /**
-     * Afficher tous les hébergements (Public)
+     * Afficher tous les hébergements validés (Public)
      */
     public function index()
     {
-        $hebergements = Hebergement::where('statut', 'valide')->with('proprietaire')->get();
+        $hebergements = Hebergement::where('statut', 'valide')
+            ->where('actif', true)
+            ->with('proprietaire')
+            ->get();
+
         return HebergementResource::collection($hebergements);
     }
 
     /**
-     * Créer un nouvel hébergement avec upload d'images (Propriétaire uniquement)
+     * Hébergements du propriétaire connecté (Tableau de bord)
+     */
+    public function mesHebergements()
+    {
+        $hebergements = Hebergement::where('id_createur', Auth::id())
+            ->with('proprietaire')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return HebergementResource::collection($hebergements);
+    }
+
+    /**
+     * Créer un nouvel hébergement
      */
     public function store(StoreHebergementRequest $request)
     {
         try {
             $validated = $request->validated();
+            unset($validated['image_principale_url'], $validated['images_galerie_urls']);
 
-            // Upload image principale vers Cloudinary
+            $validated['statut'] = 'en_attente';
+            $validated['formule'] = 'standard';
+            $validated['actif'] = true;
+
             if ($request->hasFile('image_principale')) {
-                $validated['image_principale'] = $this->cloudinary->upload(
-                    $request->file('image_principale'),
-                    'uniconnect/hebergements'
-                );
+                $validated['image_principale'] = $this->uploadOrUrl($request->file('image_principale'), 'uniconnect/hebergements');
+            } elseif ($request->filled('image_principale_url')) {
+                $validated['image_principale'] = $request->input('image_principale_url');
             }
 
-            // Upload galerie de photos (max 10 photos)
+            $gallery = [];
             if ($request->hasFile('images_galerie')) {
-                $urls = [];
                 foreach ($request->file('images_galerie') as $img) {
-                    $urls[] = $this->cloudinary->upload($img, 'uniconnect/hebergements/galerie');
+                    $gallery[] = $this->uploadOrUrl($img, 'uniconnect/hebergements/galerie');
                 }
-                $validated['images_galerie'] = $urls;
+            }
+            if ($request->filled('images_galerie_urls')) {
+                foreach ($request->input('images_galerie_urls') as $url) {
+                    if ($url) {
+                        $gallery[] = $url;
+                    }
+                }
+            }
+            if (!empty($gallery)) {
+                $validated['images_galerie'] = array_values(array_unique($gallery));
+            }
+
+            if (empty($validated['image_principale']) && !empty($validated['images_galerie'])) {
+                $validated['image_principale'] = $validated['images_galerie'][0];
             }
 
             $hebergement = Hebergement::create(array_merge($validated, [
@@ -72,7 +104,57 @@ class HebergementController extends Controller
             return response()->json(['message' => 'Hébergement non trouvé'], 404);
         }
 
+        if ($hebergement->statut !== 'valide') {
+            $user = Auth::user();
+            $isOwner = $user && $user->id_user === $hebergement->id_createur;
+            $isAdmin = $user && $user->role === 'admin';
+            if (!$isOwner && !$isAdmin) {
+                return response()->json(['message' => 'Cet hébergement n\'est pas encore validé.'], 403);
+            }
+        }
+
         return new HebergementResource($hebergement);
+    }
+
+    /**
+     * Mettre à jour visibilité / formule (propriétaire)
+     */
+    public function updatePublication(Request $request, int $id)
+    {
+        $hebergement = Hebergement::where('id_createur', Auth::id())->findOrFail($id);
+
+        $request->validate([
+            'actif'   => 'sometimes|boolean',
+            'formule' => 'sometimes|in:standard,premium,gold',
+        ]);
+
+        if ($request->has('actif')) {
+            $hebergement->actif = $request->boolean('actif');
+        }
+        if ($request->has('formule')) {
+            $hebergement->formule = $request->input('formule');
+        }
+
+        $hebergement->save();
+
+        return response()->json([
+            'message' => 'Publication mise à jour',
+            'data'    => new HebergementResource($hebergement),
+        ]);
+    }
+
+    /**
+     * Upload Cloudinary avec repli URL si config absente
+     */
+    protected function uploadOrUrl($file, string $folder): string
+    {
+        try {
+            return $this->cloudinary->upload($file, $folder);
+        } catch (\Exception $e) {
+            throw new \Exception(
+                'Upload image impossible. Configurez Cloudinary ou utilisez des URLs d\'images.'
+            );
+        }
     }
 
     /**
@@ -83,7 +165,6 @@ class HebergementController extends Controller
         $hebergement = Hebergement::where('id_createur', Auth::id())->findOrFail($id);
 
         if ($request->hasFile('image_principale')) {
-            // Supprimer l'ancienne image sur Cloudinary
             $this->cloudinary->delete($hebergement->image_principale);
             $hebergement->image_principale = $this->cloudinary->upload(
                 $request->file('image_principale'),

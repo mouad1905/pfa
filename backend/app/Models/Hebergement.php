@@ -18,15 +18,21 @@ class Hebergement extends Model
 
     protected $fillable = [
         'id_createur',
+        'titre',
         'type',
+        'type_chambre',
         'nbr_chambres',
         'meuble',
         'superficie',
         'nb_locataires',
+        'genre_colocataires',
         'localisation',
         'description',
+        'reglement',
         'prix',
         'statut',
+        'formule',
+        'actif',
         'image_principale',
         'images_galerie',
     ];
@@ -34,6 +40,7 @@ class Hebergement extends Model
     protected $casts = [
         'prix'           => 'decimal:2',
         'meuble'         => 'boolean',
+        'actif'          => 'boolean',
         'images_galerie' => 'array',
     ];
 

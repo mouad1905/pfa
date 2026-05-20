@@ -2,17 +2,6 @@ import React, { useState, useEffect } from "react";
 import { API_URLS, fetchData } from "../api/api";
 import { FaArrowRight } from "react-icons/fa";
 import { useSearchParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
 
 const availabilityIcon = (availability) => {
   const v = availability?.toLowerCase();
@@ -39,7 +28,7 @@ const Revisions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [revisions, setRevisions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -76,9 +65,26 @@ const Revisions = () => {
     setSearch(searchParams.get("search") || "");
   }, [searchParams]);
 
-  const filteredData = revisions.filter((item) =>
-    item.subject.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredData = revisions
+    .filter((item) => {
+      // Filter by search
+      if (!item.subject.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      // Hide courses deactivated by their professor
+      const status = localStorage.getItem(`unicons_pub_status_${item.id}`);
+      return status !== "false";
+    })
+    .sort((a, b) => {
+      // Gold first, then Premium, then Standard
+      const planWeight = (item) => {
+        const plan =
+          localStorage.getItem(`unicons_pub_formula_${item.id}`) || "standard";
+        if (plan === "gold") return 2;
+        if (plan === "premium") return 1;
+        return 0;
+      };
+      return planWeight(b) - planWeight(a);
+    });
 
   return (
     <>
@@ -98,12 +104,7 @@ const Revisions = () => {
       >
         <div className="max-w-300 mx-auto">
           {/* Hero Header */}
-          <motion.section
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"
-          >
+          <section className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="max-w-2xl">
               <span className="text-emerald-600 text-xs font-semibold uppercase tracking-wider mb-2 block">
                 Réservez un cours
@@ -118,7 +119,7 @@ const Revisions = () => {
                 professionnelle.
               </p>
             </div>
-            <div className="hidden md:block">
+            <div className="flex  ">
               <Link to="/addPartenaire">
                 <button className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-md cursor-pointer">
                   <span
@@ -131,7 +132,7 @@ const Revisions = () => {
                 </button>
               </Link>
             </div>
-          </motion.section>
+          </section>
 
           {/* Search & Filter Bar */}
           <section className="p-2 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-4 mb-12 items-center shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
@@ -166,92 +167,147 @@ const Revisions = () => {
           </section>
 
           {/* Instructor Grid */}
-          <motion.section
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-          >
-            {filteredData.map((profile) => (
-              <motion.div
-                variants={fadeInUp}
-                key={profile.id}
-                className="group bg-white rounded-xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
-                style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.04)" }}
-              >
-                {/* Card Header */}
-                <div className="p-6 border-b border-slate-50 bg-slate-50/30">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      {profile.subject}
-                    </span>
-                    <span className="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm">
-                      {profile.price}
-                    </span>
-                  </div>
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredData.map((profile) => {
+              const plan =
+                localStorage.getItem(`unicons_pub_formula_${profile.id}`) ||
+                "standard";
+              const isGold = plan === "gold";
+              const isPremium = plan === "premium";
 
-                  <div className="flex justify-between items-end">
-                    <Link
-                      to={`/profile/${profile.id_prof}`}
-                      className="flex items-center gap-2 group"
-                    >
-                      <img
-                        className="w-10 h-10 rounded-full object-cover border-2 border-transparent group-hover:border-emerald-500 transition-all shadow-sm"
-                        src={profile.image}
-                        alt={profile.name}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-bold text-gray-900 leading-tight group-hover:text-emerald-600 transition-colors">
-                          {profile.name}
+              return (
+                <div
+                  key={profile.id}
+                  className={`group bg-white rounded-xl overflow-hidden border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative ${
+                    isGold
+                      ? "border-amber-400 shadow-md shadow-amber-100/60 ring-1 ring-amber-300/30"
+                      : isPremium
+                        ? "border-emerald-300 shadow-md shadow-emerald-50"
+                        : "border-slate-100"
+                  }`}
+                  style={{
+                    boxShadow: isGold
+                      ? "0 4px 20px rgba(251,191,36,0.18)"
+                      : isPremium
+                        ? "0 4px 15px rgba(16,185,129,0.08)"
+                        : "0 4px 15px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {/* Gold / Premium tier ribbon badge */}
+                  {isGold && (
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 z-10" />
+                  )}
+                  {isPremium && !isGold && (
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 z-10" />
+                  )}
+
+                  {/* Card Header */}
+                  <div className="p-6 border-b border-slate-50 bg-slate-50/30">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit">
+                          {profile.subject}
                         </span>
-                        <span className="text-xs text-gray-400 font-medium tracking-wide uppercase">
-                          {profile.school}
+                        {/* Tier badges */}
+                        {isGold && (
+                          <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-extrabold px-2.5 py-0.5 rounded-full w-fit flex items-center gap-1 uppercase tracking-wider shadow-sm">
+                            👑 GOLD CROWN
+                          </span>
+                        )}
+                        {isPremium && !isGold && (
+                          <span className="bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-[8px] font-extrabold px-2.5 py-0.5 rounded-full w-fit flex items-center gap-1 uppercase tracking-wider shadow-sm">
+                            ⭐ PREMIUM BOOST
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-bold shadow-sm ${
+                          isGold
+                            ? "bg-gradient-to-br from-amber-500 to-yellow-400 text-white"
+                            : isPremium
+                              ? "bg-emerald-600 text-white"
+                              : "bg-emerald-600 text-white"
+                        }`}
+                      >
+                        {profile.price}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                      <Link
+                        to={`/profile/${profile.id_prof}`}
+                        className="flex items-center gap-2 group"
+                      >
+                        <img
+                          className={`w-10 h-10 rounded-full object-cover border-2 transition-all shadow-sm ${
+                            isGold
+                              ? "border-amber-300 group-hover:border-amber-500"
+                              : isPremium
+                                ? "border-emerald-300 group-hover:border-emerald-500"
+                                : "border-transparent group-hover:border-emerald-500"
+                          }`}
+                          src={profile.image}
+                          alt={profile.name}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-900 leading-tight group-hover:text-emerald-600 transition-colors">
+                            {profile.name}
+                          </span>
+                          <span className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+                            {profile.school}
+                          </span>
+                        </div>
+                      </Link>
+                      <div className="flex items-center text-amber-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm shrink-0 ml-2">
+                        <span
+                          className="material-symbols-outlined"
+                          style={{
+                            fontVariationSettings: "'FILL' 1",
+                            fontSize: 16,
+                          }}
+                        >
+                          star
+                        </span>
+                        <span className="text-xs font-bold text-[#0b1c30] ml-1">
+                          {profile.rating}
                         </span>
                       </div>
-                    </Link>
-                    <div className="flex items-center text-amber-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm shrink-0 ml-2">
-                      <span
-                        className="material-symbols-outlined"
-                        style={{
-                          fontVariationSettings: "'FILL' 1",
-                          fontSize: 16,
-                        }}
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="p-6 flex flex-col grow">
+                    <p
+                      className={`text-xs font-bold mb-3 ${
+                        isGold ? "text-amber-600" : "text-emerald-600"
+                      }`}
+                    >
+                      {profile.level}
+                    </p>
+                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-3 mb-6">
+                      {profile.description}
+                    </p>
+
+                    <div className="mt-auto flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 tracking-widest uppercase bg-slate-50 px-2 py-1 rounded">
+                        {availabilityIcon(profile.availability)}
+                        {profile.availability}
+                      </span>
+                      <Link
+                        to={`/profile/${profile.id_prof}`}
+                        className={`font-bold text-sm duration-200 flex items-center gap-1 hover:gap-2 transition-all ${
+                          isGold ? "text-amber-600" : "text-emerald-600"
+                        }`}
                       >
-                        star
-                      </span>
-                      <span className="text-xs font-bold text-[#0b1c30] ml-1">
-                        {profile.rating}
-                      </span>
+                        Voir Profil
+                        <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                      </Link>
                     </div>
                   </div>
                 </div>
-
-                {/* Card Body */}
-                <div className="p-6  flex flex-col grow">
-                  <p className="text-emerald-600 text-xs font-bold mb-3">
-                    {profile.level}
-                  </p>
-                  <p className="text-sm text-slate-500 leading-relaxed line-clamp-3 mb-6">
-                    {profile.description}
-                  </p>
-
-                  <div className="mt-auto flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 tracking-widest uppercase bg-slate-50 px-2 py-1 rounded">
-                      {availabilityIcon(profile.availability)}
-                      {profile.availability}
-                    </span>
-                    <Link
-                      to={`/profile/${profile.id_prof}`}
-                      className="text-emerald-600 font-bold text-sm duration-200 flex items-center gap-1 hover:gap-2 transition-all"
-                    >
-                      Voir Profil
-                      <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.section>
+              );
+            })}
+          </section>
         </div>
       </main>
     </>

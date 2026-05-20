@@ -53,6 +53,19 @@ class CoursController extends Controller
     }
 
     /**
+     * Cours du professeur connecté (Tableau de bord)
+     */
+    public function mesCours()
+    {
+        $cours = Cours::where('id_professeur', Auth::id())
+            ->with(['professeur.evaluationsRecues'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return CoursResource::collection($cours);
+    }
+
+    /**
      * Afficher un cours spécifique
      */
     public function show(int $id)

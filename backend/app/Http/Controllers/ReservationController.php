@@ -12,11 +12,46 @@ class ReservationController extends Controller
 {
     public function index()
     {
-        $reservations = Reservation::with('hebergement')
+        $reservations = Reservation::with(['hebergement', 'etudiant'])
             ->where('id_etudiant', Auth::id())
             ->get();
 
         return ReservationResource::collection($reservations);
+    }
+
+    /**
+     * Réservations / candidatures pour les biens du propriétaire connecté
+     */
+    public function mesReservationsProprietaire()
+    {
+        $reservations = Reservation::with(['etudiant', 'hebergement'])
+            ->whereHas('hebergement', fn ($q) => $q->where('id_createur', Auth::id()))
+            ->orderByDesc('created_at')
+            ->get();
+
+        return ReservationResource::collection($reservations);
+    }
+
+    /**
+     * Accepter ou refuser une candidature (propriétaire)
+     */
+    public function updateStatut(Request $request, int $id)
+    {
+        $request->validate([
+            'statut' => 'required|in:en_attente,confirmee,annulee',
+        ]);
+
+        $reservation = Reservation::with(['etudiant', 'hebergement'])
+            ->whereHas('hebergement', fn ($q) => $q->where('id_createur', Auth::id()))
+            ->findOrFail($id);
+
+        $reservation->statut = $request->statut;
+        $reservation->save();
+
+        return response()->json([
+            'message' => 'Statut de la candidature mis à jour',
+            'data'    => new ReservationResource($reservation->load(['etudiant', 'hebergement'])),
+        ]);
     }
 
     public function store(StoreReservationRequest $request)

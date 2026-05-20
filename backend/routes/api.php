@@ -40,13 +40,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reservations', [ReservationController::class, 'store']);
     });
 
-    // Hébergements (Propriétaire / Admin)
-    Route::middleware('role:proprietaire,admin')->group(function () {
+    // Hébergements (Propriétaire / Locateur / Admin)
+    Route::middleware('role:proprietaire,locateur,admin')->group(function () {
+        Route::get('/mes-hebergements', [HebergementController::class, 'mesHebergements']);
         Route::post('/hebergements', [HebergementController::class, 'store']);
+        Route::put('/hebergements/{id}/publication', [HebergementController::class, 'updatePublication']);
+        Route::get('/mes-reservations', [ReservationController::class, 'mesReservationsProprietaire']);
+        Route::put('/reservations/{id}/statut', [ReservationController::class, 'updateStatut']);
     });
 
     // Cours (Professeur / Admin)
     Route::middleware('role:professeur,admin')->group(function () {
+        Route::get('/mes-cours', [CoursController::class, 'mesCours']);
         Route::post('/cours', [CoursController::class, 'store']);
     });
 

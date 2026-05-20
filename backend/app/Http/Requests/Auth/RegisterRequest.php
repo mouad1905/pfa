@@ -19,7 +19,7 @@ class RegisterRequest extends FormRequest
             'cin' => 'required|string|unique:utilisateur,cin',
             'email' => 'required|email|unique:utilisateur,email',
             'password' => 'required|min:6',
-            'role' => 'required|in:etudiant,professeur,proprietaire',
+            'role' => 'required|in:etudiant,professeur,proprietaire,locateur',
             'niveau_etude' => 'nullable|string|max:100',
         ];
     }

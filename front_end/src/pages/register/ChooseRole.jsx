@@ -1,17 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUserGraduate, FaChalkboardTeacher, FaKey } from "react-icons/fa";
-import { motion } from "framer-motion";
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
 
 const SelectRole = () => {
   const navigate = useNavigate();
@@ -44,12 +34,7 @@ const SelectRole = () => {
     <div className="min-h-screen flex mt-10 items-center justify-center bg-linear-to-br from-[#f8fafc] to-white px-4">
       <div className="w-full max-w-5xl">
         {/* HEADER */}
-        <motion.div 
-          className="text-center mb-12"
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-        >
+        <div className="text-center mb-12">
           <h1 className="text-4xl font-black text-slate-900 mb-3">
             Choisissez votre profil
           </h1>
@@ -57,18 +42,12 @@ const SelectRole = () => {
             Pour commencer, sélectionnez le type de compte que vous souhaitez
             créer
           </p>
-        </motion.div>
+        </div>
 
         {/* CARDS */}
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {roles.map((role) => (
-            <motion.div
-              variants={fadeInUp}
+            <div
               key={role.id}
               onClick={() => navigate(role.route)}
               className="group cursor-pointer bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-300 flex flex-col items-center text-center"
@@ -90,9 +69,9 @@ const SelectRole = () => {
 
               {/* HOVER LINE */}
               <div className="mt-6 w-0 h-1 bg-emerald-500 group-hover:w-10 transition-all duration-300 rounded-full" />
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* FOOTER */}
         <p className="text-center text-sm text-slate-400 mt-10">

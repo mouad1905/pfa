@@ -1,22 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaAndroid, FaSignInAlt } from "react-icons/fa";
-import { motion } from "framer-motion";
 
-const fadeInLeft = {
-  hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
-};
-
-const fadeInRight = {
-  hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
 
 import { API_URLS } from "../api/api";
 
@@ -66,29 +51,18 @@ const LoginPage = () => {
     <div className="min-h-screen bg-gray-100 mt-15 flex flex-col justify-center font-sans">
       {/* Main Content Container */}
       <div className="container mx-auto px-4">
-        <motion.div
-          className="flex flex-col md:flex-row w-full max-w-4xl mx-auto shadow-2xl rounded-[20px] overflow-hidden bg-white"
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-        >
+        <div className="flex flex-col md:flex-row w-full max-w-4xl mx-auto shadow-2xl rounded-[20px] overflow-hidden bg-white">
           {/* Left Side: Company Info (Hidden on small screens like your CSS) */}
-          <motion.div
-            variants={fadeInLeft}
-            className="hidden md:block lg:w-135 overflow-hidden"
-          >
+          <div className="hidden md:block lg:w-135 overflow-hidden">
             <img
               src="./src/assets/loginPicture.jpg" // Replace with your actual image path
               alt="Login Visual"
               className="w-full h-full object-cover"
             />
-          </motion.div>
+          </div>
 
           {/* Right Side: Login Form */}
-          <motion.div
-            variants={fadeInRight}
-            className="w-full md:w-2/3 p-8 md:p-12"
-          >
+          <div className="w-full md:w-2/3 p-8 md:p-12">
             <div className="text-left mb-8 flex flex-row items-center gap-4">
               <FaSignInAlt className="text-3xl text-[#10b981] " />
               <h2 className="text-3xl font-bold text-[#10b981]">Log In</h2>
@@ -167,8 +141,8 @@ const LoginPage = () => {
                 </a>
               </p>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -5,20 +5,8 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
 } from "react-icons/fa";
-import { motion } from "framer-motion";
-
-const fadeInLeft = {
-  hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
-
-const fadeInRight = {
-  hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
 
 export default function ContactSection() {
-  const [saveEmail, setSaveEmail] = useState(false);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -32,184 +20,164 @@ export default function ContactSection() {
 
   const contactItems = [
     {
-      icon: <FaPhone />,
+      icon: FaPhone,
       label: "+212 96 15 92 51",
-      sublabel: "Call us Anytime",
+      sublabel: "Appelez-nous",
+      href: "tel:+21296159251",
     },
     {
-      icon: <FaEnvelope />,
+      icon: FaEnvelope,
       label: "uniconnectSupport@gmail.com",
-      sublabel: "Email us Anytime",
+      sublabel: "Écrivez-nous",
+      href: "mailto:uniconnectSupport@gmail.com",
     },
     {
-      icon: <FaMapMarkerAlt />,
+      icon: FaMapMarkerAlt,
       label: "5 Rue Lalla Aicha, Fes 30050",
-      sublabel: "Fes, MOROCCO",
-      isLocation: true,
+      sublabel: "Fès, Maroc",
+      href: "https://maps.google.com/?q=EMSI+Fes",
     },
   ];
 
   return (
-    <section>
-      <section className="min-h-screen bg-white flex items-center mt-20 justify-center px-15 py-20 font-sans">
-        <div className="px-15 w-auto grid grid-cols-1 lg:grid-cols-2 items-start ">
-          {/* Left Column */}
-          <motion.div 
-            className=" w-130 "
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeInLeft}
-          >
-            {/* Tag */}
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-emerald-500 font-extrabold text-3xl">
-                <FaPaperPlane />
-              </span>
-              <span className="text-emerald-500 font-bold uppercase text-3xl tracking-widest ">
-                Get In Touch
-              </span>
+    <div className="w-full overflow-x-hidden bg-slate-50 font-poppins">
+      <section className="pt-24 sm:pt-28 pb-10 sm:pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            {/* Infos contact */}
+            <div className="w-full order-2 lg:order-1">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <span className="text-emerald-500 text-xl sm:text-2xl">
+                  <FaPaperPlane />
+                </span>
+                <span className="text-emerald-600 font-bold uppercase text-sm sm:text-lg tracking-widest">
+                  Contactez-nous
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-3 sm:mb-4">
+                Une équipe à votre écoute sur UniConnect
+              </h1>
+
+              <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 max-w-md">
+                Colocation, cours de révision ou assistance technique — nous vous répondons
+                rapidement pour simplifier votre vie étudiante.
+              </p>
+
+              <div className="bg-emerald-50 w-full rounded-2xl px-4 sm:px-6 py-2 divide-y divide-dashed divide-emerald-200/80 border border-emerald-100/60">
+                {contactItems.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <a
+                      key={i}
+                      href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-4 py-4 sm:py-5 first:pt-3 last:pb-3 hover:bg-emerald-100/40 rounded-xl transition-colors -mx-1 px-1"
+                    >
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-500 shrink-0">
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] sm:text-xs text-gray-400 mb-0.5">{item.sublabel}</p>
+                        <p className="text-gray-800 font-semibold text-sm sm:text-base break-words">
+                          {item.label}
+                        </p>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Heading */}
-            <h2 className="text-4xl font-extrabold text-gray-900 leading-tight mb-3">
-              Trusted By the Genious
-              <br />
-              People with UniConnect
-            </h2>
+            {/* Formulaire */}
+            <div className="w-full order-1 lg:order-2 bg-white rounded-2xl shadow-lg border border-gray-100 px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+              <p className="text-emerald-500 text-xs sm:text-sm font-bold tracking-widest uppercase text-center mb-1">
+                Formulaire
+              </p>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-gray-900 mb-5 sm:mb-6">
+                Envoyez-nous un message
+              </h2>
 
-            <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-sm">
-              We connect students with housing, study resources, and support
-              services through a simple and modern platform designed to improve
-              everyday student life.
-            </p>
-
-            {/* Contact Info Card */}
-            <div className="bg-emerald-50 w-110 rounded-2xl px-7 py-3 space-y-0 divide-y divide-dashed divide-emerald-200">
-              {contactItems.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-5 py-5 first:pt-0 last:pb-0"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Votre nom *"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition"
+                />
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Téléphone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail *"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition sm:col-span-2"
+                />
+                <select
+                  name="subject"
+                  value={form.subject}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition bg-white sm:col-span-2"
                 >
-                  <div className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-500 shrink-0">
-                    {item.icon}
-                  </div>
-                  <div>
-                    {item.isLocation ? (
-                      <>
-                        <p className="text-xs text-gray-400 mb-0.5">
-                          {item.sublabel}
-                        </p>
-                        <p className="text-gray-800 font-semibold text-sm">
-                          {item.label}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-xs text-gray-400 mb-0.5">
-                          {item.sublabel}
-                        </p>
-                        <p className="text-gray-800 font-semibold text-sm">
-                          {item.label}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+                  <option value="" disabled>
+                    Choisir un sujet *
+                  </option>
+                  <option value="general">Question générale</option>
+                  <option value="support">Support technique</option>
+                  <option value="colocation">Colocation</option>
+                  <option value="cours">Cours / Révisions</option>
+                  <option value="partnership">Partenariat</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
 
-          {/* Right Column — Form */}
-          <motion.div 
-            className="w-150 rounded-2xl shadow-lg border border-gray-100 px-8 py-8 "
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeInRight}
-          >
-            {/* Tag */}
-            <div className=" flex justify-center items-center gap-2 mb-3">
-              <h5 className="text-emerald-500 text-3xl font-bold tracking-widest uppercase text-center">
-                Contact Us
-              </h5>
-            </div>
+              <textarea
+                name="message"
+                placeholder="Votre message..."
+                value={form.message}
+                onChange={handleChange}
+                rows={5}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition resize-y mb-5 min-h-[120px]"
+              />
 
-            <h3 className="text-3xl font-bold text-center text-gray-900 mb-5">
-              Feel Free To Contact Us
-            </h3>
-
-            {/* Grid inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                name="name"
-                placeholder="Your Name *"
-                value={form.name}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 transition"
-              />
-              <input
-                type="text"
-                name="phone"
-                placeholder="Phone No"
-                value={form.phone}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 transition"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter E-Mail *"
-                value={form.email}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 transition"
-              />
-              <select
-                name="subject"
-                value={form.subject}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 transition bg-white appearance-none"
+              <button
+                type="button"
+                className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-all duration-200 shadow-md shadow-emerald-200/80"
               >
-                <option value="" disabled>
-                  Select Subjects *
-                </option>
-                <option value="general">General Inquiry</option>
-                <option value="support">Support</option>
-                <option value="partnership">Partnership</option>
-                <option value="other">Other</option>
-              </select>
+                Envoyer le message
+              </button>
             </div>
-
-            {/* Textarea */}
-            <textarea
-              name="message"
-              placeholder="Write Message :"
-              value={form.message}
-              onChange={handleChange}
-              rows={5}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 transition resize-y mb-5"
-            />
-
-            {/* Submit Button */}
-            <button
-              type="button"
-              className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-all duration-200 shadow-md shadow-emerald-200"
-            >
-              Send Message
-            </button>
-          </motion.div>
+          </div>
         </div>
       </section>
-      <div className="w-auto h-100 rounded-2xl overflow-hidden shadow-lg">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3306.3794282691547!2d-5.010958325031051!3d34.0341369186873!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd9f8ba783182787%3A0xf081ce6917c14af9!2sEMSI%20F%C3%A8s%20(%20%C3%89cole%20Marocaine%20des%20Sciences%20de%20l%E2%80%99Ing%C3%A9nieur)!5e0!3m2!1sfr!2sma!4v1777160110348!5m2!1sfr!2sma"
-          className="w-full h-full border-0"
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        ></iframe>
-      </div>
-    </section>
+
+      {/* Carte */}
+      <section className="px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 max-w-6xl mx-auto w-full">
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 px-1">
+          Notre campus
+        </h3>
+        <div className="w-full h-56 sm:h-72 md:h-96 rounded-2xl overflow-hidden shadow-lg border border-slate-100">
+          <iframe
+            title="Carte EMSI Fès"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3306.3794282691547!2d-5.010958325031051!3d34.0341369186873!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd9f8ba783182787%3A0xf081ce6917c14af9!2sEMSI%20F%C3%A8s%20(%20%C3%89cole%20Marocaine%20des%20Sciences%20de%20l%E2%80%99Ing%C3%A9nieur)!5e0!3m2!1sfr!2sma!4v1777160110348!5m2!1sfr!2sma"
+            className="w-full h-full border-0"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+      </section>
+    </div>
   );
 }

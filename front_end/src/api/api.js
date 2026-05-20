@@ -4,19 +4,29 @@ export const API_URLS = {
   LOGIN: `${API_BASE_URL}/login`,
   REGISTER: `${API_BASE_URL}/register`,
   HEBERGEMENTS: `${API_BASE_URL}/hebergements`,
+  MES_HEBERGEMENTS: `${API_BASE_URL}/mes-hebergements`,
+  MES_RESERVATIONS: `${API_BASE_URL}/mes-reservations`,
+  reservationStatut: (id) => `${API_BASE_URL}/reservations/${id}/statut`,
   COURS: `${API_BASE_URL}/cours`,
+  MES_COURS: `${API_BASE_URL}/mes-cours`,
   USER: `${API_BASE_URL}/user`,
   LOGOUT: `${API_BASE_URL}/logout`,
 };
 
-export const fetchData = async (url, options = {}) => {
+const authHeaders = () => {
   const token = localStorage.getItem("token");
+  return {
+    Accept: "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
+export const fetchData = async (url, options = {}) => {
   const response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+      ...authHeaders(),
       ...options.headers,
     },
   });
@@ -24,20 +34,41 @@ export const fetchData = async (url, options = {}) => {
     let errorMessage = `HTTP error! status: ${response.status}`;
     try {
       const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch (e) {
+      errorMessage =
+        errorData.message ||
+        errorData.error ||
+        (errorData.errors ? Object.values(errorData.errors).flat().join(", ") : null) ||
+        errorMessage;
+    } catch {
       // Not JSON
-    }
-    
-    if (response.status === 401) {
-      // Optional: handle logout
     }
     throw new Error(errorMessage);
   }
   return await response.json();
 };
 
-
+/** POST/PUT avec FormData (upload fichiers) */
+export const fetchFormData = async (url, formData, method = "POST") => {
+  const response = await fetch(url, {
+    method,
+    body: formData,
+    headers: authHeaders(),
+  });
+  if (!response.ok) {
+    let errorMessage = `HTTP error! status: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage =
+        errorData.message ||
+        errorData.error ||
+        (errorData.errors ? Object.values(errorData.errors).flat().join(", ") : null) ||
+        errorMessage;
+    } catch {
+      // Not JSON
+    }
+    throw new Error(errorMessage);
+  }
+  return await response.json();
+};
 
 export default API_BASE_URL;
-
