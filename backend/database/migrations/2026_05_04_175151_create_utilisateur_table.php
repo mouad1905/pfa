@@ -18,14 +18,20 @@ return new class extends Migration
             $table->string('email', 100)->unique();
             $table->string('telephone', 20)->nullable();
             $table->text('mot_de_passe');
-            $table->string('role', 20); 
+            $table->string('role', 20); // etudiant, professeur, proprietaire, locateur, admin
+            $table->enum('statut', ['actif', 'suspendu', 'en_attente'])->default('en_attente');
+            $table->string('niveau_etude', 100)->nullable();
+            $table->string('photo_profil', 255)->nullable();
+            $table->string('document_identite', 255)->nullable();
+            $table->string('certificat', 255)->nullable();
+            $table->string('carte_etudiant', 255)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // 2. Création de la table pour les Tokens (Sanctum)
         Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->id();
-            // On lie le token à 'utilisateur' via 'id_user'
             $table->morphs('tokenable'); 
             $table->string('name');
             $table->string('token', 64)->unique();

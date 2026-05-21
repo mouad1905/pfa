@@ -55,13 +55,29 @@ class CloudinaryService
      */
     public function upload($file, string $folder = 'uniconnect'): string
     {
+        // Extraire le nom d'origine et l'extension
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = $file->getClientOriginalExtension();
+        
+        // Sécuriser le nom (enlever espaces et caractères spéciaux)
+        $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $originalName);
+        
+        // Créer un identifiant unique basé sur le nom d'origine
+        $publicId = $safeName . '_' . uniqid();
+
+        // Si ce n'est pas une image, on ajoute l'extension pour forcer Cloudinary
+        // à garder le bon format (.pdf, .docx, etc) au lieu d'un format sans extension
+        if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])) {
+            $publicId .= '.' . $extension;
+        }
+
         $result = $this->getCloudinary()->uploadApi()->upload(
             $file->getRealPath(),
             [
                 'folder'         => $folder,
                 'resource_type'  => 'auto',
-                'use_filename'   => true,
-                'unique_filename'=> true,
+                'public_id'      => $publicId,
+                // On retire 'use_filename' car $file->getRealPath() retourne un fichier .tmp
             ]
         );
 

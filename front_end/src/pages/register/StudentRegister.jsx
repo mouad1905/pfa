@@ -141,7 +141,7 @@ const StepAcademicProfile = ({ data, setData }) => {
   const set = (k) => (e) => setData({ ...data, [k]: e.target.value });
   const setFile = (k) => (e) => {
     const f = e.target.files[0];
-    if (f) setData({ ...data, [k]: f.name });
+    if (f) setData({ ...data, [k]: f });
   };
 
   return (
@@ -183,7 +183,7 @@ const StepAcademicProfile = ({ data, setData }) => {
             <FaUpload className="text-gray-300 group-hover:text-[#1ab69d] text-xl mb-1.5 transition" />
             {data.studentCard ? (
               <span className="text-xs font-medium text-[#1ab69d]">
-                {data.studentCard}
+                {data.studentCard.name}
               </span>
             ) : (
               <>
@@ -212,7 +212,7 @@ const StepIdentityVerification = ({ data, setData }) => {
   const set = (k) => (e) => setData({ ...data, [k]: e.target.value });
   const setFile = (k) => (e) => {
     const f = e.target.files[0];
-    if (f) setData({ ...data, [k]: f.name });
+    if (f) setData({ ...data, [k]: f });
   };
 
   return (
@@ -242,7 +242,7 @@ const StepIdentityVerification = ({ data, setData }) => {
             <div>
               {data.photo ? (
                 <span className="text-xs font-medium text-[#1ab69d]">
-                  {data.photo}
+                  {data.photo.name}
                 </span>
               ) : (
                 <>
@@ -270,7 +270,7 @@ const StepIdentityVerification = ({ data, setData }) => {
             <FaUpload className="text-gray-300 group-hover:text-[#1ab69d] text-xl mb-1.5 transition" />
             {data.idFile ? (
               <span className="text-xs font-medium text-[#1ab69d]">
-                {data.idFile}
+                {data.idFile.name}
               </span>
             ) : (
               <>
@@ -347,21 +347,25 @@ const CreateAccount = () => {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("nom", step1.lastName);
+      formData.append("prenom", step1.firstName);
+      formData.append("email", step1.email);
+      formData.append("password", step1.password);
+      formData.append("role", "etudiant");
+      formData.append("niveau_etude", step2.degree);
+      formData.append("cin", step3.idNumber);
+      
+      if (step3.photo) formData.append("photo_profil", step3.photo);
+      if (step3.idFile) formData.append("document_identite", step3.idFile);
+      if (step2.studentCard) formData.append("carte_etudiant", step2.studentCard);
+
       const response = await fetch(API_URLS.REGISTER, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        body: JSON.stringify({
-          nom: step1.lastName,
-          prenom: step1.firstName,
-          email: step1.email,
-          password: step1.password,
-          role: "etudiant",
-          niveau_etude: step2.degree,
-          cin: step3.idNumber,
-        }),
+        body: formData,
       });
 
       const data = await response.json();

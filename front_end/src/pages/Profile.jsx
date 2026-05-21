@@ -429,22 +429,16 @@ export default function StudentProfile() {
           {/* PROFILE CARD */}
           <section className="md:col-span-4 rounded-3xl shadow-sm p-8 flex flex-col items-center text-center bg-white border border-[#f1f3f6]">
             <div className="relative mb-6">
-              {/* Outer Ring */}
-              <div className="w-40 h-40 rounded-full border border-[#1ab69d] p-1 flex items-center justify-center bg-white">
-                <img
-                  className="w-full h-full rounded-full object-cover"
-                  src={`https://i.pravatar.cc/150?u=${user.id_user}`}
-                  alt="user"
-                  onError={(e) => {
-                    e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
-                  }}
-                />
-              </div>
-              {/* Verification Green Tick Badge */}
-              <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#1ab69d] text-white rounded-full border-2 border-white flex items-center justify-center text-xs shadow-sm">
-                <svg className="w-3 h-3 fill-current" viewBox="0 0 20 20">
-                  <path d="M0 11l2-2 5 5L18 3l2 2L7 18z" />
-                </svg>
+              <img
+                className={`w-40 h-40 rounded-full border-4 shadow-md object-cover ${theme.avatarBorder}`}
+                src={user.photo_profil || `https://i.pravatar.cc/150?u=${user.id_user}`}
+                alt="user"
+                onError={(e) => {
+                  e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
+                }}
+              />
+              <span className={`absolute bottom-2 right-2 text-xl bg-white rounded-full p-0.5 shadow-sm ${theme.profileBadgeColor}`}>
+                {isProfileAdmin ? <FaShieldAlt /> : <FaCheckCircle />}
               </span>
             </div>
             

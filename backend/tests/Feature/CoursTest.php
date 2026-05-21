@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\Utilisateur;
+use App\Models\Matiere;
 
 class CoursTest extends TestCase
 {
@@ -17,10 +18,14 @@ class CoursTest extends TestCase
             'role' => 'professeur'
         ]);
 
+        Matiere::create([
+            'nom' => 'Mathématiques'
+        ]);
+
         $response = $this->actingAs($professeur)->postJson('/api/cours', [
             'matiere' => 'Mathématiques',
             'prix' => 150,
-            'type_prix' => 'heure',
+            'type_prix' => 'DH/h',
             'niveau_etude' => 'L1',
             'description' => 'Cours complet de maths',
             'mode_enseignement' => 'en_ligne'

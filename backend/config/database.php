@@ -40,6 +40,9 @@ return [
                 if (!$db) {
                     return database_path('database.sqlite');
                 }
+                if ($db === ':memory:') {
+                    return $db;
+                }
                 // Si le chemin est absolu (commence par / ou \ ou a un lecteur Windows comme C:)
                 if (str_starts_with($db, '/') || str_starts_with($db, '\\') || (strlen($db) > 1 && $db[1] === ':')) {
                     return $db;

@@ -140,7 +140,7 @@ const StepAcademicProfile = ({ data, setData }) => {
   const set = (k) => (e) => setData({ ...data, [k]: e.target.value });
   const setFile = (k) => (e) => {
     const f = e.target.files[0];
-    if (f) setData({ ...data, [k]: f.name });
+    if (f) setData({ ...data, [k]: f });
   };
 
   return (
@@ -201,7 +201,7 @@ const StepAcademicProfile = ({ data, setData }) => {
             <FaUpload className="text-gray-300 group-hover:text-[#1ab69d] text-xl mb-1.5 transition" />
             {data.certificate ? (
               <span className="text-xs font-medium text-[#1ab69d]">
-                {data.certificate}
+                {data.certificate.name}
               </span>
             ) : (
               <>
@@ -230,7 +230,7 @@ const StepIdentityVerification = ({ data, setData }) => {
   const set = (k) => (e) => setData({ ...data, [k]: e.target.value });
   const setFile = (k) => (e) => {
     const f = e.target.files[0];
-    if (f) setData({ ...data, [k]: f.name });
+    if (f) setData({ ...data, [k]: f });
   };
 
   return (
@@ -260,7 +260,7 @@ const StepIdentityVerification = ({ data, setData }) => {
             <div>
               {data.photo ? (
                 <span className="text-xs font-medium text-[#1ab69d]">
-                  {data.photo}
+                  {data.photo.name}
                 </span>
               ) : (
                 <>
@@ -288,7 +288,7 @@ const StepIdentityVerification = ({ data, setData }) => {
             <FaUpload className="text-gray-300 group-hover:text-[#1ab69d] text-xl mb-1.5 transition" />
             {data.idFile ? (
               <span className="text-xs font-medium text-[#1ab69d]">
-                {data.idFile}
+                {data.idFile.name}
               </span>
             ) : (
               <>
@@ -313,7 +313,12 @@ const StepIdentityVerification = ({ data, setData }) => {
 };
 
 /* ── MAIN ── */
+import { useNavigate } from "react-router-dom";
+import { API_URLS } from "../../api/api";
+
 const CreateAccountProf = () => {
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
   const [step1, setStep1] = useState({
     firstName: "",
@@ -351,6 +356,50 @@ const CreateAccountProf = () => {
     <StepAcademicProfile data={step2} setData={setStep2} />,
     <StepIdentityVerification data={step3} setData={setStep3} />,
   ];
+
+  const handleRegister = async () => {
+    if (step1.password !== step1.confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (!step1.terms) {
+      setError("You must agree to the terms");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("nom", step1.lastName);
+      formData.append("prenom", step1.firstName);
+      formData.append("email", step1.email);
+      formData.append("password", step1.password);
+      formData.append("role", "professeur");
+      formData.append("cin", step3.idNumber);
+      
+      if (step3.photo) formData.append("photo_profil", step3.photo);
+      if (step3.idFile) formData.append("document_identite", step3.idFile);
+      if (step2.certificate) formData.append("certificat", step2.certificate);
+
+      const response = await fetch(API_URLS.REGISTER, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        navigate("/login");
+      } else {
+        setError(data.error || data.message || "Registration failed");
+      }
+    } catch (err) {
+      console.error("Error during registration:", err);
+      setError("An error occurred during registration.");
+    }
+  };
 
   return (
     <div className="min-h-screen mt-13 bg-[#e3f2f1] flex items-center justify-center p-4 font-sans">
@@ -411,6 +460,11 @@ const CreateAccountProf = () => {
                 Step {currentStep} — {stepTitles[currentStep - 1]}
               </h3>
             </header>
+            {error && (
+              <div className="bg-red-100 text-red-600 p-3 rounded text-sm mb-4">
+                {error}
+              </div>
+            )}
             <div
               key={currentStep}
               className="animate-in fade-in slide-in-from-bottom-4 duration-500"
@@ -428,10 +482,13 @@ const CreateAccountProf = () => {
               <FaChevronLeft /> Back
             </button>
             <button
-              onClick={() =>
-                currentStep < stepTitles.length &&
-                setCurrentStep(currentStep + 1)
-              }
+              onClick={() => {
+                if (currentStep < stepTitles.length) {
+                  setCurrentStep(currentStep + 1);
+                } else {
+                  handleRegister();
+                }
+              }}
               className="bg-[#1ab69d] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#169a85] transition-all shadow-lg shadow-[#1ab69d]/20 active:scale-95 flex items-center gap-2 cursor-pointer"
             >
               {currentStep === stepTitles.length ? "Finish" : "Next"}

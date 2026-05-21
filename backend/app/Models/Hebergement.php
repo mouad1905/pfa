@@ -29,12 +29,12 @@ class Hebergement extends Model
         'localisation',
         'description',
         'reglement',
+        'image_principale',
+        'images_galerie',
         'prix',
         'statut',
         'formule',
         'actif',
-        'image_principale',
-        'images_galerie',
     ];
 
     protected $casts = [

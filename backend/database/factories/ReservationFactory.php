@@ -18,7 +18,7 @@ class ReservationFactory extends Factory
             'id_hebergement' => Hebergement::factory(),
             'date_debut' => $debut,
             'date_fin' => $fin,
-            'statut' => fake()->randomElement(['en_attente', 'confirmee', 'annulee']),
+            'statut' => fake()->randomElement(['en_attente', 'confirme', 'annulee']),
         ];
     }
 }

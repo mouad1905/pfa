@@ -25,6 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Forcer Laravel à toujours retourner du JSON pour les erreurs d'API (évite les redirections 302 qui causent l'erreur GET method not supported)
+        $exceptions->shouldRenderJsonWhen(function (Request $request, \Throwable $e) {
+            if ($request->is('api/*')) {
+                return true;
+            }
+            return $request->expectsJson();
+        });
+
         // Retourner du JSON pour les erreurs 404 sur les routes API
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {

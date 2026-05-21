@@ -16,21 +16,22 @@ return new class extends Migration
                   ->constrained('utilisateur', 'id_user')
                   ->onDelete('cascade');
 
-            // L'utilisateur qui est signalé (ex: Alexandre Dubois)
+            // L'utilisateur qui est signalé
             $table->foreignId('id_cible')
                   ->constrained('utilisateur', 'id_user')
                   ->onDelete('cascade');
 
-            // La raison (Fake profile, Spam, Harassment, etc.)
+            // La raison
             $table->string('raison', 50); 
 
-            // Le texte libre (le champ "others" dans ton screen)
+            // Le texte libre
             $table->text('details')->nullable();
 
             // Statut pour l'administration
             $table->string('statut', 20)->default('en_attente'); // en_attente, traite, rejete
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

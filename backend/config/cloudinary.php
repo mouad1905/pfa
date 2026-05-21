@@ -27,5 +27,6 @@ return [
         'cartes'       => 'uniconnect/cartes',
         'hebergements' => 'uniconnect/hebergements',
         'cours'        => 'uniconnect/cours',
+        'reclamations' => 'uniconnect/reclamations',
     ],
 ];
