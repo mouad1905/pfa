@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaAndroid, FaSignInAlt } from "react-icons/fa";
 
 
-import { API_URLS } from "../api/api";
+import { API_URLS } from "../../api/api";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");

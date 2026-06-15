@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { API_URLS, fetchData } from "../api/api";
+import { API_URLS, fetchData } from "../../api/api";
 import { FaUser, FaPhone, FaGraduationCap, FaSave, FaTimes, FaCog } from "react-icons/fa";
 
 export default function Settings() {

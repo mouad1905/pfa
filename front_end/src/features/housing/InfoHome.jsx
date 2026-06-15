@@ -1,17 +1,15 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import { fetchData, API_URLS } from "../api/api";
+import { fetchData, API_URLS } from "../../api/api";
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
-  FaWifi,
   FaCouch,
-  FaGraduationCap,
-  FaMoon,
   FaCheck,
   FaCommentAlt,
-  FaFlag
+  FaFlag,
+  FaUsers
 } from "react-icons/fa";
 
 // Geolocation mapper to retrieve realistic coordinates for Moroccan cities/neighborhoods
@@ -42,36 +40,55 @@ const getCoordinates = (locationText) => {
   return [33.9980, -6.8521];
 };
 
-const mapApiToHome = (item) => ({
-  id: item.id_hebergement,
-  title: item.titre || `${item.type} - ${item.localisation}`,
-  price: `${item.prix} MAD`,
-  priceNum: parseFloat(item.prix),
-  location: item.localisation,
-  rooms: item.nbr_chambres,
-  area: item.superficie,
-  type: item.type,
-  roomType: item.type_chambre || "Chambre",
-  gender: item.genre_colocataires || "mixte",
-  rules: item.reglement || "",
-  image: item.image,
-  images: item.images?.length ? item.images : item.image ? [item.image] : [],
-  description: item.description,
-  poster:
-    `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() ||
-    "Propriétaire",
-});
+const mapApiToHome = (item) => {
+  let parsed = { rules: [], amenities: [], furniture: "Fully Furnished", occupancy: 1, maxCapacity: parseInt(item.nbr_chambres) || 1 };
+  if (item.reglement) {
+    try {
+      const data = JSON.parse(item.reglement);
+      if (data && typeof data === "object" && (data.rules || data.amenities)) {
+        parsed = { ...parsed, ...data };
+      } else {
+        parsed.rules = item.reglement.split(",").map((r) => r.trim()).filter(Boolean);
+      }
+    } catch {
+      parsed.rules = item.reglement.split(",").map((r) => r.trim()).filter(Boolean);
+    }
+  }
+  return {
+    id: item.id_hebergement,
+    title: item.titre || `${item.type} - ${item.localisation}`,
+    price: `${item.prix} MAD`,
+    priceNum: parseFloat(item.prix),
+    location: item.localisation,
+    rooms: item.nbr_chambres,
+    area: item.superficie,
+    type: item.type,
+    roomType: item.type_chambre || "Chambre",
+    gender: item.genre_colocataires || "mixte",
+    rules: parsed.rules,
+    amenities: parsed.amenities,
+    furniture: parsed.furniture,
+    occupancy: parsed.occupancy,
+    maxCapacity: parsed.maxCapacity,
+    image: item.image,
+    images: item.images?.length ? item.images : item.image ? [item.image] : [],
+    description: item.description,
+    poster:
+      `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() ||
+      "Propriétaire",
+  };
+};
 
 function HomeDetails() {
   const { state: stateHome } = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [home, setHome] = useState(stateHome || null);
+  const [home, setHome] = useState(stateHome ? mapApiToHome(stateHome) : null);
   const [loading, setLoading] = useState(!stateHome && !!id);
 
   useEffect(() => {
     if (stateHome) {
-      setHome(stateHome);
+      setHome(mapApiToHome(stateHome));
       return;
     }
     if (!id) return;
@@ -211,9 +228,9 @@ function HomeDetails() {
     .slice(0, 2)
     .toUpperCase();
 
-  const maxCapacity = parseInt(home.rooms) || 4;
-  const spotsLeft = Math.max(1, Math.min(2, maxCapacity - 1));
-  const progressPercent = (spotsLeft / maxCapacity) * 100;
+  const maxCapacity = home.maxCapacity || parseInt(home.rooms) || 4;
+  const spotsLeft = Math.max(0, maxCapacity - (home.occupancy || 1));
+  const progressPercent = Math.min(100, (spotsLeft / maxCapacity) * 100);
 
   // Alerts
   const handleRequestJoin = () => {
@@ -340,54 +357,34 @@ function HomeDetails() {
           {/* Highlights Bento Card */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-5 text-left">
-              PROPERTY HIGHLIGHTS
+              KEY AMENITIES INCLUDED
             </span>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 text-left">
-              {/* Highlight 1: Wifi */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                  <FaWifi className="w-6 h-6" />
+              {(home.amenities?.length > 0 ? home.amenities : ["WiFi", "Electricity", "Water"]).map((amenity, idx) => (
+                <div key={idx} className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+                    <FaCheck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">{amenity}</h4>
+                    <span className="text-xs text-slate-400 font-semibold block mt-0.5">Inclus</span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">High-speed Wifi</h4>
-                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">Member since 2022</span>
-                </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Highlight 2: Furnished */}
-              <div className="flex items-center gap-4">
+            {home.furniture && (
+              <div className="flex items-center gap-4 mb-6 text-left border-t border-slate-100 pt-4">
                 <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
                   <FaCouch className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Fully furnished</h4>
-                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">Member since 2022</span>
+                  <h4 className="font-bold text-slate-800 text-sm">{home.furniture}</h4>
+                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">Statut du meublement</span>
                 </div>
               </div>
-
-              {/* Highlight 3: Close to Univ */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                  <FaGraduationCap className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Close to University</h4>
-                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">Member since 2022</span>
-                </div>
-              </div>
-
-              {/* Highlight 4: Calm environment */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                  <FaMoon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">Calm Environment</h4>
-                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">Member since 2022</span>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Dynamic Description Area */}
             <p className="text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-5 mt-2 text-left">
@@ -417,18 +414,18 @@ function HomeDetails() {
             </div>
 
             {/* Dynamic House Rules Section */}
-            {home.rules && (
+            {home.rules?.length > 0 && (
               <div className="border-t border-slate-100 pt-5 mt-6 text-left">
                 <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-3">
                   HOUSE RULES & PREFERENCES
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {home.rules.split(",").map((rule, idx) => (
+                  {home.rules.map((rule, idx) => (
                     <span
                       key={idx}
                       className="bg-emerald-50 text-[#10b981] border border-emerald-100 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
                     >
-                      {rule.trim()}
+                      {rule}
                     </span>
                   ))}
                 </div>
@@ -475,51 +472,17 @@ function HomeDetails() {
               <div className="bg-[#10b981] h-full rounded-full transition-all duration-550" style={{ width: `${progressPercent}%` }} />
             </div>
 
-            {/* Current Roommates section */}
+            {/* Current Occupancy section */}
             <div className="text-left">
-              <h3 className="font-extrabold text-slate-800 text-sm mb-4">Current Roommates</h3>
+              <h3 className="font-extrabold text-slate-800 text-sm mb-4">Current Occupancy</h3>
               
-              <div className="space-y-4">
-                {/* Roommate 1 */}
-                <div className="flex items-center justify-between p-1">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80"
-                        alt="Ahmed"
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-850 text-sm leading-tight">Ahmed</h4>
-                      <div className="flex gap-1.5 mt-1">
-                        <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">FSR</span>
-                        <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">MALE</span>
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
+                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+                  <FaUsers className="w-6 h-6" />
                 </div>
-
-                {/* Roommate 2 */}
-                <div className="flex items-center justify-between p-1">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
-                        alt="Yassine"
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-850 text-sm leading-tight">Yassine</h4>
-                      <div className="flex gap-1.5 mt-1">
-                        <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">EMI</span>
-                        <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">MALE</span>
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm">{home.occupancy || 1} occupant{home.occupancy > 1 ? "s" : ""}</h4>
+                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">sur {maxCapacity} place{maxCapacity > 1 ? "s" : ""} disponibles</span>
                 </div>
               </div>
             </div>

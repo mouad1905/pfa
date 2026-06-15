@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_URLS, fetchData } from "../api/api";
+import { API_URLS, fetchData } from "../../api/api";
 import { FaArrowRight } from "react-icons/fa";
 import { useSearchParams, Link } from "react-router-dom";
 

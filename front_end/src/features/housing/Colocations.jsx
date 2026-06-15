@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { API_URLS, fetchData } from "../api/api";
-import { filters } from "../data/filtersData";
+import { API_URLS, fetchData } from "../../api/api";
+import { filters } from "../../data/filtersData";
 import {
   FaSearch,
   FaTimes,

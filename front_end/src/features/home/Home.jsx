@@ -9,7 +9,7 @@ import {
   FaBook,
   FaChartLine,
 } from "react-icons/fa";
-import bg from "../assets/hero-bg.png";
+import bg from "../../assets/images/hero-bg.png";
 
 const Counter = ({ target, duration = 2000, suffix = "" }) => {
   const [count, setCount] = useState(0);
@@ -359,7 +359,7 @@ const HomePage = () => {
         <div className="w-full lg:w-1/2 grid grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-2 sm:space-y-3">
             <img
-              src="/src/assets/students2.jpg"
+              src="/src/assets/images/students2.jpg"
               className="rounded-2xl sm:rounded-3xl w-full h-48 sm:h-64 md:h-80 object-cover"
               alt="Student"
             />
@@ -384,7 +384,7 @@ const HomePage = () => {
               </p>
             </div>
             <img
-              src="/src/assets/students1.jpg"
+              src="/src/assets/images/students1.jpg"
               className="rounded-2xl sm:rounded-3xl w-full h-40 sm:h-56 md:h-80 object-cover"
               alt="Team"
             />

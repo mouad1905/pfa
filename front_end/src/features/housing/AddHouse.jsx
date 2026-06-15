@@ -401,17 +401,21 @@ export default function UniConnectListing() {
 
     setLoading(true);
 
-    const formattedRules = [];
-    if (rules.noSmoking) formattedRules.push("Non fumeur");
-    if (rules.quietHours) formattedRules.push("Heures calmes");
-    if (rules.studyFriendly) formattedRules.push("Idéal pour étudier");
-    if (rules.petsAllowed) formattedRules.push("Animaux acceptés");
-    if (customRules.trim()) formattedRules.push(customRules.trim());
+    const rulesList = [];
+    if (rules.noSmoking) rulesList.push("Non fumeur");
+    if (rules.quietHours) rulesList.push("Heures calmes");
+    if (rules.studyFriendly) rulesList.push("Idéal pour étudier");
+    if (rules.petsAllowed) rulesList.push("Animaux acceptés");
+    if (customRules.trim()) rulesList.push(customRules.trim());
 
-    const activeAmenities = amenitiesList.filter((a) => a.active).map((a) => `${a.label} inclus`);
-    if (activeAmenities.length > 0) {
-      formattedRules.push(activeAmenities.join(" & "));
-    }
+    const activeAmenities = amenitiesList.filter((a) => a.active).map((a) => a.label);
+
+    const reglementData = {
+      rules: rulesList,
+      amenities: activeAmenities,
+      furniture: furnitureStatus,
+      occupancy: Number(occupancy),
+    };
 
     const formData = new FormData();
     formData.append("titre", title);
@@ -422,10 +426,10 @@ export default function UniConnectListing() {
     formData.append("type_chambre", roomType);
     formData.append("nbr_chambres", String(parseInt(capacity, 10) || 1));
     formData.append("superficie", String(parseFloat(area) || 0));
-    formData.append("nb_locataires", String(parseInt(capacity, 10) || 1));
+    formData.append("nb_locataires", String(Number(occupancy) || 1));
     formData.append("genre_colocataires", gender === "all" ? "mixte" : gender);
-    formData.append("reglement", formattedRules.join(", "));
-    formData.append("meuble", studentsOnly ? "1" : "0");
+    formData.append("reglement", JSON.stringify(reglementData));
+    formData.append("meuble", furnitureStatus === "Fully Furnished" ? "1" : "0");
 
     let files = [];
     const httpUrls = [];
