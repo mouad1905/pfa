@@ -21,6 +21,7 @@ class RegisterRequest extends FormRequest
             'password' => 'required|min:6',
             'role' => 'required|in:etudiant,professeur,proprietaire,locateur',
             'niveau_etude' => 'nullable|string|max:100',
+            'telephone' => 'nullable|string|max:20',
         ];
     }
 }

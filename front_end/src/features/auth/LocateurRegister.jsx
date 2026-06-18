@@ -270,6 +270,7 @@ const CreateAccountLocateur = () => {
       formData.append("email", step1.email);
       formData.append("password", step1.password);
       formData.append("role", "proprietaire"); // Backend might expect proprietaire
+      if (step1.phone) formData.append("telephone", step1.phone);
       formData.append("cin", step2.idNumber);
       
       if (step2.photo) formData.append("photo_profil", step2.photo);

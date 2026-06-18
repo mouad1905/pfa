@@ -24,6 +24,7 @@ class AuthController extends Controller
                 'prenom'       => $request->prenom,
                 'cin'          => $request->cin,
                 'email'        => $request->email,
+                'telephone'    => $request->telephone,
                 'mot_de_passe' => Hash::make($request->password),
                 'role'         => $request->role,
                 'niveau_etude' => $request->niveau_etude,
