@@ -18,12 +18,14 @@ import AdminRoute from "./AdminRoute";
 import AdminLayout from "../components/layout/AdminLayout";
 import AdminDashboard from "../features/admin/AdminDashboard";
 import ManageHomes from "../features/admin/ManageHomes";
+import AdminHomeDetail from "../features/admin/AdminHomeDetail";
 import ManageRevisions from "../features/admin/ManageRevisions";
 import ManageUsers from "../features/admin/ManageUsers";
 import ManageSignales from "../features/admin/ManageSignales";
 import AddHouse from "../features/housing/AddHouse";
 import Dashboard from "../features/dashboard/Dashboard";
 import Security from "../features/profile/Security";
+import ScrollToTop from "../components/layout/ScrollToTop";
 
 function PublicLayout() {
   return (
@@ -39,11 +41,14 @@ function PublicLayout() {
 
 export default function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/admin" element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="manage-homes" element={<ManageHomes />} />
+          <Route path="manage-homes/:id" element={<AdminHomeDetail />} />
           <Route path="manage-revisions" element={<ManageRevisions />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="manage-signales" element={<ManageSignales />} />
@@ -69,5 +74,6 @@ export default function AppRoutes() {
         <Route path="/addHouse" element={<AddHouse />} />
       </Route>
     </Routes>
+    </>
   );
 }

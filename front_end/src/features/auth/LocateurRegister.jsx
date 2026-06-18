@@ -253,7 +253,34 @@ const CreateAccountLocateur = () => {
     <StepIdentityVerification data={step2} setData={setStep2} />,
   ];
 
+  const validateStep = (step) => {
+    const missing = [];
+    if (step === 1) {
+      if (!step1.firstName.trim()) missing.push("First Name");
+      if (!step1.lastName.trim()) missing.push("Last Name");
+      if (!step1.email.trim()) missing.push("Email");
+      if (!step1.phone.trim()) missing.push("Phone Number");
+      if (!step1.dob) missing.push("Date of Birth");
+      if (!step1.password) missing.push("Password");
+      if (!step1.confirm) missing.push("Confirm Password");
+      if (step1.password !== step1.confirm) { setError("Passwords do not match"); return false; }
+      if (!step1.terms) missing.push("Terms agreement");
+    } else if (step === 2) {
+      if (!step2.idType) missing.push("ID Type");
+      if (!step2.idNumber.trim()) missing.push("ID Number");
+      if (!step2.photo) missing.push("Profile Photo");
+      if (!step2.idFile) missing.push("ID Document");
+    }
+    if (missing.length > 0) {
+      setError(`Required fields: ${missing.join(", ")}`);
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
   const handleRegister = async () => {
+    if (!validateStep(2)) return;
     if (step1.password !== step1.confirm) {
       setError("Passwords do not match");
       return;
@@ -268,8 +295,10 @@ const CreateAccountLocateur = () => {
       formData.append("nom", step1.lastName);
       formData.append("prenom", step1.firstName);
       formData.append("email", step1.email);
+      formData.append("telephone", step1.phone);
+      formData.append("date_naissance", step1.dob);
       formData.append("password", step1.password);
-      formData.append("role", "proprietaire"); // Backend might expect proprietaire
+      formData.append("role", "locateur");
       formData.append("cin", step2.idNumber);
       
       if (step2.photo) formData.append("photo_profil", step2.photo);
@@ -277,9 +306,7 @@ const CreateAccountLocateur = () => {
 
       const response = await fetch(API_URLS.REGISTER, {
         method: "POST",
-        headers: {
-          "Accept": "application/json",
-        },
+        headers: { "Accept": "application/json" },
         body: formData,
       });
 
@@ -288,11 +315,15 @@ const CreateAccountLocateur = () => {
       if (response.ok) {
         navigate("/login");
       } else {
-        setError(data.error || data.message || "Registration failed");
+        if (data.errors) {
+          const messages = Object.values(data.errors).flat();
+          setError(messages.join("\n"));
+        } else {
+          setError(data.message || data.error || "Registration failed");
+        }
       }
     } catch (err) {
-      console.error("Error during registration:", err);
-      setError("An error occurred during registration.");
+      setError(err.message || "An error occurred during registration.");
     }
   };
 
@@ -356,7 +387,7 @@ const CreateAccountLocateur = () => {
               </h3>
             </header>
             {error && (
-              <div className="bg-red-100 text-red-600 p-3 rounded text-sm mb-4">
+              <div className="bg-red-100 text-red-600 p-3 rounded text-sm mb-4 whitespace-pre-line">
                 {error}
               </div>
             )}
@@ -371,15 +402,16 @@ const CreateAccountLocateur = () => {
           <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center">
             <button
               disabled={currentStep === 1}
-              onClick={() => setCurrentStep(currentStep - 1)}
+              onClick={() => { setError(""); setCurrentStep(currentStep - 1); }}
               className="bg-[#1ab69d] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#169a85] transition-all shadow-lg shadow-[#1ab69d]/20 active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-0"
             >
               <FaChevronLeft /> Back
             </button>
             <button
               onClick={() => {
+                setError("");
                 if (currentStep < stepTitles.length) {
-                  setCurrentStep(currentStep + 1);
+                  if (validateStep(currentStep)) setCurrentStep(currentStep + 1);
                 } else {
                   handleRegister();
                 }

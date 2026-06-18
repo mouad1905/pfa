@@ -28,6 +28,7 @@ class UtilisateurResource extends JsonResource
             'document_identite' => $this->document_identite,
             'certificat'        => $this->certificat,
             'carte_etudiant'    => $this->carte_etudiant,
+            'about'             => $this->about,
             
             // Evaluations relations and aggregates
             'avg_rating'        => isset($this->avg_rating) ? $this->avg_rating : (round($this->evaluationsRecues()->avg('note'), 1) ?: 0.0),

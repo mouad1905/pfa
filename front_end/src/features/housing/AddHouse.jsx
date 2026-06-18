@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URLS, fetchFormData } from "../../api/api";
 import { compressImageFiles } from "../../utils/compressImage";
@@ -63,27 +63,7 @@ const PRESET_IMAGES = [
   },
 ];
 
-const geocodeLocation = (city, neighborhood) => {
-  const query = `${city} ${neighborhood}`.toLowerCase();
-  // Standard Rabat locations
-  if (query.includes("agdal")) return [33.9980, -6.8521];
-  if (query.includes("hay riad") || query.includes("riad")) return [33.9667, -6.8778];
-  if (query.includes("ocean") || query.includes("océan")) return [34.0250, -6.8450];
-  if (query.includes("souissi")) return [33.9780, -6.8290];
-  if (query.includes("takaddoum")) return [33.9910, -6.8120];
-  if (query.includes("qamra") || query.includes("kamra")) return [34.0040, -6.8590];
-  if (query.includes("rabat")) return [34.020882, -6.841650];
-  // Casablanca locations
-  if (query.includes("casablanca") || query.includes("casa")) {
-    if (query.includes("maarif") || query.includes("maârif")) return [33.5833, -7.6333];
-    if (query.includes("gauthier")) return [33.5900, -7.6250];
-    if (query.includes("sidi maarouf") || query.includes("sidi maârouf")) return [33.5290, -7.6410];
-    return [33.5731, -7.5898];
-  }
-  // Marrakech
-  if (query.includes("marrakech") || query.includes("kech")) return [31.6295, -7.9811];
-  return [33.9980, -6.8521]; // Default to Rabat Agdal
-};
+
 
 export default function UniConnectListing() {
   const navigate = useNavigate();
@@ -112,97 +92,13 @@ export default function UniConnectListing() {
   ]);
   const [newAmenityText, setNewAmenityText] = useState("");
 
-  const [mapCoords, setMapCoords] = useState({ lat: 33.9980, lng: -6.8521 });
-
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null);
-
-  // Initialize interactive Leaflet map in Step 1
-  useEffect(() => {
-    if (step !== 1 || !window.L || !mapContainerRef.current) return;
-
-    // Clean up existing map instance
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-      markerRef.current = null;
-    }
-
-    try {
-      const initialCoords = [mapCoords.lat, mapCoords.lng];
-
-      mapInstanceRef.current = window.L.map(mapContainerRef.current, {
-        center: initialCoords,
-        zoom: 14,
-        zoomControl: false,
-        attributionControl: false
-      });
-
-      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        maxZoom: 20
-      }).addTo(mapInstanceRef.current);
-
-      window.L.control.zoom({ position: "bottomright" }).addTo(mapInstanceRef.current);
-
-      const emeraldIcon = window.L.divIcon({
-        className: "custom-leaflet-marker",
-        html: `<div class="relative flex items-center justify-center">
-          <div class="absolute w-8 h-8 rounded-full bg-emerald-500/30 animate-ping"></div>
-          <div class="relative w-5 h-5 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center shadow-lg">
-            <div class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
-          </div>
-        </div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-
-      markerRef.current = window.L.marker(initialCoords, { icon: emeraldIcon, draggable: true }).addTo(mapInstanceRef.current);
-
-      // Handle drag end on marker to capture coordinates
-      markerRef.current.on("dragend", () => {
-        if (!markerRef.current) return;
-        const position = markerRef.current.getLatLng();
-        setMapCoords({ lat: parseFloat(position.lat.toFixed(5)), lng: parseFloat(position.lng.toFixed(5)) });
-      });
-
-      // Handle click on map to reposition marker
-      mapInstanceRef.current.on("click", (e) => {
-        if (!markerRef.current) return;
-        const coords = e.latlng;
-        markerRef.current.setLatLng(coords);
-        setMapCoords({ lat: parseFloat(coords.lat.toFixed(5)), lng: parseFloat(coords.lng.toFixed(5)) });
-      });
-    } catch (err) {
-      console.error("Error initializing Leaflet map in addHouse:", err);
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        markerRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
-
-  // Sync map center if user changes location inputs
-  useEffect(() => {
-    if (step !== 1 || !mapInstanceRef.current || !markerRef.current) return;
-    const newCoords = geocodeLocation(location, neighborhood);
-    mapInstanceRef.current.setView(newCoords, 14);
-    markerRef.current.setLatLng(newCoords);
-    setMapCoords({ lat: newCoords[0], lng: newCoords[1] });
-  }, [location, neighborhood, step]);
-
   // Step 2: Capacity state
   const [capacity, setCapacity] = useState(3); // Total Rooms
   const [spots, setSpots] = useState(4); // Max Student Capacity
   const [roomType, setRoomType] = useState("Shared Room");
   const [occupancy, setOccupancy] = useState(1); // Current occupancy slider
   const [furnitureStatus, setFurnitureStatus] = useState("Fully Furnished");
-  const [area, _setArea] = useState(50);
+  const [area, setArea] = useState(50);
 
   // Step 3: House Rules state
   const [rules, setRules] = useState({
@@ -306,7 +202,7 @@ export default function UniConnectListing() {
   };
 
   // Local File Upload Handlers
-  const MAX_GALLERY_IMAGES = 8;
+  const MAX_GALLERY_IMAGES = 6;
 
   const addFilesToGallery = async (files) => {
     const remaining = MAX_GALLERY_IMAGES - selectedImages.length;
@@ -316,20 +212,38 @@ export default function UniConnectListing() {
     }
 
     const toAdd = files.slice(0, remaining);
+    const validFiles = [];
+    for (const f of toAdd) {
+      if (!f.type.startsWith("image/")) {
+        Swal.fire("Format non supporté", `${f.name} n'est pas une image valide. Utilisez JPG, PNG ou WEBP.`, "error");
+        continue;
+      }
+      validFiles.push(f);
+    }
+    if (validFiles.length === 0) return;
+
     let compressed;
     try {
-      compressed = await compressImageFiles(toAdd, remaining);
+      compressed = await compressImageFiles(validFiles, remaining);
     } catch {
-      compressed = toAdd;
+      compressed = validFiles;
     }
 
     const mapUpdate = { ...imageFileMap };
     const newUrls = [];
-    compressed.forEach((file) => {
-      const url = URL.createObjectURL(file);
-      mapUpdate[url] = file;
-      newUrls.push(url);
-    });
+    let hasError = false;
+    for (const file of compressed) {
+      try {
+        const url = URL.createObjectURL(file);
+        mapUpdate[url] = file;
+        newUrls.push(url);
+      } catch {
+        hasError = true;
+      }
+    }
+    if (hasError) {
+      Swal.fire("Erreur", "Certaines photos n'ont pas pu être chargées (format HEIC/iCloud). Essayez JPG ou PNG.", "warning");
+    }
     setImageFileMap(mapUpdate);
     setSelectedImages((prev) => [...prev, ...newUrls]);
 
@@ -379,8 +293,8 @@ export default function UniConnectListing() {
   };
 
   const removeSelectedImage = (url) => {
-    if (selectedImages.length === 1) {
-      return Swal.fire("Info", "Vous devez garder au moins une photo principale.", "info");
+    if (selectedImages.length <= 3) {
+      return Swal.fire("Info", "Vous devez garder au moins 3 photos.", "info");
     }
     const nextMap = { ...imageFileMap };
     delete nextMap[url];
@@ -389,8 +303,8 @@ export default function UniConnectListing() {
   };
 
   const handlePublish = async () => {
-    if (selectedImages.length === 0) {
-      return Swal.fire("Attention", "Veuillez sélectionner au moins une image pour votre hébergement.", "warning");
+    if (selectedImages.length < 3) {
+      return Swal.fire("Attention", "Veuillez sélectionner au moins 3 images pour votre hébergement.", "warning");
     }
 
     const token = localStorage.getItem("token");
@@ -413,8 +327,6 @@ export default function UniConnectListing() {
     const reglementData = {
       rules: rulesList,
       amenities: activeAmenities,
-      furniture: furnitureStatus,
-      occupancy: Number(occupancy),
     };
 
     const formData = new FormData();
@@ -428,6 +340,8 @@ export default function UniConnectListing() {
     formData.append("superficie", String(parseFloat(area) || 0));
     formData.append("nb_locataires", String(Number(occupancy) || 1));
     formData.append("genre_colocataires", gender === "all" ? "mixte" : gender);
+    formData.append("max_capacity", String(parseInt(spots, 10) || 1));
+    formData.append("students_only", studentsOnly ? "1" : "0");
     formData.append("reglement", JSON.stringify(reglementData));
     formData.append("meuble", furnitureStatus === "Fully Furnished" ? "1" : "0");
 
@@ -704,27 +618,18 @@ export default function UniConnectListing() {
                         </div>
                       </div>
 
-                      {/* Interactive Map Illustration */}
+                      {/* Location Map */}
                       <div>
-                        <div className="flex justify-between items-center mb-1 font-poppins">
-                          <span className="text-[10px] text-slate-400 font-extrabold uppercase">Interactive Map (Drag pin or click to move):</span>
-                          <span className="text-[9px] text-[#10b981] font-black bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">
-                            Lat: {mapCoords.lat.toFixed(4)} | Lng: {mapCoords.lng.toFixed(4)}
-                          </span>
-                        </div>
-                        <div 
-                          className="bg-slate-100 border border-slate-200 rounded-xl h-44 overflow-hidden relative shadow-inner z-10 animate-in fade-in duration-300"
-                        >
-                          {/* Live Interactive Leaflet Map Container */}
-                          <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
-                          
-                          {/* Safe CDN loading fallback overlay */}
-                          {!window.L && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-2 z-10">
-                              <span className="w-2 h-2 rounded-full bg-[#10b981] animate-ping" />
-                              <span className="text-[10px] font-bold font-poppins">Chargement de la carte interactive...</span>
-                            </div>
-                          )}
+                        <span className="text-[10px] text-slate-400 font-extrabold uppercase mb-2 block">Location Map</span>
+                        <div className="bg-slate-100 border border-slate-200 rounded-xl h-44 overflow-hidden relative shadow-inner">
+                          <iframe
+                            title="Location preview"
+                            src={`https://maps.google.com/maps?q=${encodeURIComponent(location + " " + neighborhood)},+Morocco&output=embed&z=14`}
+                            className="absolute inset-0 w-full h-full border-0"
+                            loading="lazy"
+                            allowFullScreen
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
                         </div>
                       </div>
                     </div>
@@ -807,7 +712,7 @@ export default function UniConnectListing() {
                     {/* General Capacity */}
                     <div className="border-b border-slate-100 pb-6 mb-6">
                       <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-3">General Capacity</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                           <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">Total Rooms</label>
                           <div className="relative">
@@ -830,6 +735,19 @@ export default function UniConnectListing() {
                               value={spots}
                               onChange={(e) => setSpots(Math.max(1, parseInt(e.target.value) || 1))}
                               placeholder="e.g. 4"
+                              className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-3.5 pl-10 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 outline-none focus:border-[#10b981]"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">Surface (m²)</label>
+                          <div className="relative">
+                            <FaExpandArrowsAlt className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs shrink-0" />
+                            <input
+                              type="number"
+                              value={area}
+                              onChange={(e) => setArea(Math.max(1, parseFloat(e.target.value) || 0))}
+                              placeholder="e.g. 75"
                               className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-3.5 pl-10 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 outline-none focus:border-[#10b981]"
                             />
                           </div>
@@ -1087,7 +1005,7 @@ export default function UniConnectListing() {
                         className={`border-2 border-dashed rounded-3xl p-10 text-center flex flex-col items-center justify-center shadow-xs mb-6 transition-all duration-300
                           ${dragActive 
                             ? "bg-[#edfdf6] border-[#10b981] scale-[1.01]" 
-                            : "bg-white border-slate-200 bg-slate-50/20 hover:bg-slate-50/30"
+                            : "bg-white border-slate-200  hover:bg-slate-50/30"
                           }`}
                       >
                         <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-100/50">
@@ -1215,7 +1133,7 @@ export default function UniConnectListing() {
                         <span className="font-extrabold text-xs uppercase tracking-wider">Pro Tip:</span>
                       </div>
                       <span className="text-[10px] text-emerald-700/90 font-medium leading-relaxed block">
-                        Listings with at least 8 photos get 3x more inquiries. Ensure you include the kitchen and bathroom!
+                        Ajoutez entre 3 et 6 photos pour maximiser l'intérêt. Incluez la cuisine et la salle de bain !
                       </span>
                     </div>
                   </div>

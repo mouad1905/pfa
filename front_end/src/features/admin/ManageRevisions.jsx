@@ -9,8 +9,104 @@ import {
   FaTrashAlt, 
   FaClock, 
   FaGraduationCap,
-  FaFileAlt
+  FaFileAlt,
+  FaTimes,
+  FaDownload,
+  FaFilePdf,
+  FaFileImage,
+  FaExternalLinkAlt
 } from "react-icons/fa";
+
+const DocumentPreviewModal = ({ doc, course, onClose }) => {
+  if (!doc) return null;
+  const isPdf = doc.toLowerCase().endsWith(".pdf") || doc.includes("pdf");
+  const professorName = course?.professeur
+    ? `${course.professeur.prenom} ${course.professeur.nom}`
+    : "Professeur";
+  const downloadUrl = isPdf
+    ? doc.replace("/upload/", "/upload/fl_attachment/")
+    : doc.replace("/upload/", "/upload/fl_attachment/");
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backdropFilter: "blur(8px)", background: "rgba(0,0,0,0.6)" }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+              {isPdf ? <FaFilePdf size={20} /> : <FaFileImage size={20} />}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Document de vérification</h3>
+              <p className="text-xs text-slate-400 font-medium">{professorName}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={downloadUrl}
+              download
+              className="p-2.5 bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-xl transition cursor-pointer"
+              title="Télécharger"
+            >
+              <FaDownload size={14} />
+            </a>
+            <a
+              href={doc}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl transition cursor-pointer"
+              title="Ouvrir dans un nouvel onglet"
+            >
+              <FaExternalLinkAlt size={13} />
+            </a>
+            <button
+              onClick={onClose}
+              className="p-2.5 bg-red-50 hover:bg-red-100 text-red-400 rounded-xl transition cursor-pointer"
+            >
+              <FaTimes size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-auto p-6 bg-[#f8f9fa] flex items-center justify-center min-h-[400px]">
+          {isPdf ? (
+            <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-slate-200 bg-white">
+              <iframe
+                src={doc}
+                className="w-full h-full border-0"
+                title="Document PDF"
+              />
+            </div>
+          ) : (
+            <img
+              src={doc}
+              alt="Diplôme"
+              className="max-w-full max-h-[600px] rounded-2xl shadow-sm object-contain bg-white"
+            />
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-400">
+          <span className="font-medium">
+            {course?.description?.substring(0, 60) || "Document de vérification"}
+          </span>
+          <span className="font-semibold">
+            {isPdf ? "PDF" : "Image"} • {course?.created_at ? new Date(course.created_at).toLocaleDateString("fr-FR") : ""}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ManageRevisions = () => {
   const [courses, setCourses] = useState([]);
@@ -18,6 +114,7 @@ const ManageRevisions = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   const loadCourses = async () => {
     try {
@@ -162,6 +259,14 @@ const ManageRevisions = () => {
         </div>
       </div>
 
+      {previewDoc && (
+        <DocumentPreviewModal
+          doc={previewDoc.url}
+          course={previewDoc.course}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
+
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
           <FaSpinner className="animate-spin text-teal-600 text-4xl mb-4" />
@@ -187,6 +292,7 @@ const ManageRevisions = () => {
                   <th className="p-4 font-bold text-slate-600 text-sm">Matière</th>
                   <th className="p-4 font-bold text-slate-600 text-sm">Prix / Format</th>
                   <th className="p-4 font-bold text-slate-600 text-sm">Niveau</th>
+                  <th className="p-4 font-bold text-slate-600 text-sm">Diplôme</th>
                   <th className="p-4 font-bold text-slate-600 text-sm">Statut</th>
                   <th className="p-4 font-bold text-slate-600 text-sm text-center">Actions</th>
                 </tr>
@@ -194,7 +300,7 @@ const ManageRevisions = () => {
               <tbody className="divide-y divide-slate-100">
                 {filteredCourses.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-gray-500">
+                    <td colSpan="7" className="p-8 text-center text-gray-500">
                       Aucun cours de soutien trouvé pour ce filtre.
                     </td>
                   </tr>
@@ -233,8 +339,25 @@ const ManageRevisions = () => {
                       </td>
                       <td className="p-4">
                         <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold">
-                          {c.niveau || "Tous niveaux"}
+                          {c.niveau_etude || "Tous niveaux"}
                         </span>
+                      </td>
+                      <td className="p-4">
+                        {c.diplome_verification ? (
+                          <button
+                            onClick={() => setPreviewDoc({ url: c.diplome_verification, course: c })}
+                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm hover:shadow"
+                            title="Prévisualiser le diplôme"
+                          >
+                            <FaFileAlt size={13} />
+                            <span>Diplôme</span>
+                            <span className="text-[10px] opacity-60 ml-0.5">
+                              {c.diplome_verification.toLowerCase().endsWith(".pdf") ? "PDF" : "IMG"}
+                            </span>
+                          </button>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium">—</span>
+                        )}
                       </td>
                       <td className="p-4">{getStatusBadge(c.statut)}</td>
                       <td className="p-4">

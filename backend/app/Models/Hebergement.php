@@ -22,10 +22,12 @@ class Hebergement extends Model
         'type',
         'type_chambre',
         'nbr_chambres',
+        'max_capacity',
         'meuble',
         'superficie',
         'nb_locataires',
         'genre_colocataires',
+        'students_only',
         'localisation',
         'description',
         'reglement',
@@ -41,6 +43,7 @@ class Hebergement extends Model
         'prix'           => 'decimal:2',
         'meuble'         => 'boolean',
         'actif'          => 'boolean',
+        'students_only'  => 'boolean',
         'images_galerie' => 'array',
     ];
 

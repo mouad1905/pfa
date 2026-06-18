@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_URLS, fetchData } from "../../api/api";
+import { API_URLS, fetchFormData } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
@@ -39,6 +39,7 @@ export default function DevenirPartenaire() {
   const [rate, setRate] = useState("");
   const [niveau, setNiveau] = useState("L1");
   const [description, setDescription] = useState("");
+  const [diplomeFile, setDiplomeFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -65,17 +66,16 @@ export default function DevenirPartenaire() {
     setError("");
 
     try {
-      const response = await fetchData(API_URLS.COURS, {
-        method: "POST",
-        body: JSON.stringify({
-          matiere: selectedSubject,
-          prix: rate,
-          type_prix: "DH/h",
-          niveau_etude: niveau,
-          description: description,
-          mode_enseignement: mode,
-        }),
-      });
+      const formData = new FormData();
+      formData.append("matiere", selectedSubject);
+      formData.append("prix", rate);
+      formData.append("type_prix", "DH/h");
+      formData.append("niveau_etude", niveau);
+      formData.append("description", description);
+      formData.append("mode_enseignement", mode);
+      if (diplomeFile) formData.append("diplome_verification", diplomeFile);
+
+      await fetchFormData(API_URLS.COURS, formData);
 
       Swal.fire({
         title: "Cours soumis !",
@@ -202,6 +202,32 @@ export default function DevenirPartenaire() {
                     placeholder="Décrivez votre méthodologie, les sujets abordés, etc."
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-emerald-500 transition resize-none"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Diplôme de vérification</label>
+                  <p className="text-xs text-slate-500 mb-3">Téléchargez un justificatif (diplôme, certificat) prouvant votre capacité à enseigner cette matière.</p>
+                  <label className="flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-xl cursor-pointer transition bg-slate-50 hover:bg-emerald-50/30">
+                    <span className="text-2xl">🎓</span>
+                    <div>
+                      {diplomeFile ? (
+                        <span className="text-sm font-semibold text-emerald-600">{diplomeFile.name}</span>
+                      ) : (
+                        <>
+                          <span className="text-sm font-semibold text-slate-600">Cliquez pour ajouter votre diplôme</span>
+                          <span className="text-xs text-slate-400 block mt-0.5">PDF, JPG ou PNG — max 10 Mo</span>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files[0];
+                        if (f) setDiplomeFile(f);
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
             </BentoCard>

@@ -100,42 +100,26 @@ export default function LocateurDashboard({ user }) {
         createdAt: r.created_at,
       }));
 
-      let msgList = resList.map((r) => ({
-        id: `msg-${r.id}`,
-        name: r.etudiant
-          ? `${r.etudiant.prenom || ""} ${r.etudiant.nom || ""}`.trim() || "Étudiant"
-          : "Étudiant",
-        time: formatTime(r.createdAt),
-        listing: r.listingTitle,
-        preview:
-          r.statut === "en_attente"
-            ? `Demande de colocation — entrée ${r.dateDebut || "à définir"}`
-            : `Mise à jour de la candidature (${r.statut})`,
-        avatar: `https://i.pravatar.cc/150?u=${r.etudiant?.id_user || r.id}`,
-        unread: r.statut === "en_attente",
-      }));
-
-      if (msgList.length === 0) {
-        msgList.push(
-          {
-            id: "demo-1",
-            name: "Amine B.",
-            time: "14:20",
-            listing: "Colocation Rabat Agdal",
-            preview: "Est-ce que la chambre est disponible dès septembre ?",
-            avatar: "https://i.pravatar.cc/150?u=amine",
-            unread: true,
-          },
-          {
-            id: "demo-2",
-            name: "Leila M.",
-            time: "Hier",
-            listing: "Studio Casablanca",
-            preview: "Bonjour, j'aimerais planifier une visite virtuelle...",
-            avatar: "https://i.pravatar.cc/150?u=leila",
-            unread: true,
-          }
-        );
+      let msgList = [];
+      try {
+        const msgRes = await fetchData(API_URLS.MESSAGES_INBOX);
+        const msgs = Array.isArray(msgRes) ? msgRes : msgRes.data || [];
+        msgList = msgs.map((m) => ({
+          id: `msg-${m.id_message}`,
+          name: m.expediteur
+            ? `${m.expediteur.prenom || ""} ${m.expediteur.nom || ""}`.trim() || "Étudiant"
+            : "Étudiant",
+          time: formatTime(m.created_at),
+          listing: m.hebergement?.titre || m.sujet || "Logement",
+          preview: m.contenu,
+          avatar: `https://i.pravatar.cc/150?u=${m.expediteur?.id_user || m.id_message}`,
+          unread: m.statut === "envoye",
+          expediteurId: m.expediteur?.id_user,
+          messageId: m.id_message,
+          hebergementId: m.id_hebergement,
+        }));
+      } catch {
+        // Fallback to empty messages
       }
 
       const activeCount = hebList.filter((a) => a.active && a.statut === "valide").length;
@@ -418,12 +402,52 @@ export default function LocateurDashboard({ user }) {
                       <p className="text-xs text-[#3c4a42] mt-1 line-clamp-2">{msg.preview}</p>
                     </div>
                   </div>
-                  <div className="flex justify-end mt-2">
+                    <div className="flex justify-end mt-2">
                     <button
                       type="button"
-                      onClick={() =>
-                        Swal.fire("Messagerie", "La messagerie intégrée arrive bientôt.", "info")
-                      }
+                      onClick={() => {
+                        Swal.fire({
+                          title: `Répondre à ${msg.name}`,
+                          input: "textarea",
+                          inputPlaceholder: "Écrivez votre réponse...",
+                          inputAttributes: { rows: 4 },
+                          showCancelButton: true,
+                          confirmButtonText: "Envoyer",
+                          cancelButtonText: "Annuler",
+                          confirmButtonColor: "#006c49",
+                          preConfirm: (reply) => {
+                            if (!reply || !reply.trim()) {
+                              Swal.showValidationMessage("Veuillez écrire un message.");
+                              return false;
+                            }
+                            return reply.trim();
+                          },
+                        }).then(async (result) => {
+                          if (!result.isConfirmed || !result.value) return;
+                          try {
+                            const res = await fetch("http://127.0.0.1:8000/api/messages", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                              },
+                              body: JSON.stringify({
+                                id_destinataire: msg.expediteurId,
+                                id_hebergement: msg.hebergementId,
+                                sujet: `Re: ${msg.listing}`,
+                                contenu: result.value,
+                              }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.error || "Erreur");
+                            Swal.fire("Envoyé", "Votre réponse a été envoyée.", "success");
+                            loadData();
+                          } catch (err) {
+                            Swal.fire("Erreur", err.message, "error");
+                          }
+                        });
+                      }}
                       className="text-[#006c49] text-sm font-medium border border-[#006c49] px-4 py-1 rounded-lg hover:bg-[#006c49]/10 transition-colors cursor-pointer bg-white"
                     >
                       Répondre

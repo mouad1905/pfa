@@ -32,6 +32,7 @@ class Utilisateur extends Authenticatable // <--- DOIT ÉTENDRE Authenticatable
         'document_identite',
         'certificat',
         'carte_etudiant',
+        'about',
     ];
 
     protected $hidden = [

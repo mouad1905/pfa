@@ -160,10 +160,10 @@ function ReportModal({ onClose, user, isOwnProfile }) {
             <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 mb-4">
               <img
                 className="w-9 h-9 rounded-full object-cover"
-                src={`https://i.pravatar.cc/150?u=${user?.id_user}`}
+                src={user?.photo_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.prenom||'U')+' '+(user?.nom||''))}&background=10b981&color=fff&size=36&bold=true`}
                 alt="user"
                 onError={(e) => {
-                  e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.prenom||'U')+' '+(user?.nom||''))}&background=10b981&color=fff&size=36&bold=true`;
                 }}
               />
               <div>
@@ -386,7 +386,7 @@ export default function StudentProfile() {
     {
       id_evaluation: 1,
       id_auteur: 101,
-      auteur: { prenom: "Sanford", nom: "Mante" },
+      auteur: { prenom: "Sanford", nom: "Mante", photo_profil: null },
       date_evaluation: "2026-05-17T12:00:00.000Z",
       note: 4,
       commentaire: "Le Prosseur de 3amal bien bien"
@@ -394,7 +394,7 @@ export default function StudentProfile() {
     {
       id_evaluation: 2,
       id_auteur: 102,
-      auteur: { prenom: "Étudiant", nom: "" },
+      auteur: { prenom: "Étudiant", nom: "", photo_profil: null },
       date_evaluation: "2026-05-17T12:00:00.000Z",
       note: 2,
       commentaire: "b7alou b7al z3ra 0 f ta3lim"
@@ -402,7 +402,7 @@ export default function StudentProfile() {
     {
       id_evaluation: 3,
       id_auteur: 103,
-      auteur: { prenom: "Krystal", nom: "White" },
+      auteur: { prenom: "Krystal", nom: "White", photo_profil: null },
       date_evaluation: "2026-05-19T12:00:00.000Z",
       note: 3,
       commentaire: "Explications complexes ❓ Rythme rapide ⚡ Peu disponible ⏳ Sévère mais juste ⚖️"
@@ -431,10 +431,10 @@ export default function StudentProfile() {
             <div className="relative mb-6">
               <img
                 className={`w-40 h-40 rounded-full border-4 shadow-md object-cover ${theme.avatarBorder}`}
-                src={user.photo_profil || `https://i.pravatar.cc/150?u=${user.id_user}`}
+                src={user.photo_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent((user.prenom||'U')+' '+(user.nom||''))}&background=10b981&color=fff&size=160&bold=true`}
                 alt="user"
                 onError={(e) => {
-                  e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent((user.prenom||'U')+' '+(user.nom||''))}&background=10b981&color=fff&size=160&bold=true`;
                 }}
               />
               <span className={`absolute bottom-2 right-2 text-xl bg-white rounded-full p-0.5 shadow-sm ${theme.profileBadgeColor}`}>
@@ -531,6 +531,32 @@ export default function StudentProfile() {
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* ABOUT / DESCRIPTION */}
+          <section className="md:col-span-12 bg-white rounded-3xl shadow-sm p-8 border border-[#f1f3f6]">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <FaUserCircle size={20} />
+              </div>
+              <div>
+                <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#6f7c8f]">
+                  À propos de moi
+                </h2>
+              </div>
+            </div>
+            <p className="text-sm text-[#2c3e50] leading-relaxed font-medium">
+              {user.about || theme.about || "Aucune description fournie."}
+            </p>
+
+            {/* Interests / Tags */}
+            <div className="flex flex-wrap gap-2 mt-5">
+              {theme.interests?.map((interest, idx) => (
+                <span key={idx} className={`px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${theme.interestsBg}`}>
+                  {interest}
+                </span>
+              ))}
             </div>
           </section>
 
@@ -646,10 +672,10 @@ export default function StudentProfile() {
                             <div className="flex items-center gap-3">
                               <img
                                 className="w-10 h-10 rounded-full object-cover shadow-sm"
-                                src={`https://i.pravatar.cc/150?u=${evalItem.id_auteur}`}
+                                src={evalItem.auteur?.photo_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent(((evalItem.auteur?.prenom||'É')+' '+(evalItem.auteur?.nom||'')))}&background=10b981&color=fff&size=40&bold=true`}
                                 alt="auteur"
                                 onError={(e) => {
-                                  e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
+                                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(((evalItem.auteur?.prenom||'É')+' '+(evalItem.auteur?.nom||'')))}&background=10b981&color=fff&size=40&bold=true`;
                                 }}
                               />
                               <div>

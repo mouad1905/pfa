@@ -28,6 +28,7 @@ class StoreCoursRequest extends FormRequest
             'niveau_etude' => 'required|string|max:100',
             'description' => 'nullable|string',
             'mode_enseignement' => 'required|in:en_ligne,presentiel',
+            'diplome_verification' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ];
     }
 }

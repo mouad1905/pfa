@@ -169,6 +169,15 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Obtenir un hébergement spécifique (Admin moderation detail)
+     */
+    public function getHebergement($id)
+    {
+        $hebergement = Hebergement::with('proprietaire')->findOrFail($id);
+        return new HebergementResource($hebergement);
+    }
+
+    /**
      * Supprimer un hébergement (Admin)
      */
     public function deleteHebergement($id)

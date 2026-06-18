@@ -1,15 +1,17 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import API_BASE, { fetchData, API_URLS } from "../../api/api";
+import API_BASE_URL, { fetchData } from "../../api/api";
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
   FaCouch,
   FaCheck,
-  FaCommentAlt,
-  FaFlag,
+  FaSpinner,
+  FaTrashAlt,
+  FaBan,
   FaUsers,
+  FaHome,
   FaClock
 } from "react-icons/fa";
 
@@ -46,6 +48,7 @@ const mapApiToHome = (item) => {
     amenities: parsed.amenities,
     furniture: furnitureLabel,
     occupancy: item.nb_locataires || 0,
+    statut: item.statut,
     image: item.image,
     images: item.images?.length ? item.images : item.image ? [item.image] : [],
     description: item.description || "",
@@ -56,55 +59,107 @@ const mapApiToHome = (item) => {
   };
 };
 
-function HomeDetails() {
-  const { state: stateHome } = useLocation();
+const AdminHomeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [home, setHome] = useState(stateHome ? mapApiToHome(stateHome) : null);
-  const [loading, setLoading] = useState(!stateHome && !!id);
+  const [home, setHome] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    if (stateHome) {
-      setHome(mapApiToHome(stateHome));
-      return;
-    }
-    if (!id) return;
     const load = async () => {
       setLoading(true);
       try {
-        const result = await fetchData(`${API_URLS.HEBERGEMENTS}/${id}`);
+        const result = await fetchData(`${API_BASE_URL}/admin/hebergements/${id}`);
         const item = result.data || result;
         setHome(mapApiToHome(item));
       } catch (err) {
         console.error(err);
         Swal.fire("Erreur", "Impossible de charger cette annonce.", "error");
-        navigate("/colocations");
+        navigate("/admin/manage-homes");
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [id, stateHome, navigate]);
+  }, [id, navigate]);
 
-  const googleMapsUrl = home?.location
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco&output=embed&z=15`
-    : "";
+  const refreshHome = async () => {
+    try {
+      const result = await fetchData(`${API_BASE_URL}/admin/hebergements/${id}`);
+      const item = result.data || result;
+      setHome(mapApiToHome(item));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 mt-20">
-        <div className="w-10 h-10 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const handleUpdateStatus = async (newStatus) => {
+    setActionLoading(true);
+    try {
+      await fetchData(`${API_BASE_URL}/admin/hebergements/${id}/statut`, {
+        method: "PUT",
+        body: JSON.stringify({ statut: newStatus })
+      });
+      setHome(prev => ({ ...prev, statut: newStatus }));
+      const label = newStatus === "valide" ? "approuvée" : "rejetée";
+      Swal.fire("Succès", `L'annonce a été ${label}.`, "success");
+    } catch (err) {
+      Swal.fire("Erreur", `Erreur de mise à jour: ${err.message}`, "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
-  if (!home) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 mt-20">
-        <p className="text-stone-400 text-sm tracking-wide">Logement non trouvé</p>
-      </div>
-    );
-  }
+  const handleDelete = async () => {
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: "Supprimer cet hébergement définitivement ? Cette action est irréversible.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer !",
+      cancelButtonText: "Annuler"
+    });
+    if (!result.isConfirmed) return;
+    setActionLoading(true);
+    try {
+      await fetchData(`${API_BASE_URL}/admin/hebergements/${id}`, {
+        method: "DELETE"
+      });
+      Swal.fire("Succès", "Hébergement supprimé avec succès.", "success");
+      navigate("/admin/manage-homes");
+    } catch (err) {
+      Swal.fire("Erreur", `Erreur de suppression: ${err.message}`, "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "valide":
+        return (
+          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold flex items-center gap-1 w-max">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Validé
+          </span>
+        );
+      case "rejete":
+        return (
+          <span className="px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-bold flex items-center gap-1 w-max">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Rejeté
+          </span>
+        );
+      case "en_attente":
+      default:
+        return (
+          <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold flex items-center gap-1 w-max animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> En attente
+          </span>
+        );
+    }
+  };
 
   const defaultImages = [
     "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
@@ -123,10 +178,29 @@ function HomeDetails() {
     displayImages.push(defaultImages[displayImages.length % defaultImages.length]);
   }
 
+  const googleMapsUrl = home?.location
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco&output=embed&z=15`
+    : "";
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <FaSpinner className="animate-spin text-teal-600 text-4xl mb-4" />
+        <p className="text-slate-500 font-medium">Chargement de l'annonce...</p>
+      </div>
+    );
+  }
+
+  if (!home) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <p className="text-slate-400">Annonce non trouvée</p>
+      </div>
+    );
+  }
+
   const maxCapacity = home.maxCapacity || 1;
   const currentOccupants = Math.min(home.occupancy || 0, maxCapacity);
-  const spotsLeft = Math.max(0, maxCapacity - currentOccupants);
-
   const posterInitials = (home.poster || "P")
     .split(" ")
     .map((w) => w[0])
@@ -134,84 +208,52 @@ function HomeDetails() {
     .slice(0, 2)
     .toUpperCase();
 
-  const openMessageDialog = (title, subjectPrefix) => {
-    const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
-    if (!loggedInUser) {
-      return Swal.fire("Connexion requise", "Connectez-vous pour envoyer un message.", "warning");
-    }
-    Swal.fire({
-      title: title,
-      input: "textarea",
-      inputPlaceholder: "Écrivez votre message ici...",
-      inputAttributes: { rows: 4 },
-      showCancelButton: true,
-      confirmButtonText: "Envoyer",
-      cancelButtonText: "Annuler",
-      confirmButtonColor: "#10b981",
-      preConfirm: (msg) => {
-        if (!msg || !msg.trim()) {
-          Swal.showValidationMessage("Veuillez écrire un message.");
-          return false;
-        }
-        return msg.trim();
-      },
-    }).then(async (result) => {
-      if (!result.isConfirmed || !result.value) return;
-      try {
-        const res = await fetch(`${API_BASE}/messages`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            id_destinataire: home.proprietaireId,
-            id_hebergement: home.id,
-            sujet: `${subjectPrefix} - ${home.title}`,
-            contenu: result.value,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi");
-        Swal.fire("Envoyé !", "Votre message a été transmis au propriétaire.", "success");
-      } catch (err) {
-        Swal.fire("Erreur", err.message, "error");
-      }
-    });
-  };
-
-  const handleRequestJoin = () => openMessageDialog("Demande de colocation", "Demande de colocation");
-  const handleContactOwner = () => openMessageDialog("Contacter le propriétaire", "Contact");
-
-  const handleReportListing = () => {
-    Swal.fire({
-      title: "Signaler l'annonce",
-      text: "Merci de nous aider à maintenir notre communauté sûre. Veuillez décrire le problème :",
-      input: "textarea",
-      inputPlaceholder: "Décrivez la raison de votre signalement...",
-      showCancelButton: true,
-      confirmButtonText: "Signaler",
-      cancelButtonText: "Annuler",
-      confirmButtonColor: "#ef4444",
-    }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        Swal.fire("Signalé", "L'annonce a été signalée aux modérateurs.", "success");
-      }
-    });
-  };
-
   return (
-    <div className="mt-20 max-w-[1120px] mx-auto px-4 sm:px-6 py-8 font-poppins bg-[#fcfdff] text-[#0b1c30]">
-      {/* HEADER NAVIGATION BACK */}
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-[#10b981] transition-colors cursor-pointer self-start"
-      >
-        <FaArrowLeft className="text-[10px] shrink-0" /> Retour aux annonces
-      </button>
+    <div className="font-poppins text-[#0b1c30]">
+      {/* Back + Status + Actions bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/admin/manage-homes")}
+            className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-teal-600 transition-colors cursor-pointer"
+          >
+            <FaArrowLeft className="text-[10px]" /> Retour à la liste
+          </button>
+          {getStatusBadge(home.statut)}
+        </div>
 
-      {/* GALLERY */}
+        <div className="flex gap-2">
+          {home.statut !== "valide" && (
+            <button
+              onClick={() => handleUpdateStatus("valide")}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+            >
+              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaCheck />}
+              Approuver
+            </button>
+          )}
+          {home.statut !== "rejete" && (
+            <button
+              onClick={() => handleUpdateStatus("rejete")}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+            >
+              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaBan />}
+              Rejeter
+            </button>
+          )}
+          <button
+            onClick={handleDelete}
+            disabled={actionLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+          >
+            <FaTrashAlt /> Supprimer
+          </button>
+        </div>
+      </div>
+
+      {/* Gallery */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="overflow-hidden rounded-[24px] h-[480px] shadow-sm hover:shadow-md transition-shadow relative">
           <img
@@ -247,7 +289,7 @@ function HomeDetails() {
         </div>
       </div>
 
-      {/* HEADER */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white border border-slate-100 rounded-3xl p-6 shadow-sm mb-8 gap-4">
         <div className="text-left">
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight tracking-tight mb-2">
@@ -286,24 +328,20 @@ function HomeDetails() {
             </p>
           )}
         </div>
-
         <div className="bg-[#10b981] text-white rounded-[20px] px-6 py-4 flex flex-col items-center justify-center min-w-[170px] text-center shadow-sm w-full md:w-auto self-stretch md:self-auto">
           <span className="text-2xl font-black">{home.priceNum} DH</span>
           <span className="text-[10px] font-bold opacity-90 mt-0.5 leading-tight uppercase tracking-wider">/ mois</span>
         </div>
       </div>
 
-      {/* TWO-COLUMN LAYOUT */}
+      {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* LEFT: Details & Map */}
+        {/* LEFT: Details + Map */}
         <div className="lg:col-span-2 space-y-6">
-          
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-5 text-left">
               AMÉNAGEMENTS INCLUS
             </span>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 text-left">
               {(home.amenities?.length > 0 ? home.amenities : ["WiFi", "Electricité", "Eau"]).map((amenity, idx) => (
                 <div key={idx} className="flex items-center gap-4">
@@ -394,23 +432,20 @@ function HomeDetails() {
           )}
         </div>
 
-        {/* RIGHT: Availability + Owner + CTAs */}
+        {/* RIGHT: Owner + Occupancy */}
         <div className="space-y-6">
-          
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
                 DISPONIBILITÉ
               </span>
               <span className="bg-emerald-50 text-[#10b981] px-3 py-1 rounded-full text-[10px] font-extrabold">
-                {spotsLeft}/{maxCapacity} places
+                {Math.max(0, maxCapacity - currentOccupants)}/{maxCapacity} places
               </span>
             </div>
-
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-6">
-              <div className="bg-[#10b981] h-full rounded-full transition-all duration-550" style={{ width: `${Math.min(100, (spotsLeft / maxCapacity) * 100)}%` }} />
+              <div className="bg-[#10b981] h-full rounded-full transition-all duration-550" style={{ width: `${Math.min(100, (Math.max(0, maxCapacity - currentOccupants) / maxCapacity) * 100)}%` }} />
             </div>
-
             <div className="text-left">
               <h3 className="font-extrabold text-slate-800 text-sm mb-4">Occupation actuelle</h3>
               <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
@@ -440,35 +475,18 @@ function HomeDetails() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 pt-2">
             <button
-              onClick={handleRequestJoin}
-              className="w-full bg-[#10b981] hover:bg-[#0b9062] active:scale-[0.98] text-white py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
+              onClick={() => navigate("/admin/manage-homes")}
+              className="w-full border-2 border-slate-200 hover:bg-slate-50 text-slate-600 py-3.5 rounded-2xl font-bold text-sm transition-all cursor-pointer bg-white"
             >
-              Demander à rejoindre
-            </button>
-            <button
-              onClick={handleContactOwner}
-              className="w-full border-2 border-[#10b981] hover:bg-emerald-50/50 active:scale-[0.98] text-[#10b981] py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer bg-white"
-            >
-              <FaCommentAlt className="w-4 h-4 shrink-0" />
-              Contacter le propriétaire
-            </button>
-
-            <button
-              onClick={handleReportListing}
-              className="flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-red-500 font-bold mt-4 transition-colors cursor-pointer self-center"
-            >
-              <FaFlag className="w-3.5 h-3.5 shrink-0" />
-              Signaler l'annonce
+              ← Retour à la liste
             </button>
           </div>
-
         </div>
-
       </div>
     </div>
   );
-}
+};
 
-export default HomeDetails;
+export default AdminHomeDetail;
