@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { API_URLS, fetchData } from "../../api/api";
+import { API_URLS, fetchData, fetchFormData } from "../../api/api";
 import Swal from "sweetalert2";
 import {
   FaArrowLeft, FaEdit, FaUsers, FaClipboardList, FaImage,
@@ -47,6 +47,9 @@ export default function EditHouse() {
 
   // Step 4: Media
   const [selectedImages, setSelectedImages] = useState([]);
+  const [newMainImage, setNewMainImage] = useState(null);
+  const [newGalleryImages, setNewGalleryImages] = useState([]);
+  const [removedImages, setRemovedImages] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -194,6 +197,17 @@ export default function EditHouse() {
       await fetchData(`${API_URLS.HEBERGEMENTS}/${id}`, {
         method: "PUT", body: JSON.stringify(body),
       });
+
+      // Upload images if changed
+      if (newMainImage || newGalleryImages.length > 0 || removedImages.length > 0) {
+        const keptUrls = selectedImages.filter(u => !removedImages.includes(u));
+        const fd = new FormData();
+        if (newMainImage) fd.append("image_principale", newMainImage);
+        if (!newMainImage && keptUrls[0]) fd.append("image_principale_url", keptUrls[0]);
+        newGalleryImages.forEach(f => fd.append("images_galerie[]", f));
+        keptUrls.slice(1).forEach(u => fd.append("images_galerie_urls[]", u));
+        await fetchFormData(API_URLS.HEBERGEMENT_IMAGES(id), fd, "PUT");
+      }
 
       Swal.fire({ icon: "success", title: "Annonce mise à jour !", timer: 1500, showConfirmButton: false });
       navigate("/dashboard");
@@ -430,19 +444,51 @@ export default function EditHouse() {
           {step === 4 && (
             <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
               <h2 className="text-xl font-black text-[#0b1c30]">Media</h2>
-              <p className="text-xs text-slate-400 font-semibold">Photos actuelles de l'annonce.</p>
-              {selectedImages.length > 0 ? (
+
+              {/* Image principale actuelle */}
+              <div>
+                <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide mb-2 block">Image principale</label>
+                {selectedImages[0] && !removedImages.includes(selectedImages[0]) ? (
+                  <div className="relative aspect-video max-w-md rounded-xl overflow-hidden border border-slate-200 group">
+                    <img src={selectedImages[0]} alt="" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => setRemovedImages(prev => [...prev, selectedImages[0]])}
+                      className="absolute top-2 right-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition cursor-pointer border-none">X</button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 mb-2">Image principale supprimée ou absente.</p>
+                )}
+                <label className="inline-flex items-center gap-2 mt-2 px-4 py-2 bg-[#f8fafc] border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer hover:bg-slate-50 transition">
+                  <FaImage /> Changer l'image principale
+                  <input type="file" accept="image/*" onChange={(e) => setNewMainImage(e.target.files[0])} className="hidden" />
+                </label>
+                {newMainImage && <span className="text-xs text-[#10b981] ml-3 font-semibold">{newMainImage.name}</span>}
+              </div>
+
+              {/* Galerie */}
+              <div>
+                <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wide mb-2 block">Galerie</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {selectedImages.map((img, i) => (
-                    <div key={i} className="aspect-video rounded-xl overflow-hidden border border-slate-200">
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                  {selectedImages.slice(1).map((img, i) => (
+                    removedImages.includes(img) ? null : (
+                      <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 group">
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setRemovedImages(prev => [...prev, img])}
+                          className="absolute top-2 right-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition cursor-pointer border-none">X</button>
+                      </div>
+                    )
+                  ))}
+                  {newGalleryImages.map((file, i) => (
+                    <div key={`new-${i}`} className="relative aspect-video rounded-xl overflow-hidden border border-[#10b981]">
+                      <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
                     </div>
                   ))}
+                  <label className="aspect-video rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-[#10b981] transition bg-slate-50/50">
+                    <FaImage className="text-slate-400 text-lg" />
+                    <span className="text-[10px] font-bold text-slate-400">Ajouter</span>
+                    <input type="file" multiple accept="image/*" onChange={(e) => setNewGalleryImages(prev => [...prev, ...Array.from(e.target.files)])} className="hidden" />
+                  </label>
                 </div>
-              ) : (
-                <p className="text-sm text-slate-400">Aucune image disponible.</p>
-              )}
-              <p className="text-xs text-slate-400">Pour modifier les images, utilisez la création d'annonce.</p>
+              </div>
             </div>
           )}
 

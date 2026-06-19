@@ -198,19 +198,32 @@ class HebergementController extends Controller
         $hebergement = Hebergement::where('id_createur', Auth::id())->findOrFail($id);
 
         if ($request->hasFile('image_principale')) {
-            $this->cloudinary->delete($hebergement->image_principale);
+            if ($hebergement->image_principale) {
+                $this->cloudinary->delete($hebergement->image_principale);
+            }
             $hebergement->image_principale = $this->cloudinary->upload(
                 $request->file('image_principale'),
                 'uniconnect/hebergements'
             );
+        } elseif ($request->filled('image_principale_url')) {
+            $hebergement->image_principale = $request->input('image_principale_url');
         }
 
+        $gallery = [];
+        if ($request->filled('images_galerie_urls')) {
+            $gallery = array_values(array_filter($request->input('images_galerie_urls')));
+        }
         if ($request->hasFile('images_galerie')) {
-            $urls = [];
             foreach ($request->file('images_galerie') as $img) {
-                $urls[] = $this->cloudinary->upload($img, 'uniconnect/hebergements/galerie');
+                $gallery[] = $this->cloudinary->upload($img, 'uniconnect/hebergements/galerie');
             }
-            $hebergement->images_galerie = $urls;
+        }
+        if (!empty($gallery)) {
+            $hebergement->images_galerie = array_values(array_unique($gallery));
+        }
+
+        if (empty($hebergement->image_principale) && !empty($hebergement->images_galerie)) {
+            $hebergement->image_principale = $hebergement->images_galerie[0];
         }
 
         $hebergement->save();
