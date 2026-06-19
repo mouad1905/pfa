@@ -20,15 +20,15 @@ class AuthController extends Controller
             $validated = $request->validated();
 
             $userData = [
-                'nom'           => $request->nom,
-                'prenom'        => $request->prenom,
-                'cin'           => $request->cin,
-                'email'         => $request->email,
-                'telephone'     => $request->telephone,
-                'date_naissance'=> $request->date_naissance,
-                'mot_de_passe'  => Hash::make($request->password),
-                'role'          => $request->role,
-                'niveau_etude'  => $request->niveau_etude,
+                'nom'            => $request->nom,
+                'prenom'         => $request->prenom,
+                'cin'            => $request->cin,
+                'email'          => $request->email,
+                'telephone'      => $request->telephone,
+                'date_naissance' => $request->date_naissance,
+                'mot_de_passe'   => Hash::make($request->password),
+                'role'           => $request->role,
+                'niveau_etude'   => $request->niveau_etude,
             ];
 
             // Upload photo de profil (tous les rôles)

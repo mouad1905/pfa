@@ -388,6 +388,7 @@ const CreateAccount = () => {
       formData.append("password", step1.password);
       formData.append("role", "etudiant");
       formData.append("niveau_etude", step2.degree);
+      if (step1.phone) formData.append("telephone", step1.phone);
       formData.append("cin", step3.idNumber);
       
       if (step3.photo) formData.append("photo_profil", step3.photo);

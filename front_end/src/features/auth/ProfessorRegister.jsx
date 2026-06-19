@@ -410,6 +410,8 @@ const CreateAccountProf = () => {
       formData.append("date_naissance", step1.dob);
       formData.append("password", step1.password);
       formData.append("role", "professeur");
+      if (step1.phone) formData.append("telephone", step1.phone);
+      if (step2.rank) formData.append("niveau_etude", step2.rank);
       formData.append("cin", step3.idNumber);
       
       if (step3.photo) formData.append("photo_profil", step3.photo);

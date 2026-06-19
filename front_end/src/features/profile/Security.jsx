@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { FaShieldAlt, FaLock, FaKey } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Security() {
-  const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
+  const { user: loggedInUser } = useContext(AuthContext);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

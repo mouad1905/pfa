@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { API_URLS, fetchData } from "../../api/api";
+import { AuthContext } from "../../context/AuthContext";
 import {
   FaCheckCircle,
   FaUserCheck,
@@ -333,8 +334,8 @@ export default function StudentProfile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Retrieve details of the current logged-in user
-  const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
+  // Retrieve details of the current logged-in user from context
+  const { user: loggedInUser } = useContext(AuthContext);
   const currentIsAdmin = loggedInUser && loggedInUser.role === "admin";
 
   useEffect(() => {
@@ -558,6 +559,47 @@ export default function StudentProfile() {
                 >
                   <FaCommentDots />
                   Modifier le profil
+                </button>
+              )}
+
+              {/* Contacter ce membre (chat privé) */}
+              {!isOwnProfile && loggedInUser && (
+                <button
+                  onClick={async () => {
+                    const userRole = loggedInUser.role;
+                    const destRole = user.role;
+                    const isUserAdmin = userRole === 'admin';
+                    const isDestAdmin = destRole === 'admin';
+                    const hasEtudiant = userRole === 'etudiant' || destRole === 'etudiant';
+                    const allowedRoles = ['etudiant', 'professeur', 'locateur', 'proprietaire'];
+                    const validRoles = allowedRoles.includes(userRole) && allowedRoles.includes(destRole);
+
+                    if (!isUserAdmin && !isDestAdmin && !(hasEtudiant && validRoles)) {
+                      Swal.fire(
+                        "Communication restreinte",
+                        "Les conversations directes ne sont permises qu'entre étudiants, ou entre un étudiant et un enseignant/locateur.",
+                        "warning"
+                      );
+                      return;
+                    }
+
+                    try {
+                      Swal.showLoading();
+                      const response = await fetchData(API_URLS.CONVERSATIONS, {
+                        method: "POST",
+                        body: JSON.stringify({ id_destinataire: user.id_user })
+                      });
+                      Swal.close();
+                      const conversationId = response.id_conversation || response.data?.id_conversation;
+                      navigate(`/chat/${conversationId}`);
+                    } catch (err) {
+                      Swal.fire("Erreur", err.message || "Impossible d'ouvrir la conversation.", "error");
+                    }
+                  }}
+                  className="bg-[#1ab69d] hover:bg-[#17a18a] text-white px-6 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer font-bold text-xs transition duration-200 shadow-sm"
+                >
+                  <FaCommentDots />
+                  Contacter {user.role === "professeur" ? "ce professeur" : user.role === "locateur" || user.role === "proprietaire" ? "ce locateur" : "cet étudiant"}
                 </button>
               )}
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaArrowRight,
@@ -14,7 +14,10 @@ import {
   FaInfoCircle,
   FaCheckDouble,
   FaChartBar,
+  FaCommentDots,
 } from "react-icons/fa";
+import { fetchData, API_URLS } from "../../api/api";
+import { AuthContext } from "../../context/AuthContext";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -124,8 +127,29 @@ const Navbar = () => {
     isScrolledOrNotHome ? "text-slate-800" : "text-white"
   }`;
 
-  const token = localStorage.getItem("token");
-  const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
+  const navigate = useNavigate();
+  const { token, user: loggedInUser, logout } = useContext(AuthContext);
+
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const result = await fetchData(API_URLS.CONVERSATIONS_UNREAD_TOTAL);
+        setUnreadChatCount(result.total_unread ?? 0);
+      } catch (err) {
+        console.error("Error fetching unread chat count:", err);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Poll every 10 seconds for real-time feel
+    const interval = setInterval(fetchUnreadCount, 10000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -204,6 +228,16 @@ const Navbar = () => {
           <Link to="/support" className={navLinkStyles}>
             Support
           </Link>
+          {token && (
+            <Link to="/chat" className={`${navLinkStyles} flex items-center gap-1.5`}>
+              Chat
+              {unreadChatCount > 0 && (
+                <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-[10px] font-black leading-none animate-pulse">
+                  {unreadChatCount}
+                </span>
+              )}
+            </Link>
+          )}
           {/* Dashboard link — only for professors and landlords */}
         </div>
 
@@ -479,6 +513,22 @@ const Navbar = () => {
                         </Link>
 
                         <Link
+                          to="/chat"
+                          onClick={() => setDropdownOpen(false)}
+                          className={profileMenuLinkClass((p) => p.startsWith("/chat"))}
+                        >
+                          <div className="relative">
+                            <FaCommentDots
+                              className={profileMenuIconClass((p) => p.startsWith("/chat"))}
+                            />
+                            {unreadChatCount > 0 && (
+                              <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
+                            )}
+                          </div>
+                          <span>Messages</span>
+                        </Link>
+
+                        <Link
                           to="/settings"
                           onClick={() => setDropdownOpen(false)}
                           className={profileMenuLinkClass("/settings")}
@@ -518,13 +568,11 @@ const Navbar = () => {
 
                       {/* Divider line before logout */}
                       <div className="border-t border-slate-100 my-2" />
-
                       <button
                         onClick={() => {
                           setDropdownOpen(false);
-                          localStorage.removeItem("token");
-                          localStorage.removeItem("user");
-                          window.location.href = "/login";
+                          logout();
+                          navigate("/login");
                         }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 hover:text-red-800 rounded-xl transition duration-150 cursor-pointer text-left"
                       >
@@ -573,47 +621,57 @@ const Navbar = () => {
           className="flex flex-col px-4 sm:px-6 py-3 gap-0.5"
           aria-label="Navigation mobile"
         >
-          {[
-            { to: "/", label: "Home", match: (p) => p === "/" },
-            {
-              to: "/colocations",
-              label: "Colocations",
-              match: (p) => p.startsWith("/colocations"),
-            },
-            {
-              to: "/revisions",
-              label: "Revisions",
-              match: (p) => p.startsWith("/revisions"),
-            },
-            {
-              to: "/support",
-              label: "Support",
-              match: (p) => p.startsWith("/support"),
-            },
-          ].map(({ to, label, match }) => {
-            const isActive = match(location.pathname);
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMenuOpen(false)}
-                className={`py-3.5 px-4 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-between ${
-                  isActive
-                    ? "text-emerald-700 bg-emerald-50"
-                    : "text-slate-700 hover:text-emerald-600 hover:bg-emerald-50"
-                }`}
-              >
-                {label}
-                <FaArrowRight
-                  className={`text-xs transition-all ${
+          {(() => {
+            const mobileMenuItems = [
+              { to: "/", label: "Home", match: (p) => p === "/" },
+              {
+                to: "/colocations",
+                label: "Colocations",
+                match: (p) => p.startsWith("/colocations"),
+              },
+              {
+                to: "/revisions",
+                label: "Revisions",
+                match: (p) => p.startsWith("/revisions"),
+              },
+              {
+                to: "/support",
+                label: "Support",
+                match: (p) => p.startsWith("/support"),
+              },
+            ];
+            if (token) {
+              mobileMenuItems.push({
+                to: "/chat",
+                label: `Messages ${unreadChatCount > 0 ? `(${unreadChatCount})` : ""}`,
+                match: (p) => p.startsWith("/chat"),
+              });
+            }
+            return mobileMenuItems.map(({ to, label, match }) => {
+              const isActive = match(location.pathname);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setMenuOpen(false)}
+                  className={`py-3.5 px-4 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-between ${
                     isActive
-                      ? "text-emerald-500 opacity-100"
-                      : "text-emerald-400 opacity-50"
+                      ? "text-emerald-700 bg-emerald-50"
+                      : "text-slate-700 hover:text-emerald-600 hover:bg-emerald-50"
                   }`}
-                />
-              </Link>
-            );
-          })}
+                >
+                  {label}
+                  <FaArrowRight
+                    className={`text-xs transition-all ${
+                      isActive
+                        ? "text-emerald-500 opacity-100"
+                        : "text-emerald-400 opacity-50"
+                    }`}
+                  />
+                </Link>
+              );
+            });
+          })()}
         </nav>
       </div>
     </header>

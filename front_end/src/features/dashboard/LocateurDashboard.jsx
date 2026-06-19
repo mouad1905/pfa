@@ -46,14 +46,12 @@ export default function LocateurDashboard({ user }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    vues: 0,
-    favoris: 0,
+    annonces: 0,
+    actives: 0,
     messages: 0,
     candidatures: 0,
-    vuesTrend: "+12%",
-    favorisTrend: "+5%",
-    messagesTrend: "-2%",
-    candidaturesTrend: "+24%",
+    en_attente: 0,
+    non_lus: 0,
   });
 
   useEffect(() => {
@@ -81,6 +79,12 @@ export default function LocateurDashboard({ user }) {
         image:
           item.image ||
           "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600",
+        type: item.type || "appartement",
+        description: item.description || "",
+        superficie: item.superficie || "",
+        nbr_chambres: item.nbr_chambres || "",
+        nb_locataires: item.nb_locataires || "",
+        meuble: item.meuble || false,
         statut: item.statut,
         active: item.actif !== false,
         capacity: item.nb_locataires || item.nbr_chambres || 1,
@@ -130,14 +134,12 @@ export default function LocateurDashboard({ user }) {
       setCandidatures(resList);
       setMessages(msgList);
       setStats({
-        vues: activeCount * 420 + hebList.length * 180,
-        favoris: Math.max(hebList.length * 12, newMsg * 3),
+        annonces: hebList.length,
+        actives: activeCount,
         messages: msgList.length,
         candidatures: resList.length,
-        vuesTrend: "+12%",
-        favorisTrend: "+5%",
-        messagesTrend: newMsg > 0 ? `+${newMsg}` : "0",
-        candidaturesTrend: pendingCand > 0 ? `+${pendingCand}` : "0",
+        en_attente: pendingCand,
+        non_lus: newMsg,
       });
     } catch (err) {
       console.error(err);
@@ -192,10 +194,10 @@ export default function LocateurDashboard({ user }) {
   };
 
   const statCards = [
-    { icon: "visibility", label: "Vues", value: stats.vues.toLocaleString("fr-FR"), trend: stats.vuesTrend, up: true },
-    { icon: "favorite", label: "Favoris", value: stats.favoris, trend: stats.favorisTrend, up: true },
-    { icon: "chat_bubble", label: "Messages", value: stats.messages, trend: stats.messagesTrend, up: false },
-    { icon: "assignment_ind", label: "Candidatures", value: stats.candidatures, trend: stats.candidaturesTrend, up: true },
+    { icon: "home", label: "Annonces", value: stats.annonces, detail: `${stats.actives} active${stats.actives > 1 ? "s" : ""}` },
+    { icon: "assignment_ind", label: "Candidatures", value: stats.candidatures, detail: `${stats.en_attente} en attente` },
+    { icon: "chat_bubble", label: "Messages", value: stats.messages, detail: `${stats.non_lus} non lu${stats.non_lus > 1 ? "s" : ""}` },
+    { icon: "checklist", label: "Annonces actives", value: stats.actives, detail: `sur ${stats.annonces} totale${stats.annonces > 1 ? "s" : ""}` },
   ];
 
   const newMessagesCount = messages.filter((m) => m.unread).length;
@@ -232,19 +234,15 @@ export default function LocateurDashboard({ user }) {
               key={s.label}
               className="bg-white p-4 sm:p-5 rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-[#bbcabf]/30"
             >
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex items-start mb-2">
                 <Icon
                   name={s.icon}
                   className="text-[#006c49] p-2 bg-[#adedd3]/30 rounded-lg text-xl"
                 />
-                <span
-                  className={`font-bold text-xs ${s.up ? "text-[#006c49]" : "text-[#ba1a1a]"}`}
-                >
-                  {s.trend}
-                </span>
               </div>
               <p className="text-xs text-[#3c4a42] font-medium">{s.label}</p>
               <h3 className="text-xl sm:text-2xl font-semibold mt-1">{s.value}</h3>
+              <p className="text-xs text-[#006c49] font-medium mt-0.5">{s.detail}</p>
             </div>
           ))}
         </div>
@@ -303,7 +301,7 @@ export default function LocateurDashboard({ user }) {
                             <button
                               type="button"
                               title="Modifier"
-                              onClick={() => Swal.fire("Info", "Édition bientôt disponible.", "info")}
+                              onClick={() => navigate(`/editHouse/${annonce.id}`)}
                               className="text-[#3c4a42] hover:text-[#006c49] cursor-pointer border-none bg-transparent p-0"
                             >
                               <Icon name="edit" className="text-[18px]" />

@@ -410,6 +410,7 @@ const Colocations = () => {
             "Propriétaire",
           id_poster: item.proprietaire?.id_user,
           description: item.description,
+          formule: item.formule || "standard",
         }));
         setColocations(mappedData);
       } catch (error) {
@@ -437,12 +438,6 @@ const Colocations = () => {
 
   const visible = useMemo(() => {
     let result = [...colocations];
-
-    // Filter out listings deactivated by their owner
-    result = result.filter((c) => {
-      const status = localStorage.getItem(`unicons_pub_status_${c.id}`);
-      return status !== "false";
-    });
 
     // Zone tab
     if (active === "campus") result = result.filter((c) => c.zone === "campus");
@@ -479,8 +474,7 @@ const Colocations = () => {
 
     // Sort: Gold first, then Premium, then standard
     const planWeight = (c) => {
-      const plan =
-        localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
+      const plan = localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
       if (plan === "gold") return 2;
       if (plan === "premium") return 1;
       return 0;
@@ -694,9 +688,7 @@ const Colocations = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visible.map((c) => {
-              const plan =
-                localStorage.getItem(`unicons_pub_formula_${c.id}`) ||
-                "standard";
+              const plan = localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
               return (
                 <ColocationCard
                   key={c.id}

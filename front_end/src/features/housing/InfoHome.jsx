@@ -1,7 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import API_BASE, { fetchData, API_URLS } from "../../api/api";
+import { AuthContext } from "../../context/AuthContext";
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
@@ -64,6 +67,9 @@ function HomeDetails() {
   const navigate = useNavigate();
   const [home, setHome] = useState(null);
   const [loading, setLoading] = useState(!!id);
+  const { user: loggedInUser } = useContext(AuthContext);
+  const [home, setHome] = useState(stateHome ? mapApiToHome(stateHome) : null);
+  const [loading, setLoading] = useState(!stateHome && !!id);
 
   useEffect(() => {
     if (!id) return;
@@ -124,23 +130,52 @@ function HomeDetails() {
     .slice(0, 2)
     .toUpperCase();
 
-  const openMessageDialog = (title, subjectPrefix) => {
-    const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
+  const handleContactOwner = async () => {
     if (!loggedInUser) {
-      return Swal.fire("Connexion requise", "Connectez-vous pour envoyer un message.", "warning");
+      return Swal.fire("Connexion requise", "Connectez-vous pour contacter le propriétaire.", "warning");
     }
+
+    if (loggedInUser.role !== 'etudiant' && loggedInUser.role !== 'admin') {
+      return Swal.fire("Action non autorisée", "Seuls les étudiants peuvent contacter un locateur.", "error");
+    }
+
+    try {
+      Swal.showLoading();
+      const res = await fetchData(API_URLS.CONVERSATIONS, {
+        method: "POST",
+        body: JSON.stringify({
+          id_destinataire: home.proprietaireId
+        })
+      });
+      Swal.close();
+      const conversationId = res.id_conversation || res.data?.id_conversation;
+      navigate(`/chat/${conversationId}`);
+    } catch (err) {
+      Swal.fire("Erreur", err.message || "Impossible de démarrer la conversation.", "error");
+    }
+  };
+
+  const handleRequestJoin = () => {
+    if (!loggedInUser) {
+      return Swal.fire("Connexion requise", "Connectez-vous pour envoyer une demande de colocation.", "warning");
+    }
+
+    if (loggedInUser.role !== 'etudiant' && loggedInUser.role !== 'admin') {
+      return Swal.fire("Action non autorisée", "Seuls les étudiants peuvent postuler à une colocation.", "error");
+    }
+
     Swal.fire({
-      title: title,
+      title: "Demande de colocation",
       input: "textarea",
-      inputPlaceholder: "Écrivez votre message ici...",
+      inputPlaceholder: "Présentez-vous en quelques mots au propriétaire...",
       inputAttributes: { rows: 4 },
       showCancelButton: true,
-      confirmButtonText: "Envoyer",
+      confirmButtonText: "Envoyer la demande",
       cancelButtonText: "Annuler",
       confirmButtonColor: "#10b981",
       preConfirm: (msg) => {
         if (!msg || !msg.trim()) {
-          Swal.showValidationMessage("Veuillez écrire un message.");
+          Swal.showValidationMessage("Veuillez écrire un message de motivation.");
           return false;
         }
         return msg.trim();
@@ -148,23 +183,25 @@ function HomeDetails() {
     }).then(async (result) => {
       if (!result.isConfirmed || !result.value) return;
       try {
-        const res = await fetch(`${API_BASE}/messages`, {
+        Swal.showLoading();
+        const res = await fetchData(API_URLS.CONVERSATIONS, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
           body: JSON.stringify({
             id_destinataire: home.proprietaireId,
-            id_hebergement: home.id,
-            sujet: `${subjectPrefix} - ${home.title}`,
-            contenu: result.value,
+            contenu: `[Demande de colocation - ${home.title}]\n\n${result.value}`
           }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi");
-        Swal.fire("Envoyé !", "Votre message a été transmis au propriétaire.", "success");
+        Swal.close();
+        const conversationId = res.id_conversation || res.data?.id_conversation;
+        Swal.fire({
+          title: "Envoyé !",
+          text: "Votre demande a été envoyée. Redirection vers la discussion...",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          navigate(`/chat/${conversationId}`);
+        });
       } catch (err) {
         Swal.fire("Erreur", err.message, "error");
       }

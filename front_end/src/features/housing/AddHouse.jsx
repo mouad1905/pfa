@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URLS, fetchFormData } from "../../api/api";
 import { compressImageFiles } from "../../utils/compressImage";
 import Swal from "sweetalert2";
+import { AuthContext } from "../../context/AuthContext";
 import {
   FaEdit,
   FaUsers,
@@ -67,6 +68,7 @@ const PRESET_IMAGES = [
 
 export default function UniConnectListing() {
   const navigate = useNavigate();
+  const { token, user } = useContext(AuthContext);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [layoutMode, setLayoutMode] = useState("sidebar"); // 'sidebar' or 'horizontal'
@@ -300,8 +302,6 @@ export default function UniConnectListing() {
       return Swal.fire("Attention", "Veuillez sélectionner au moins 3 images pour votre hébergement.", "warning");
     }
 
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || "null");
     if (!token || !user) {
       return Swal.fire("Connexion requise", "Connectez-vous en tant que locateur ou propriétaire pour publier.", "warning");
     }

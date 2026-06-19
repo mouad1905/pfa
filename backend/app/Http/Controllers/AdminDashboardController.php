@@ -8,7 +8,12 @@ use App\Models\Hebergement;
 use App\Models\Cours;
 use App\Models\Reservation;
 use App\Models\Paiement;
+use App\Models\Signalement;
+use App\Models\Reclamation;
+use App\Models\Evaluation;
+use App\Models\Matiere;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Http\Resources\HebergementResource;
 use App\Http\Resources\CoursResource;
 
@@ -25,22 +30,58 @@ class AdminDashboardController extends Controller
                 'etudiants' => Utilisateur::where('role', 'etudiant')->count(),
                 'professeurs' => Utilisateur::where('role', 'professeur')->count(),
                 'proprietaires' => Utilisateur::where('role', 'proprietaire')->count(),
+                'locateurs' => Utilisateur::where('role', 'locateur')->count(),
+                'admins' => Utilisateur::where('role', 'admin')->count(),
+                'suspendus' => Utilisateur::where('statut', 'suspendu')->count(),
+                'en_attente' => Utilisateur::where('statut', 'en_attente')->count(),
+                'actifs' => Utilisateur::where('statut', 'actif')->count(),
+                'inscrits_7j' => Utilisateur::where('created_at', '>=', now()->subDays(7))->count(),
+                'inscrits_30j' => Utilisateur::where('created_at', '>=', now()->subDays(30))->count(),
             ],
             'annonces' => [
                 'hebergements_valides' => Hebergement::where('statut', 'valide')->count(),
                 'hebergements_en_attente' => Hebergement::where('statut', 'en_attente')->count(),
+                'hebergements_rejetes' => Hebergement::where('statut', 'rejete')->count(),
                 'cours_valides' => Cours::where('statut', 'valide')->count(),
                 'cours_en_attente' => Cours::where('statut', 'en_attente')->count(),
+                'cours_rejetes' => Cours::where('statut', 'rejete')->count(),
             ],
             'reservations' => [
                 'total' => Reservation::count(),
                 'en_attente' => Reservation::where('statut', 'en_attente')->count(),
                 'confirmees' => Reservation::where('statut', 'confirmee')->count(),
+                'annulees' => Reservation::where('statut', 'annulee')->count(),
             ],
             'finances' => [
                 'total_transactions' => Paiement::count(),
                 'chiffre_affaires' => Paiement::sum('montant'),
-            ]
+                'reussi' => Paiement::where('statut', 'reussi')->count(),
+                'echoue' => Paiement::where('statut', 'echoue')->count(),
+            ],
+            'signalements' => [
+                'total' => Signalement::count(),
+                'en_attente' => Signalement::where('statut', 'en_attente')->count(),
+                'traites' => Signalement::where('statut', 'traite')->count(),
+                'rejetes' => Signalement::where('statut', 'rejete')->count(),
+            ],
+            'reclamations' => [
+                'total' => Reclamation::count(),
+                'en_attente' => Reclamation::where('statut', 'en_attente')->count(),
+                'traitees' => Reclamation::where('statut', 'traitee')->count(),
+                'rejetees' => Reclamation::where('statut', 'rejetee')->count(),
+            ],
+            'evaluations' => [
+                'total' => Evaluation::count(),
+                'moyenne_generale' => round(Evaluation::avg('note'), 1) ?: 0,
+                'notes_5' => Evaluation::where('note', 5)->count(),
+                'notes_4' => Evaluation::where('note', 4)->count(),
+                'notes_3' => Evaluation::where('note', 3)->count(),
+                'notes_2' => Evaluation::where('note', 2)->count(),
+                'notes_1' => Evaluation::where('note', 1)->count(),
+            ],
+            'matieres' => [
+                'total' => Matiere::count(),
+            ],
         ]);
     }
 
