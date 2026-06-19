@@ -198,22 +198,26 @@ const HomePage = () => {
                 title: "Student Housing",
                 desc: "Find verified student accommodations near your campus. Safe, affordable, and perfect for students.",
                 cta: "Find Housing",
+                to: "/colocations",
               },
               {
                 icon: FaUsers,
                 title: "Study Groups",
                 desc: "Connect with students taking the same courses. Study smarter together.",
                 cta: "Join Groups",
+                to: "/revisions",
               },
               {
                 icon: FaChartLine,
-                title: "Campus Insights",
-                desc: "Get real-time data on housing prices, popular courses, and campus events.",
-                cta: "View Insights",
+                title: "Support & Communauté",
+                desc: "Obtenez de l'aide, signalez un problème et échangez avec la communauté UniConnect.",
+                cta: "Obtenir de l'aide",
+                to: "/support",
               },
-            ].map(({ icon: Icon, title, desc, cta }) => (
-              <div
+            ].map(({ icon: Icon, title, desc, cta, to }) => (
+              <Link
                 key={title}
+                to={to}
                 className="group bg-linear-to-br from-gray-50 to-white p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 cursor-pointer h-full flex flex-col"
               >
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -225,14 +229,11 @@ const HomePage = () => {
                 <p className="text-gray-600 leading-relaxed mb-4 sm:mb-6 flex-1 text-sm sm:text-base">
                   {desc}
                 </p>
-                <button
-                  type="button"
-                  className="text-emerald-600 font-semibold hover:text-emerald-700 flex items-center gap-2 transition-colors text-sm sm:text-base"
-                >
+                <div className="text-emerald-600 font-semibold hover:text-emerald-700 flex items-center gap-2 transition-colors text-sm sm:text-base">
                   {cta}{" "}
                   <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -360,7 +361,7 @@ const HomePage = () => {
           <div className="space-y-2 sm:space-y-3">
             <img
               src="/src/assets/images/students2.jpg"
-              className="rounded-2xl sm:rounded-3xl w-full h-48 sm:h-64 md:h-80 object-cover"
+              className="rounded-2xl sm:rounded-3xl w-full h-48 sm:h-64 md:h-100 object-cover"
               alt="Student"
             />
             <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-4">
@@ -374,7 +375,7 @@ const HomePage = () => {
               </p>
             </div>
           </div>
-          <div className="space-y-3 sm:space-y-4">
+          <div className=" space-y-3 sm:space-y-4">
             <div className="bg-emerald-500 rounded-2xl p-4 sm:p-6 text-white flex flex-col sm:flex-row items-center justify-center gap-2 text-center">
               <div className="bg-white/20 p-4 sm:p-5 rounded-full">
                 <FaCheckCircle className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -385,7 +386,7 @@ const HomePage = () => {
             </div>
             <img
               src="/src/assets/images/students1.jpg"
-              className="rounded-2xl sm:rounded-3xl w-full h-40 sm:h-56 md:h-80 object-cover"
+              className="rounded-2xl sm:rounded-3xl w-full h-40 sm:h-56 md:h-90 object-cover"
               alt="Team"
             />
           </div>

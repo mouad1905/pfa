@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import API_BASE_URL, { fetchData } from "../../api/api";
 import Swal from "sweetalert2";
 import { 
@@ -14,6 +15,7 @@ import {
 } from "react-icons/fa";
 
 const ManageHomes = () => {
+  const navigate = useNavigate();
   const [homes, setHomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -252,6 +254,13 @@ const ManageHomes = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex justify-center gap-1.5">
+                          <button
+                            onClick={() => navigate(`/admin/manage-homes/${id}`)}
+                            className="p-2 bg-teal-50 hover:bg-teal-100 text-teal-600 hover:text-teal-700 rounded-lg transition cursor-pointer"
+                            title="Voir les détails"
+                          >
+                            <FaEye size={12} />
+                          </button>
                           {home.statut !== "valide" && (
                             <button
                               onClick={() => handleUpdateStatus(id, "valide")}

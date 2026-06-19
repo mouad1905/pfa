@@ -10,6 +10,8 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\SignalementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\MatiereController;
+use App\Http\Controllers\MediaController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return new \App\Http\Resources\UtilisateurResource($request->user());
     });
+    Route::put('/users/{id}', [AuthController::class, 'updateProfile']);
 
     // Réservations (pour les étudiants uniquement)
     Route::middleware('role:etudiant')->group(function () {
@@ -44,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:proprietaire,locateur,admin')->group(function () {
         Route::get('/mes-hebergements', [HebergementController::class, 'mesHebergements']);
         Route::post('/hebergements', [HebergementController::class, 'store']);
+        Route::put('/hebergements/{id}', [HebergementController::class, 'update']);
         Route::put('/hebergements/{id}/publication', [HebergementController::class, 'updatePublication']);
         Route::get('/mes-reservations', [ReservationController::class, 'mesReservationsProprietaire']);
         Route::put('/reservations/{id}/statut', [ReservationController::class, 'updateStatut']);
@@ -67,12 +71,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/signalements', [SignalementController::class, 'store']);
     Route::get('/signalements/mes-envois', [SignalementController::class, 'mesSignalements']);
 
+    // Messages
+    Route::post('/messages', [MessageController::class, 'send']);
+    Route::get('/messages/inbox', [MessageController::class, 'inbox']);
+    Route::get('/messages/sent', [MessageController::class, 'sent']);
+    Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
+    Route::put('/messages/{id}/read', [MessageController::class, 'markAsRead']);
+
+    // Media (Cloudinary upload URL save)
+    Route::post('/save-media', [MediaController::class, 'store']);
+
     // Routes d'administration
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/statistiques', [AdminDashboardController::class, 'getStats']);
         Route::get('/paiements', [AdminDashboardController::class, 'getPaiements']);
         Route::put('/hebergements/{id}/statut', [AdminDashboardController::class, 'updateHebergementStatus']);
         Route::get('/hebergements', [AdminDashboardController::class, 'getAllHebergements']);
+        Route::get('/hebergements/{id}', [AdminDashboardController::class, 'getHebergement']);
         Route::delete('/hebergements/{id}', [AdminDashboardController::class, 'deleteHebergement']);
         Route::put('/cours/{id}/statut', [AdminDashboardController::class, 'updateCoursStatus']);
         Route::get('/cours', [AdminDashboardController::class, 'getAllCours']);

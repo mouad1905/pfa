@@ -38,6 +38,14 @@ class CoursController extends Controller
                 );
             }
 
+            // Upload diplôme de vérification vers Cloudinary (optionnel)
+            if ($request->hasFile('diplome_verification')) {
+                $validated['diplome_verification'] = $this->cloudinary->upload(
+                    $request->file('diplome_verification'),
+                    'uniconnect/cours/diplomes'
+                );
+            }
+
             $cours = Cours::create(array_merge($validated, [
                 'id_professeur' => Auth::id(),
             ]));

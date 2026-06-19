@@ -20,14 +20,15 @@ class AuthController extends Controller
             $validated = $request->validated();
 
             $userData = [
-                'nom'          => $request->nom,
-                'prenom'       => $request->prenom,
-                'cin'          => $request->cin,
-                'email'        => $request->email,
-                'telephone'    => $request->telephone,
-                'mot_de_passe' => Hash::make($request->password),
-                'role'         => $request->role,
-                'niveau_etude' => $request->niveau_etude,
+                'nom'            => $request->nom,
+                'prenom'         => $request->prenom,
+                'cin'            => $request->cin,
+                'email'          => $request->email,
+                'telephone'      => $request->telephone,
+                'date_naissance' => $request->date_naissance,
+                'mot_de_passe'   => Hash::make($request->password),
+                'role'           => $request->role,
+                'niveau_etude'   => $request->niveau_etude,
             ];
 
             // Upload photo de profil (tous les rôles)
@@ -187,5 +188,26 @@ class AuthController extends Controller
         $user->evaluations_count = $evaluations_count;
 
         return new \App\Http\Resources\UtilisateurResource($user);
+    }
+
+    // Mettre à jour le profil d'un utilisateur
+    public function updateProfile(Request $request, int $id)
+    {
+        $user = Utilisateur::findOrFail($id);
+
+        $validated = $request->validate([
+            'prenom'       => 'required|string|max:50',
+            'nom'          => 'required|string|max:50',
+            'telephone'    => 'nullable|string|max:20',
+            'niveau_etude' => 'nullable|string|max:50',
+            'about'        => 'nullable|string|max:1000',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profil mis à jour avec succès',
+            'data'    => new \App\Http\Resources\UtilisateurResource($user)
+        ]);
     }
 }

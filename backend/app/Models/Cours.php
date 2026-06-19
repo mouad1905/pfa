@@ -22,6 +22,7 @@ class Cours extends Model
         'mode_enseignement',
         'statut',
         'image_cours',
+        'diplome_verification',
     ];
 
     protected $casts = [

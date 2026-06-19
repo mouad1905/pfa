@@ -25,6 +25,7 @@ class CoursResource extends JsonResource
             'statut'            => $this->statut,
             // Image hébergée sur Cloudinary
             'image'             => $this->image_cours,
+            'diplome_verification' => $this->diplome_verification,
             'professeur'        => new UtilisateurResource($this->whenLoaded('professeur')),
             'created_at'        => $this->created_at,
             'updated_at'        => $this->updated_at,

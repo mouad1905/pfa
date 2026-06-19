@@ -106,8 +106,8 @@ const ColocationCard = ({ c, onClick, plan }) => {
         isGold
           ? "border-amber-400 shadow-amber-100 ring-1 ring-amber-300/40"
           : isPremium
-          ? "border-emerald-300 shadow-emerald-50"
-          : "border-slate-100"
+            ? "border-emerald-300 shadow-emerald-50"
+            : "border-slate-100"
       }`}
     >
       {/* Visual Header / Image Container with exact overlays */}
@@ -483,14 +483,15 @@ const Colocations = () => {
 
     // Sort: Gold first, then Premium, then standard
     const planWeight = (c) => {
-      const plan = c.formule;
+      const plan = localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
       if (plan === "gold") return 2;
       if (plan === "premium") return 1;
       return 0;
     };
 
     if (sortBy === "price_asc") result.sort((a, b) => a.priceNum - b.priceNum);
-    else if (sortBy === "price_desc") result.sort((a, b) => b.priceNum - a.priceNum);
+    else if (sortBy === "price_desc")
+      result.sort((a, b) => b.priceNum - a.priceNum);
     else result.sort((a, b) => planWeight(b) - planWeight(a));
 
     return result;
@@ -695,14 +696,17 @@ const Colocations = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visible.map((c) => (
-              <ColocationCard
-                key={c.id}
-                c={c}
-                plan={c.formule}
-                onClick={() => navigate(`/colocations/${c.id}`)}
-              />
-            ))}
+            {visible.map((c) => {
+              const plan = localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
+              return (
+                <ColocationCard
+                  key={c.id}
+                  c={c}
+                  plan={plan}
+                  onClick={() => navigate(`/home/${c.id}`, { state: c })}
+                />
+              );
+            })}
           </div>
         )}
       </div>

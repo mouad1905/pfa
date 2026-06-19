@@ -173,7 +173,7 @@ const Navbar = () => {
 
       {/* MAIN NAV */}
       <nav
-        className={`transition-all duration-500 px-4 md:px-12 py-3 flex justify-between items-center ${
+        className={`transition-all duration-500 px-4 md:px-12 py-4 flex justify-between items-center ${
           isScrolledOrNotHome || menuOpen
             ? "bg-white/95 backdrop-blur-xl border-b border-emerald-900/10 shadow-xl"
             : "bg-transparent"
@@ -210,7 +210,6 @@ const Navbar = () => {
         {/* RIGHT SIDE */}
         <div className="flex items-center ml-25 gap-3">
           {token && loggedInUser ? (
-            /* Logged in state - replace "Get Started" with rounded avatar leading to profile dropdown */
             <div className="flex items-center gap-3">
               {/* NOTIFICATION BELL & DRAWER */}
               <div className="relative">
@@ -218,12 +217,12 @@ const Navbar = () => {
                   type="button"
                   onClick={() => {
                     setNotificationsOpen(!notificationsOpen);
-                    setDropdownOpen(false); // Close profile dropdown when opening notifications
+                    setDropdownOpen(false);
                   }}
                   className={`relative p-2.5 rounded-full transition-all duration-300 cursor-pointer ${
                     isScrolledOrNotHome
-                      ? "text-slate-650 hover:text-[#10b981] hover:bg-slate-100/50"
-                      : "text-white/80 hover:text-white hover:bg-white/10"
+                      ? "text-slate-650 hover:text-[#10b981]"
+                      : "text-white/80 hover:text-white "
                   }`}
                   aria-label="Notifications"
                 >
@@ -380,26 +379,41 @@ const Navbar = () => {
                 <button
                   onClick={() => {
                     setDropdownOpen(!dropdownOpen);
-                    setNotificationsOpen(false); // Close notifications when opening profile dropdown
+                    setNotificationsOpen(false);
                   }}
-                  className="flex items-center focus:outline-none cursor-pointer group"
+                  className={`relative rounded-full transition-all duration-300 cursor-pointer ${
+                    isScrolledOrNotHome
+                      ? "hover:bg-slate-100/50"
+                      : "hover:bg-white/10"
+                  }`}
                   aria-label="User menu"
                 >
-                  <img
-                    className={`w-10 h-10 rounded-full border-2 object-cover shadow-md transition hover:scale-105 duration-300 ${
-                      dropdownOpen
-                        ? "border-[#10b981] ring-2 ring-emerald-550/20"
-                        : isScrolledOrNotHome
-                          ? "border-slate-200"
-                          : "border-white"
+                  {loggedInUser?.photo_profil ? (
+                    <img
+                      src={loggedInUser.photo_profil}
+                      alt="photo"
+                      className="w-9 h-9 rounded-full object-cover border-2 border-emerald-300"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                      loggedInUser?.photo_profil ? "hidden" : ""
+                    } ${
+                      isScrolledOrNotHome
+                        ? "text-slate-650 bg-slate-100"
+                        : "text-white/80 bg-white/10"
                     }`}
-                    src={`https://i.pravatar.cc/150?u=${loggedInUser.id_user}`}
-                    alt="profile"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
-                    }}
-                  />
+                  >
+                    {loggedInUser?.photo_profil ? null : (
+                      <span className="text-xs font-bold">
+                        {((loggedInUser?.prenom || "U")[0] + (loggedInUser?.nom || "")[0]).toUpperCase() || "U"}
+                      </span>
+                    )}
+                  </div>
                 </button>
 
                 {/* DROPDOWN MENU */}
@@ -413,16 +427,27 @@ const Navbar = () => {
                     <div className="absolute right-0 mt-3 w-64 rounded-2xl bg-white border border-slate-100 shadow-xl p-4 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
                       {/* User Info Header Block */}
                       <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-2">
-                        <div className="relative">
-                          <img
-                            className="w-11 h-11 rounded-full object-cover border border-slate-100 shadow-sm"
-                            src={`https://i.pravatar.cc/150?u=${loggedInUser.id_user}`}
-                            alt="profile"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80";
-                            }}
-                          />
+                        <div className="relative shrink-0">
+                          {loggedInUser?.photo_profil ? (
+                            <img
+                              src={loggedInUser.photo_profil}
+                              alt="photo"
+                              className="w-11 h-11 rounded-full object-cover border-2 border-emerald-200 shadow-sm"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.nextSibling.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className={`w-11 h-11 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[#10b981] shadow-sm ${
+                              loggedInUser?.photo_profil ? "hidden" : ""
+                            }`}
+                          >
+                            <span className="text-sm font-bold">
+                              {((loggedInUser?.prenom || "U")[0] + (loggedInUser?.nom || "")[0]).toUpperCase() || "U"}
+                            </span>
+                          </div>
 
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
                         </div>
@@ -441,9 +466,15 @@ const Navbar = () => {
                         <Link
                           to={`/profile/${loggedInUser.id_user}`}
                           onClick={() => setDropdownOpen(false)}
-                          className={profileMenuLinkClass((p) => p.startsWith("/profile"))}
+                          className={profileMenuLinkClass((p) =>
+                            p.startsWith("/profile"),
+                          )}
                         >
-                          <FaUser className={profileMenuIconClass((p) => p.startsWith("/profile"))} />
+                          <FaUser
+                            className={profileMenuIconClass((p) =>
+                              p.startsWith("/profile"),
+                            )}
+                          />
                           <span>Voir mon profil</span>
                         </Link>
 
@@ -452,7 +483,9 @@ const Navbar = () => {
                           onClick={() => setDropdownOpen(false)}
                           className={profileMenuLinkClass("/settings")}
                         >
-                          <FaCog className={profileMenuIconClass("/settings")} />
+                          <FaCog
+                            className={profileMenuIconClass("/settings")}
+                          />
                           <span>Paramètres du compte</span>
                         </Link>
 
@@ -464,7 +497,9 @@ const Navbar = () => {
                             onClick={() => setDropdownOpen(false)}
                             className={profileMenuLinkClass("/dashboard")}
                           >
-                            <FaChartBar className={profileMenuIconClass("/dashboard")} />
+                            <FaChartBar
+                              className={profileMenuIconClass("/dashboard")}
+                            />
                             <span>Tableau de Bord</span>
                           </Link>
                         )}
@@ -474,7 +509,9 @@ const Navbar = () => {
                           onClick={() => setDropdownOpen(false)}
                           className={profileMenuLinkClass("/security")}
                         >
-                          <FaShieldAlt className={profileMenuIconClass("/security")} />
+                          <FaShieldAlt
+                            className={profileMenuIconClass("/security")}
+                          />
                           <span>Sécurité</span>
                         </Link>
                       </div>
@@ -532,12 +569,27 @@ const Navbar = () => {
           menuOpen ? "max-h-72 opacity-100" : "max-h-0 opacity-0"
         } bg-white/95 backdrop-blur-xl border-b border-emerald-900/10 shadow-xl`}
       >
-        <nav className="flex flex-col px-4 sm:px-6 py-3 gap-0.5" aria-label="Navigation mobile">
+        <nav
+          className="flex flex-col px-4 sm:px-6 py-3 gap-0.5"
+          aria-label="Navigation mobile"
+        >
           {[
             { to: "/", label: "Home", match: (p) => p === "/" },
-            { to: "/colocations", label: "Colocations", match: (p) => p.startsWith("/colocations") },
-            { to: "/revisions", label: "Revisions", match: (p) => p.startsWith("/revisions") },
-            { to: "/support", label: "Support", match: (p) => p.startsWith("/support") },
+            {
+              to: "/colocations",
+              label: "Colocations",
+              match: (p) => p.startsWith("/colocations"),
+            },
+            {
+              to: "/revisions",
+              label: "Revisions",
+              match: (p) => p.startsWith("/revisions"),
+            },
+            {
+              to: "/support",
+              label: "Support",
+              match: (p) => p.startsWith("/support"),
+            },
           ].map(({ to, label, match }) => {
             const isActive = match(location.pathname);
             return (
@@ -554,7 +606,9 @@ const Navbar = () => {
                 {label}
                 <FaArrowRight
                   className={`text-xs transition-all ${
-                    isActive ? "text-emerald-500 opacity-100" : "text-emerald-400 opacity-50"
+                    isActive
+                      ? "text-emerald-500 opacity-100"
+                      : "text-emerald-400 opacity-50"
                   }`}
                 />
               </Link>

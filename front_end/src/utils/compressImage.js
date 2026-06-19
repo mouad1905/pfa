@@ -6,16 +6,28 @@ const MAX_OUTPUT_BYTES = 900 * 1024;
  * Compresse une image avant envoi (réduit erreur "POST data is too large").
  */
 export async function compressImage(file) {
-  if (!file?.type?.startsWith("image/")) return file;
+  if (!file?.type?.startsWith("image/")) {
+    throw new Error(`Format non supporté : ${file?.type || "inconnu"}. Utilisez JPG, PNG ou WEBP.`);
+  }
   if (file.size <= 400 * 1024 && !file.type.includes("heic")) return file;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
 
+    const timeoutId = setTimeout(() => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    }, 8000);
+
     img.onload = () => {
+      clearTimeout(timeoutId);
       URL.revokeObjectURL(url);
       let { width, height } = img;
+      if (width === 0 || height === 0) {
+        resolve(file);
+        return;
+      }
       const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
       width = Math.round(width * scale);
       height = Math.round(height * scale);
@@ -30,7 +42,7 @@ export async function compressImage(file) {
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(new Error("Compression impossible"));
+              resolve(file);
               return;
             }
             if (blob.size > MAX_OUTPUT_BYTES && quality > 0.5) {
@@ -54,6 +66,7 @@ export async function compressImage(file) {
     };
 
     img.onerror = () => {
+      clearTimeout(timeoutId);
       URL.revokeObjectURL(url);
       resolve(file);
     };

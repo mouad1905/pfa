@@ -41,7 +41,7 @@ export default function ContactSection() {
 
   return (
     <div className="w-full overflow-x-hidden bg-slate-50 font-poppins">
-      <section className="pt-24 sm:pt-28 pb-10 sm:pb-16 px-4 sm:px-6 lg:px-8">
+      <section className=" pt-24 sm:pt-36 pb-10 sm:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Infos contact */}
@@ -60,8 +60,8 @@ export default function ContactSection() {
               </h1>
 
               <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 max-w-md">
-                Colocation, cours de révision ou assistance technique — nous vous répondons
-                rapidement pour simplifier votre vie étudiante.
+                Colocation, cours de révision ou assistance technique — nous
+                vous répondons rapidement pour simplifier votre vie étudiante.
               </p>
 
               <div className="bg-emerald-50 w-full rounded-2xl px-4 sm:px-6 py-2 divide-y divide-dashed divide-emerald-200/80 border border-emerald-100/60">
@@ -71,7 +71,9 @@ export default function ContactSection() {
                     <a
                       key={i}
                       href={item.href}
-                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      target={
+                        item.href.startsWith("http") ? "_blank" : undefined
+                      }
                       rel="noopener noreferrer"
                       className="flex items-center gap-4 py-4 sm:py-5 first:pt-3 last:pb-3 hover:bg-emerald-100/40 rounded-xl transition-colors -mx-1 px-1"
                     >
@@ -79,7 +81,9 @@ export default function ContactSection() {
                         <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] sm:text-xs text-gray-400 mb-0.5">{item.sublabel}</p>
+                        <p className="text-[11px] sm:text-xs text-gray-400 mb-0.5">
+                          {item.sublabel}
+                        </p>
                         <p className="text-gray-800 font-semibold text-sm sm:text-base break-words">
                           {item.label}
                         </p>

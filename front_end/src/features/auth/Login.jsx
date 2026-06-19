@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaAndroid, FaSignInAlt } from "react-icons/fa";
 
-
 import { API_URLS } from "../../api/api";
 
 const LoginPage = () => {
@@ -39,7 +38,11 @@ const LoginPage = () => {
           navigate(`/profile/${data.user.id_user}`);
         }
       } else {
-        setError(data.message || data.error || "Identifiants incorrects. Vérifiez votre email et mot de passe.");
+        setError(
+          data.message ||
+            data.error ||
+            "Identifiants incorrects. Vérifiez votre email et mot de passe.",
+        );
       }
     } catch (err) {
       console.error("Error during login:", err);
@@ -55,7 +58,7 @@ const LoginPage = () => {
           {/* Left Side: Company Info (Hidden on small screens like your CSS) */}
           <div className="hidden md:block lg:w-135 overflow-hidden">
             <img
-              src="./src/assets/loginPicture.jpg" // Replace with your actual image path
+              src="./src/assets/images/loginPicture.jpg"
               alt="Login Visual"
               className="w-full h-full object-cover"
             />

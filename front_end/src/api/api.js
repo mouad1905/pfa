@@ -11,6 +11,12 @@ export const API_URLS = {
   MES_COURS: `${API_BASE_URL}/mes-cours`,
   USER: `${API_BASE_URL}/user`,
   LOGOUT: `${API_BASE_URL}/logout`,
+  MESSAGES: `${API_BASE_URL}/messages`,
+  MESSAGES_INBOX: `${API_BASE_URL}/messages/inbox`,
+  MESSAGES_SENT: `${API_BASE_URL}/messages/sent`,
+  MESSAGES_UNREAD: `${API_BASE_URL}/messages/unread-count`,
+  messageRead: (id) => `${API_BASE_URL}/messages/${id}/read`,
+  SAVE_MEDIA: `${API_BASE_URL}/save-media`,
 };
 
 const authHeaders = () => {

@@ -144,6 +144,39 @@ class HebergementController extends Controller
     }
 
     /**
+     * Mettre à jour un hébergement (propriétaire uniquement)
+     * Le statut reste inchangé pour que l'annonce reste active si elle l'était déjà
+     */
+    public function update(Request $request, int $id)
+    {
+        $hebergement = Hebergement::where('id_createur', Auth::id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'titre'              => 'nullable|string|max:255',
+            'type'               => 'required|string',
+            'type_chambre'       => 'nullable|string|max:50',
+            'nbr_chambres'       => 'nullable|integer',
+            'max_capacity'       => 'nullable|integer',
+            'meuble'             => 'nullable|boolean',
+            'superficie'         => 'nullable|numeric',
+            'nb_locataires'      => 'nullable|integer',
+            'genre_colocataires' => 'nullable|string|max:30',
+            'students_only'      => 'nullable|boolean',
+            'localisation'       => 'required|string',
+            'description'        => 'nullable|string',
+            'reglement'          => 'nullable|string',
+            'prix'               => 'required|numeric',
+        ]);
+
+        $hebergement->update($validated);
+
+        return response()->json([
+            'message' => 'Annonce mise à jour avec succès',
+            'data'    => new HebergementResource($hebergement->load('proprietaire')),
+        ]);
+    }
+
+    /**
      * Upload Cloudinary avec repli URL si config absente
      */
     protected function uploadOrUrl($file, string $folder): string
