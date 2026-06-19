@@ -26,6 +26,8 @@ import AddHouse from "../features/housing/AddHouse";
 import Dashboard from "../features/dashboard/Dashboard";
 import Security from "../features/profile/Security";
 import ScrollToTop from "../components/layout/ScrollToTop";
+import ProtectedRoute from "./ProtectedRoute";
+import Chat from "../features/chat/Chat";
 
 function PublicLayout() {
   return (
@@ -62,6 +64,7 @@ export default function AppRoutes() {
         <Route path="/revisions" element={<Revisions />} />
         <Route path="/profile/:id?" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/chat/:id?" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/support" element={<Support />} />
         <Route path="/home/:id" element={<InfoHome />} />
         <Route path="/register" element={<ChooseRole />} />
