@@ -45,7 +45,27 @@ class ReservationController extends Controller
             ->whereHas('hebergement', fn ($q) => $q->where('id_createur', Auth::id()))
             ->findOrFail($id);
 
-        $reservation->statut = $request->statut;
+        $oldStatut = $reservation->statut;
+        $newStatut = $request->statut;
+        $hebergement = $reservation->hebergement;
+
+        if ($newStatut === 'confirmee' && $oldStatut !== 'confirmee') {
+            $current = $hebergement->nb_locataires ?? 0;
+            $max = $hebergement->max_capacity ?? 0;
+            if ($max > 0 && $current >= $max) {
+                return response()->json(['message' => 'Capacité maximale atteinte.'], 422);
+            }
+            $hebergement->nb_locataires = $current + 1;
+            $hebergement->save();
+        }
+
+        if ($newStatut === 'annulee' && $oldStatut === 'confirmee') {
+            $current = $hebergement->nb_locataires ?? 0;
+            $hebergement->nb_locataires = max(0, $current - 1);
+            $hebergement->save();
+        }
+
+        $reservation->statut = $newStatut;
         $reservation->save();
 
         return response()->json([
@@ -62,8 +82,8 @@ class ReservationController extends Controller
             $reservation = Reservation::create([
                 'id_etudiant'    => Auth::id(),
                 'id_hebergement' => $validated['id_hebergement'],
-                'date_debut'     => $validated['date_debut'],
-                'date_fin'       => $validated['date_fin'],
+                'date_debut'     => $validated['date_debut'] ?? null,
+                'date_fin'       => $validated['date_fin'] ?? null,
                 'statut'         => 'en_attente'
             ]);
 

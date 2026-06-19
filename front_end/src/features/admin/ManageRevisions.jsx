@@ -308,25 +308,15 @@ const ManageRevisions = () => {
                   filteredCourses.map((c) => (
                     <tr key={c.id_cours} className="hover:bg-slate-50/50 transition">
                       <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            className="w-12 h-12 rounded-xl object-cover border border-slate-200 bg-slate-50"
-                            src={c.image_cours || `https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=150&q=80`}
-                            alt="cours"
-                            onError={(e) => {
-                              e.target.src = "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=150&q=80";
-                            }}
-                          />
-                          <div>
-                            <div className="font-bold text-slate-800 text-sm sm:text-base">
-                              {c.description ? c.description.substring(0, 45) + (c.description.length > 45 ? "..." : "") : "Cours de soutien"}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
-                              <span className="font-medium text-teal-600">Par:</span>
-                              <span className="font-semibold text-slate-600">
-                                {c.professeur ? `${c.professeur.prenom} ${c.professeur.nom}` : "Professeur EMSI"}
-                              </span>
-                            </div>
+                        <div>
+                          <div className="font-bold text-slate-800 text-sm sm:text-base">
+                            {c.description ? c.description.substring(0, 45) + (c.description.length > 45 ? "..." : "") : "Cours de soutien"}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                            <span className="font-medium text-teal-600">Par:</span>
+                            <span className="font-semibold text-slate-600">
+                              {c.professeur ? `${c.professeur.prenom} ${c.professeur.nom}` : "Professeur EMSI"}
+                            </span>
                           </div>
                         </div>
                       </td>

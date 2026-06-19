@@ -10,12 +10,18 @@ import {
   FaSpinner, 
   FaCheckCircle, 
   FaArrowUp,
-  FaShieldAlt
+  FaShieldAlt,
+  FaUser,
+  FaMapMarkerAlt,
+  FaCheck,
+  FaHourglassHalf
 } from "react-icons/fa";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
+  const [recentReservations, setRecentReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reservationsLoading, setReservationsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadStats = async () => {
@@ -32,8 +38,22 @@ const AdminDashboard = () => {
     }
   };
 
+  const loadRecentReservations = async () => {
+    try {
+      setReservationsLoading(true);
+      const data = await fetchData(`${API_BASE_URL}/admin/reservations`);
+      setRecentReservations(data.data || data || []);
+    } catch (err) {
+      console.error("Error fetching recent reservations:", err);
+      setRecentReservations([]);
+    } finally {
+      setReservationsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadStats();
+    loadRecentReservations();
   }, []);
 
   if (loading) {
@@ -136,10 +156,19 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Statistics breakdown */}
+        {/* Activités & Réservations */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-xs border border-slate-100 space-y-6">
-          <h3 className="font-bold text-slate-800 text-lg">Activités & Réservations</h3>
-          
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-slate-800 text-lg">Activités & Réservations</h3>
+            <button
+              onClick={loadRecentReservations}
+              className="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1 transition cursor-pointer"
+            >
+              <FaClock size={11} /> Actualiser
+            </button>
+          </div>
+
+          {/* Stats row */}
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Réservations</div>
@@ -155,11 +184,61 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-6 space-y-4">
+          {/* Recent activity feed */}
+          <div className="border-t border-slate-100 pt-5">
+            <h4 className="text-sm font-bold text-slate-700 mb-4">Réservations récentes</h4>
+
+            {reservationsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <FaSpinner className="animate-spin text-teal-600 text-xl" />
+              </div>
+            ) : recentReservations.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-sm font-medium">
+                Aucune réservation récente.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentReservations.slice(0, 6).map((res, idx) => {
+                  const statusColor = res.statut === "confirmee"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : res.statut === "en_attente"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-slate-100 text-slate-500";
+                  const statusLabel = res.statut === "confirmee" ? "Confirmée" : res.statut === "en_attente" ? "En attente" : res.statut;
+                  return (
+                    <div key={res.id_reservation || idx} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                          res.statut === "confirmee" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                        }`}>
+                          {res.statut === "confirmee" ? <FaCheck size={12} /> : <FaHourglassHalf size={12} />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate">
+                            {res.etudiant ? `${res.etudiant.prenom} ${res.etudiant.nom}` : "Étudiant"}
+                            {res.hebergement && (
+                              <span className="font-normal text-slate-400"> — {res.hebergement.titre || res.hebergement.localisation || "Hébergement"}</span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {res.created_at ? new Date(res.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${statusColor}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Validation audit */}
+          <div className="border-t border-slate-100 pt-5 space-y-3">
             <h4 className="text-sm font-bold text-slate-700">Audit des validations requises</h4>
-            
             <div className="space-y-3">
-              {/* Accommodation validation */}
               <div className="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
@@ -167,7 +246,7 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <h5 className="font-semibold text-slate-800 text-sm">Hébergements en attente</h5>
-                    <p className="text-xs text-slate-400">Annonces nécessitant une validation physique</p>
+                    <p className="text-xs text-slate-400">Annonces nécessitant une validation</p>
                   </div>
                 </div>
                 {annonces.hebergements_en_attente > 0 ? (
@@ -180,8 +259,6 @@ const AdminDashboard = () => {
                   </span>
                 )}
               </div>
-
-              {/* Courses validation */}
               <div className="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-sky-50 text-sky-600 rounded-lg flex items-center justify-center">
@@ -189,7 +266,7 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <h5 className="font-semibold text-slate-800 text-sm">Cours de soutien en attente</h5>
-                    <p className="text-xs text-slate-400">Offres de révision nécessitant une validation</p>
+                    <p className="text-xs text-slate-400">Offres nécessitant une validation</p>
                   </div>
                 </div>
                 {annonces.cours_en_attente > 0 ? (
@@ -204,7 +281,6 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-
         </div>
 
         {/* Security & System Info */}

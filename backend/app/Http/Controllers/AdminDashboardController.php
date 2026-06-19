@@ -45,6 +45,19 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Obtenir les réservations récentes (Activités)
+     */
+    public function getRecentReservations()
+    {
+        $reservations = Reservation::with(['etudiant', 'hebergement'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return response()->json($reservations);
+    }
+
+    /**
      * Obtenir l'historique des paiements
      */
     public function getPaiements()
@@ -164,7 +177,7 @@ class AdminDashboardController extends Controller
      */
     public function getAllHebergements()
     {
-        $hebergements = Hebergement::with('proprietaire')->orderBy('created_at', 'desc')->get();
+        $hebergements = Hebergement::with(['proprietaire', 'occupants'])->orderBy('created_at', 'desc')->get();
         return HebergementResource::collection($hebergements);
     }
 
@@ -173,7 +186,7 @@ class AdminDashboardController extends Controller
      */
     public function getHebergement($id)
     {
-        $hebergement = Hebergement::with('proprietaire')->findOrFail($id);
+        $hebergement = Hebergement::with(['proprietaire', 'occupants'])->findOrFail($id);
         return new HebergementResource($hebergement);
     }
 

@@ -46,7 +46,7 @@ const Revisions = () => {
           price: `${item.prix} ${item.type_prix}`,
           availability:
             item.mode_enseignement === "en_ligne" ? "En ligne" : "Présentiel",
-          image: `https://i.pravatar.cc/150?u=${item.id_cours}`,
+          image: item.professeur?.photo_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent((item.professeur?.prenom || '') + ' ' + (item.professeur?.nom || '?'))}&background=10b981&color=fff&bold=true&font-size=0.33&size=128`,
           description: item.description,
           id_prof: item.professeur?.id_user,
           rating: item.professeur?.avg_rating || "0.0",

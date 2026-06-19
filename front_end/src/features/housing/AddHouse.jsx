@@ -112,11 +112,7 @@ export default function UniConnectListing() {
   const [studentsOnly, setStudentsOnly] = useState(true);
 
   // Step 4: Media state
-  const [selectedImages, setSelectedImages] = useState([
-    PRESET_IMAGES[0].url,
-    PRESET_IMAGES[1].url,
-    PRESET_IMAGES[3].url,
-  ]);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [customImageUrl, setCustomImageUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [imageFileMap, setImageFileMap] = useState({});
@@ -293,9 +289,6 @@ export default function UniConnectListing() {
   };
 
   const removeSelectedImage = (url) => {
-    if (selectedImages.length <= 3) {
-      return Swal.fire("Info", "Vous devez garder au moins 3 photos.", "info");
-    }
     const nextMap = { ...imageFileMap };
     delete nextMap[url];
     setImageFileMap(nextMap);
@@ -336,11 +329,11 @@ export default function UniConnectListing() {
     formData.append("prix", String(parseFloat(price)));
     formData.append("type", type);
     formData.append("type_chambre", roomType);
-    formData.append("nbr_chambres", String(parseInt(capacity, 10) || 1));
+    formData.append("nbr_chambres", String(Math.max(0, parseInt(capacity, 10) || 0)));
     formData.append("superficie", String(parseFloat(area) || 0));
-    formData.append("nb_locataires", String(Number(occupancy) || 1));
+    formData.append("nb_locataires", String(Math.max(0, Number(occupancy) || 0)));
     formData.append("genre_colocataires", gender === "all" ? "mixte" : gender);
-    formData.append("max_capacity", String(parseInt(spots, 10) || 1));
+    formData.append("max_capacity", String(Math.max(0, parseInt(spots, 10) || 0)));
     formData.append("students_only", studentsOnly ? "1" : "0");
     formData.append("reglement", JSON.stringify(reglementData));
     formData.append("meuble", furnitureStatus === "Fully Furnished" ? "1" : "0");
@@ -359,7 +352,7 @@ export default function UniConnectListing() {
         // garde les fichiers originaux si la compression échoue
       }
       formData.append("image_principale", files[0]);
-      files.slice(1, 5).forEach((f) => formData.append("images_galerie[]", f));
+      files.slice(1).forEach((f) => formData.append("images_galerie[]", f));
     }
     if (httpUrls.length > 0) {
       if (files.length === 0) {
@@ -1048,7 +1041,7 @@ export default function UniConnectListing() {
                       <div>
                         <div className="flex justify-between items-center mb-3">
                           <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">GALLERY PREVIEW</h4>
-                          <span className="text-xs text-[#10b981] font-extrabold">{selectedImages.length} Photos Uploaded</span>
+                          <span className="text-xs text-[#10b981] font-extrabold">{selectedImages.length}/6 · min 3</span>
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

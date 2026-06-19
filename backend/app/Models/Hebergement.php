@@ -62,4 +62,14 @@ class Hebergement extends Model
     {
         return $this->hasMany(Reservation::class, 'id_hebergement', 'id_hebergement');
     }
+
+    /**
+     * Occupants confirmés (réservations avec statut = confirmee)
+     */
+    public function occupants()
+    {
+        return $this->hasMany(Reservation::class, 'id_hebergement', 'id_hebergement')
+            ->where('statut', 'confirmee')
+            ->with('etudiant');
+    }
 }

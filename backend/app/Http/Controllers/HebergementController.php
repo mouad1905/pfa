@@ -20,7 +20,7 @@ class HebergementController extends Controller
     {
         $hebergements = Hebergement::where('statut', 'valide')
             ->where('actif', true)
-            ->with('proprietaire')
+            ->with(['proprietaire', 'occupants'])
             ->get();
 
         return HebergementResource::collection($hebergements);
@@ -32,7 +32,7 @@ class HebergementController extends Controller
     public function mesHebergements()
     {
         $hebergements = Hebergement::where('id_createur', Auth::id())
-            ->with('proprietaire')
+            ->with(['proprietaire', 'occupants'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -85,7 +85,7 @@ class HebergementController extends Controller
 
             return response()->json([
                 'message' => 'Hébergement créé avec succès',
-                'data'    => new HebergementResource($hebergement->load('proprietaire')),
+                'data'    => new HebergementResource($hebergement->load(['proprietaire', 'occupants'])),
             ], 201);
 
         } catch (\Exception $e) {
@@ -98,7 +98,7 @@ class HebergementController extends Controller
      */
     public function show(int $id)
     {
-        $hebergement = Hebergement::with('proprietaire')->find($id);
+        $hebergement = Hebergement::with(['proprietaire', 'occupants'])->find($id);
 
         if (!$hebergement) {
             return response()->json(['message' => 'Hébergement non trouvé'], 404);
@@ -139,7 +139,7 @@ class HebergementController extends Controller
 
         return response()->json([
             'message' => 'Publication mise à jour',
-            'data'    => new HebergementResource($hebergement),
+            'data'    => new HebergementResource($hebergement->load(['proprietaire', 'occupants'])),
         ]);
     }
 
@@ -184,7 +184,7 @@ class HebergementController extends Controller
 
         return response()->json([
             'message' => 'Images mises à jour avec succès',
-            'data'    => new HebergementResource($hebergement),
+            'data'    => new HebergementResource($hebergement->load(['proprietaire', 'occupants'])),
         ]);
     }
 }

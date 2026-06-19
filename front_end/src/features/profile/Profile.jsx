@@ -275,8 +275,8 @@ function EvaluationForm({ targetUserId, onSubmitted }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div>
-        <p className="text-base font-bold text-[#2c3e50]">Évaluez ce professeur</p>
-        <p className="text-xs text-[#6f7c8f] mt-1">Votre évaluation aide d'autres étudiants à choisir leur tuteur.</p>
+        <p className="text-base font-bold text-[#2c3e50]">Évaluez ce profil</p>
+        <p className="text-xs text-[#6f7c8f] mt-1">Votre évaluation aide la communauté à identifier les profils les plus fiables.</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -381,41 +381,15 @@ export default function StudentProfile() {
   // Load the dynamic theme based on the profile's role
   const theme = getRoleTheme(user.role);
 
-  // Mock / fallback evaluations if database is empty, to match mockup design perfectly
-  const reviewsList = (user.evaluations && user.evaluations.length > 0) ? user.evaluations : [
-    {
-      id_evaluation: 1,
-      id_auteur: 101,
-      auteur: { prenom: "Sanford", nom: "Mante", photo_profil: null },
-      date_evaluation: "2026-05-17T12:00:00.000Z",
-      note: 4,
-      commentaire: "Le Prosseur de 3amal bien bien"
-    },
-    {
-      id_evaluation: 2,
-      id_auteur: 102,
-      auteur: { prenom: "Étudiant", nom: "", photo_profil: null },
-      date_evaluation: "2026-05-17T12:00:00.000Z",
-      note: 2,
-      commentaire: "b7alou b7al z3ra 0 f ta3lim"
-    },
-    {
-      id_evaluation: 3,
-      id_auteur: 103,
-      auteur: { prenom: "Krystal", nom: "White", photo_profil: null },
-      date_evaluation: "2026-05-19T12:00:00.000Z",
-      note: 3,
-      commentaire: "Explications complexes ❓ Rythme rapide ⚡ Peu disponible ⏳ Sévère mais juste ⚖️"
-    }
-  ];
+  const reviewsList = (user.evaluations && user.evaluations.length > 0) ? user.evaluations : [];
 
-  const evaluationsCount = user.role === "professeur"
-    ? (user.evaluations_count !== undefined && user.evaluations_count !== null ? user.evaluations_count : (user.evaluations && user.evaluations.length > 0 ? user.evaluations.length : 3))
-    : 0;
+  const evaluationsCount = user.evaluations_count !== undefined && user.evaluations_count !== null
+    ? user.evaluations_count
+    : (user.evaluations && user.evaluations.length > 0 ? user.evaluations.length : 0);
 
-  const avgRating = user.role === "professeur"
-    ? (user.avg_rating || (user.evaluations && user.evaluations.length > 0 ? (user.evaluations.reduce((acc, curr) => acc + curr.note, 0) / user.evaluations.length).toFixed(1) : "3.0"))
-    : "0.0";
+  const avgRating = user.avg_rating || (user.evaluations && user.evaluations.length > 0
+    ? (user.evaluations.reduce((acc, curr) => acc + curr.note, 0) / user.evaluations.length).toFixed(1)
+    : "0.0");
 
   return (
     <div className="bg-[#f8f9ff] mt-20 min-h-screen font-poppins text-[#6f7c8f]">
@@ -447,26 +421,24 @@ export default function StudentProfile() {
             </h1>
             <p className="text-[#6f7c8f] text-xs font-medium mt-1">{user.email || "mckenzie.gerlach@example.com"}</p>
 
-            {/* Display rating only for teachers (professeur) */}
-            {user.role === "professeur" && (
-              <div className="flex flex-col items-center mt-4">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-extrabold text-[#2c3e50]">{Number(avgRating).toFixed(1)}</span>
-                  <div className="flex items-center gap-0.5 text-[#f59e0b]">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <FaStar
-                        key={star}
-                        className={star <= Math.round(Number(avgRating)) ? "text-[#f59e0b]" : "text-[#e2e8f0]"}
-                        size={14}
-                      />
-                    ))}
-                  </div>
+            {/* Display rating for all profiles */}
+            <div className="flex flex-col items-center mt-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl font-extrabold text-[#2c3e50]">{Number(avgRating).toFixed(1)}</span>
+                <div className="flex items-center gap-0.5 text-[#f59e0b]">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      className={star <= Math.round(Number(avgRating)) ? "text-[#f59e0b]" : "text-[#e2e8f0]"}
+                      size={14}
+                    />
+                  ))}
                 </div>
-                <p className="text-[10px] text-[#6f7c8f] font-medium mt-1">
-                  ({evaluationsCount} {evaluationsCount === 1 ? "évaluation" : "évaluations"})
-                </p>
               </div>
-            )}
+              <p className="text-[10px] text-[#6f7c8f] font-medium mt-1">
+                ({evaluationsCount} {evaluationsCount === 1 ? "évaluation" : "évaluations"})
+              </p>
+            </div>
             
             <div className="flex gap-2 mt-6">
               <span className="bg-[#e6f7f4] text-[#1ab69d] px-4 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
@@ -604,14 +576,13 @@ export default function StudentProfile() {
           </section>
 
           {/* EVALUATIONS & REVIEWS SECTION */}
-          {user.role === "professeur" && (
-            <div className="md:col-span-12 mt-6">
-              
-              {/* Header outside of the card */}
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-[#2c3e50]">Évaluations & Avis</h2>
-                <p className="text-[#6f7c8f] text-sm mt-1">Consultez les retours des étudiants ou évaluez les compétences pédagogiques de ce professeur.</p>
-              </div>
+          <div className="md:col-span-12 mt-6">
+            
+            {/* Header outside of the card */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#2c3e50]">Évaluations & Avis</h2>
+              <p className="text-[#6f7c8f] text-sm mt-1">Consultez les avis de la communauté ou partagez votre expérience avec ce profil.</p>
+            </div>
 
               {/* White card container */}
               <section className="bg-white rounded-3xl shadow-sm p-8 border border-[#f1f3f6]">
@@ -636,7 +607,7 @@ export default function StudentProfile() {
 
                   {/* Form to submit review */}
                   <div className="lg:col-span-8">
-                    {loggedInUser && loggedInUser.role === "etudiant" && !isOwnProfile ? (
+                    {loggedInUser && !isOwnProfile ? (
                       <EvaluationForm targetUserId={user.id_user} onSubmitted={() => {
                         window.location.reload();
                       }} />
@@ -649,9 +620,7 @@ export default function StudentProfile() {
                         <p className="text-xs text-[#6f7c8f] mt-2 leading-relaxed font-medium">
                           {!loggedInUser 
                             ? "Veuillez vous connecter pour soumettre une évaluation." 
-                            : isOwnProfile 
-                              ? "Vous ne pouvez pas évaluer votre propre profil enseignant." 
-                              : "Seuls les étudiants inscrits peuvent soumettre des évaluations aux enseignants partenaires."}
+                            : "Vous ne pouvez pas évaluer votre propre profil."}
                         </p>
                       </div>
                     )}
@@ -719,7 +688,6 @@ export default function StudentProfile() {
                 </div>
               </section>
             </div>
-          )}
         </div>
       </main>
     </div>

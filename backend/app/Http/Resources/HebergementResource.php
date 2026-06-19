@@ -30,6 +30,14 @@ class HebergementResource extends JsonResource
             'actif'              => (bool) ($this->actif ?? true),
             'image'              => $this->image_principale,
             'images'             => $this->images_galerie ?? [],
+            'occupants'          => $this->whenLoaded('occupants', function () {
+                return $this->occupants->map(fn ($r) => [
+                    'id_user'   => $r->etudiant->id_user,
+                    'prenom'    => $r->etudiant->prenom,
+                    'nom'       => $r->etudiant->nom,
+                    'photo_profil' => $r->etudiant->photo_profil,
+                ]);
+            }),
             'proprietaire'       => new UtilisateurResource($this->whenLoaded('proprietaire')),
             'id_createur'        => $this->id_createur,
             'created_at'         => $this->created_at,

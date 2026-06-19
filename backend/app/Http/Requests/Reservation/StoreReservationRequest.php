@@ -15,8 +15,8 @@ class StoreReservationRequest extends FormRequest
     {
         return [
             'id_hebergement' => 'required|exists:hebergement,id_hebergement',
-            'date_debut'     => 'required|date|after_or_equal:today',
-            'date_fin'       => 'required|date|after:date_debut'
+            'date_debut'     => 'nullable|date|after_or_equal:today',
+            'date_fin'       => 'nullable|date|after:date_debut'
         ];
     }
 }

@@ -12,7 +12,10 @@ import {
   FaBan,
   FaUsers,
   FaHome,
-  FaClock
+  FaClock,
+  FaShareAlt,
+  FaShieldAlt,
+  FaFlag
 } from "react-icons/fa";
 
 const mapApiToHome = (item) => {
@@ -38,7 +41,7 @@ const mapApiToHome = (item) => {
     location: item.localisation || "",
     type: item.type,
     rooms: item.nbr_chambres,
-    maxCapacity: item.max_capacity || parseInt(item.nbr_chambres) || 1,
+    maxCapacity: item.max_capacity ?? parseInt(item.nbr_chambres) ?? 0,
     area: item.superficie,
     roomType: item.type_chambre || "Chambre",
     gender: item.genre_colocataires || "mixte",
@@ -47,13 +50,14 @@ const mapApiToHome = (item) => {
     rules: parsed.rules,
     amenities: parsed.amenities,
     furniture: furnitureLabel,
-    occupancy: item.nb_locataires || 0,
+    occupancy: item.nb_locataires ?? 0,
     statut: item.statut,
     image: item.image,
     images: item.images?.length ? item.images : item.image ? [item.image] : [],
     description: item.description || "",
     poster: `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() || "Propriétaire",
     proprietaireId: item.proprietaire?.id_user || item.id_createur,
+    occupants: item.occupants || [],
     formule: item.formule || "standard",
     created_at: item.created_at,
   };
@@ -161,21 +165,12 @@ const AdminHomeDetail = () => {
     }
   };
 
-  const defaultImages = [
-    "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-  ];
-
   const displayImages = [];
-  if (home && Array.isArray(home.images) && home.images.length > 0) {
-    displayImages.push(...home.images);
-  } else if (home && home.image) {
+  if (home && home.image) {
     displayImages.push(home.image);
   }
-  while (displayImages.length < 4) {
-    displayImages.push(defaultImages[displayImages.length % defaultImages.length]);
+  if (home && Array.isArray(home.images) && home.images.length > 0) {
+    displayImages.push(...home.images);
   }
 
   const googleMapsUrl = home?.location
@@ -199,8 +194,8 @@ const AdminHomeDetail = () => {
     );
   }
 
-  const maxCapacity = home.maxCapacity || 1;
-  const currentOccupants = Math.min(home.occupancy || 0, maxCapacity);
+  const maxCapacity = Math.max(0, home.maxCapacity ?? 0);
+  const currentOccupants = Math.min(home.occupancy ?? 0, maxCapacity);
   const posterInitials = (home.poster || "P")
     .split(" ")
     .map((w) => w[0])
@@ -262,31 +257,19 @@ const AdminHomeDetail = () => {
             className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700 cursor-pointer"
           />
         </div>
-        <div className="grid grid-rows-2 gap-4 h-[480px]">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="overflow-hidden rounded-[20px] h-full shadow-sm hover:shadow-md transition-shadow">
-              <img
-                src={displayImages[1]}
-                alt="Kitchen Area"
-                className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-500 cursor-pointer"
-              />
-            </div>
-            <div className="overflow-hidden rounded-[20px] h-full shadow-sm hover:shadow-md transition-shadow">
-              <img
-                src={displayImages[2]}
-                alt="Exterior View"
-                className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-500 cursor-pointer"
-              />
-            </div>
+        {displayImages.length > 1 && (
+          <div className="grid grid-cols-2 gap-4 h-[480px] content-start">
+            {displayImages.slice(1).map((img, idx) => (
+              <div key={idx} className="overflow-hidden rounded-[20px] shadow-sm hover:shadow-md transition-shadow h-[230px]">
+                <img
+                  src={img}
+                  alt={`Photo ${idx + 2}`}
+                  className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-500 cursor-pointer"
+                />
+              </div>
+            ))}
           </div>
-          <div className="overflow-hidden rounded-[20px] h-full shadow-sm hover:shadow-md transition-shadow">
-            <img
-              src={displayImages[3]}
-              alt="Living Room"
-              className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Header */}
@@ -447,16 +430,39 @@ const AdminHomeDetail = () => {
               <div className="bg-[#10b981] h-full rounded-full transition-all duration-550" style={{ width: `${Math.min(100, (Math.max(0, maxCapacity - currentOccupants) / maxCapacity) * 100)}%` }} />
             </div>
             <div className="text-left">
-              <h3 className="font-extrabold text-slate-800 text-sm mb-4">Occupation actuelle</h3>
-              <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                  <FaUsers className="w-6 h-6" />
+              <h3 className="font-extrabold text-slate-800 text-sm mb-4">
+                Occupation actuelle
+                {home.occupants?.length > 0 && (
+                  <span className="text-[#10b981] text-xs font-bold ml-2">({home.occupants.length})</span>
+                )}
+              </h3>
+              {home.occupants?.length > 0 ? (
+                <div className="space-y-2">
+                  {home.occupants.map((occ) => (
+                    <div key={occ.id_user} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-2xl">
+                      <img
+                        className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm"
+                        src={occ.photo_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent((occ.prenom||'')+' '+(occ.nom||''))}&background=10b981&color=fff&size=36&bold=true`}
+                        alt={occ.prenom}
+                      />
+                      <div className="text-left">
+                        <p className="font-bold text-slate-800 text-xs">{occ.prenom} {occ.nom}</p>
+                        <span className="text-[10px] text-slate-400 font-semibold">Occupant</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">{currentOccupants} occupant{currentOccupants > 1 ? "s" : ""}</h4>
-                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">sur {maxCapacity} place{maxCapacity > 1 ? "s" : ""} disponibles</span>
+              ) : (
+                <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
+                  <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+                    <FaUsers className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">Aucun occupant</h4>
+                    <span className="text-xs text-slate-400 font-semibold block mt-0.5">sur {maxCapacity} place{maxCapacity > 1 ? "s" : ""} disponibles</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -475,7 +481,28 @@ const AdminHomeDetail = () => {
             </div>
           </div>
 
+          <div className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-4 flex items-center gap-3 text-left shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+              <FaShieldAlt className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-bold text-emerald-800 text-xs">Annonce vérifiée</p>
+              <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Logement authentifié par UniConnect</p>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 pt-2">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                Swal.fire("Lien copié !", "Le lien de l'annonce a été copié.", "success");
+              }}
+              className="w-full border-2 border-slate-200 hover:bg-slate-50 active:scale-[0.98] text-slate-600 py-3 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer bg-white"
+            >
+              <FaShareAlt className="w-3.5 h-3.5 shrink-0" />
+              Partager
+            </button>
+
             <button
               onClick={() => navigate("/admin/manage-homes")}
               className="w-full border-2 border-slate-200 hover:bg-slate-50 text-slate-600 py-3.5 rounded-2xl font-bold text-sm transition-all cursor-pointer bg-white"

@@ -29,7 +29,7 @@ class StoreHebergementRequest extends FormRequest
             'reglement'             => 'nullable|string',
             'prix'                  => 'required|numeric',
             'image_principale'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:30720',
-            'images_galerie'        => 'nullable|array|max:5',
+            'images_galerie'        => 'nullable|array|max:6',
             'images_galerie.*'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:30720',
             'image_principale_url'  => 'nullable|url',
             'images_galerie_urls'   => 'nullable|array|max:10',

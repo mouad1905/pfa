@@ -83,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Routes d'administration
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/statistiques', [AdminDashboardController::class, 'getStats']);
+        Route::get('/reservations', [AdminDashboardController::class, 'getRecentReservations']);
         Route::get('/paiements', [AdminDashboardController::class, 'getPaiements']);
         Route::put('/hebergements/{id}/statut', [AdminDashboardController::class, 'updateHebergementStatus']);
         Route::get('/hebergements', [AdminDashboardController::class, 'getAllHebergements']);

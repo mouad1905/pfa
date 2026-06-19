@@ -19,8 +19,12 @@ import {
 // ── Card ─────────────────────────────────────────────────────────────────────
 const ColocationCard = ({ c, onClick, plan }) => {
   const [activeSlide, setActiveSlide] = useState(0);
-  const images =
-    Array.isArray(c.images) && c.images.length > 0 ? c.images : [c.image];
+  const images = (() => {
+    const result = [];
+    if (c.image) result.push(c.image);
+    if (Array.isArray(c.images) && c.images.length > 0) result.push(...c.images);
+    return result;
+  })();
 
   const nextSlide = (e) => {
     e.stopPropagation();
@@ -54,8 +58,7 @@ const ColocationCard = ({ c, onClick, plan }) => {
   const itemIndex = c.id % 3;
   const currentPreset = presets[isNaN(itemIndex) ? 0 : itemIndex];
 
-  // Capacity text
-  const capacityText = `CAPACITY: ${c.rooms || 1} ${c.rooms > 1 ? "STUDENTS" : "STUDENT"}`;
+  const spotsText = c.maxCapacity > 0 ? `${c.occupancy}/${c.maxCapacity} spots` : `${c.occupancy} occupé`;
 
   // Formatting price DH / MO
   const priceDisplay = (() => {
@@ -113,10 +116,7 @@ const ColocationCard = ({ c, onClick, plan }) => {
       {/* Visual Header / Image Container with exact overlays */}
       <div className="relative h-52 overflow-hidden rounded-[18px] bg-slate-100 shadow-inner flex items-center justify-center">
         {/* Animated Stacked Carousel Images or Landscape Placeholder */}
-        {images &&
-        images.length > 0 &&
-        images[0] &&
-        !images[0].includes("unsplash.com/photo-1522708323590-d24dbb6b0267") ? (
+        {images && images.length > 0 && images[0] ? (
           images.map((img, idx) => (
             <img
               key={idx}
@@ -182,10 +182,7 @@ const ColocationCard = ({ c, onClick, plan }) => {
         </div>
 
         {/* Carousel Slider Arrows (only visible on hover) */}
-        {images.length > 1 &&
-          !images[0].includes(
-            "unsplash.com/photo-1522708323590-d24dbb6b0267",
-          ) && (
+        {images.length > 1 && (
             <div className="absolute inset-y-0 inset-x-0 flex items-center justify-between px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
               <button
                 onClick={prevSlide}
@@ -203,10 +200,7 @@ const ColocationCard = ({ c, onClick, plan }) => {
           )}
 
         {/* Bullet Dot indicators */}
-        {images.length > 1 &&
-          !images[0].includes(
-            "unsplash.com/photo-1522708323590-d24dbb6b0267",
-          ) && (
+        {images.length > 1 && (
             <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
               {images.map((_, i) => (
                 <button
@@ -240,7 +234,7 @@ const ColocationCard = ({ c, onClick, plan }) => {
 
           {/* Capacity Text */}
           <div className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide mb-2.5">
-            {capacityText}
+            {spotsText}
           </div>
 
           {/* Elegant Tinted Green Tag Chips */}
@@ -387,15 +381,15 @@ const Colocations = () => {
           priceNum: parseFloat(item.prix),
           location: item.localisation,
           rooms: item.nbr_chambres,
+          maxCapacity: item.max_capacity ?? 0,
+          occupancy: item.nb_locataires ?? 0,
           area: item.superficie,
           type: item.type,
           roomType: item.type_chambre || "Chambre",
           gender: item.genre_colocataires || "mixte",
           rules: item.reglement || "",
           zone: item.prix < 3000 ? "budget" : "campus",
-          image:
-            item.image ||
-            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600",
+          image: item.image || null,
           images: (() => {
             if (item.images) {
               try {
@@ -409,10 +403,7 @@ const Colocations = () => {
               }
             }
             if (item.image) return [item.image];
-            return [
-              "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800",
-              "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&q=80&w=800",
-            ];
+            return [];
           })(),
           poster:
             `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() ||
