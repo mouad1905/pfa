@@ -1,6 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import API_BASE, { fetchData, API_URLS } from "../../api/api";
@@ -65,11 +63,11 @@ const mapApiToHome = (item) => {
 function HomeDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [home, setHome] = useState(null);
-  const [loading, setLoading] = useState(!!id);
-  const { user: loggedInUser } = useContext(AuthContext);
+  const location = useLocation();
+  const stateHome = location.state;
   const [home, setHome] = useState(stateHome ? mapApiToHome(stateHome) : null);
   const [loading, setLoading] = useState(!stateHome && !!id);
+  const { user: loggedInUser } = useContext(AuthContext);
 
   useEffect(() => {
     if (!id) return;
@@ -130,84 +128,6 @@ function HomeDetails() {
     .slice(0, 2)
     .toUpperCase();
 
-  const handleContactOwner = async () => {
-    if (!loggedInUser) {
-      return Swal.fire("Connexion requise", "Connectez-vous pour contacter le propriétaire.", "warning");
-    }
-
-    if (loggedInUser.role !== 'etudiant' && loggedInUser.role !== 'admin') {
-      return Swal.fire("Action non autorisée", "Seuls les étudiants peuvent contacter un locateur.", "error");
-    }
-
-    try {
-      Swal.showLoading();
-      const res = await fetchData(API_URLS.CONVERSATIONS, {
-        method: "POST",
-        body: JSON.stringify({
-          id_destinataire: home.proprietaireId
-        })
-      });
-      Swal.close();
-      const conversationId = res.id_conversation || res.data?.id_conversation;
-      navigate(`/chat/${conversationId}`);
-    } catch (err) {
-      Swal.fire("Erreur", err.message || "Impossible de démarrer la conversation.", "error");
-    }
-  };
-
-  const handleRequestJoin = () => {
-    if (!loggedInUser) {
-      return Swal.fire("Connexion requise", "Connectez-vous pour envoyer une demande de colocation.", "warning");
-    }
-
-    if (loggedInUser.role !== 'etudiant' && loggedInUser.role !== 'admin') {
-      return Swal.fire("Action non autorisée", "Seuls les étudiants peuvent postuler à une colocation.", "error");
-    }
-
-    Swal.fire({
-      title: "Demande de colocation",
-      input: "textarea",
-      inputPlaceholder: "Présentez-vous en quelques mots au propriétaire...",
-      inputAttributes: { rows: 4 },
-      showCancelButton: true,
-      confirmButtonText: "Envoyer la demande",
-      cancelButtonText: "Annuler",
-      confirmButtonColor: "#10b981",
-      preConfirm: (msg) => {
-        if (!msg || !msg.trim()) {
-          Swal.showValidationMessage("Veuillez écrire un message de motivation.");
-          return false;
-        }
-        return msg.trim();
-      },
-    }).then(async (result) => {
-      if (!result.isConfirmed || !result.value) return;
-      try {
-        Swal.showLoading();
-        const res = await fetchData(API_URLS.CONVERSATIONS, {
-          method: "POST",
-          body: JSON.stringify({
-            id_destinataire: home.proprietaireId,
-            contenu: `[Demande de colocation - ${home.title}]\n\n${result.value}`
-          }),
-        });
-        Swal.close();
-        const conversationId = res.id_conversation || res.data?.id_conversation;
-        Swal.fire({
-          title: "Envoyé !",
-          text: "Votre demande a été envoyée. Redirection vers la discussion...",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false
-        }).then(() => {
-          navigate(`/chat/${conversationId}`);
-        });
-      } catch (err) {
-        Swal.fire("Erreur", err.message, "error");
-      }
-    });
-  };
-
   const handleRequestJoin = async () => {
     const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
     if (!loggedInUser) {
@@ -233,7 +153,30 @@ function HomeDetails() {
       Swal.fire("Erreur", err.message, "error");
     }
   };
-  const handleContactOwner = () => openMessageDialog("Contacter le propriétaire", "Contact");
+  const handleContactOwner = async () => {
+    if (!loggedInUser) {
+      return Swal.fire("Connexion requise", "Connectez-vous pour contacter le propriétaire.", "warning");
+    }
+
+    if (loggedInUser.role !== 'etudiant' && loggedInUser.role !== 'admin') {
+      return Swal.fire("Action non autorisée", "Seuls les étudiants peuvent contacter un locateur.", "error");
+    }
+
+    try {
+      Swal.showLoading();
+      const res = await fetchData(API_URLS.CONVERSATIONS, {
+        method: "POST",
+        body: JSON.stringify({
+          id_destinataire: home.proprietaireId
+        })
+      });
+      Swal.close();
+      const conversationId = res.id_conversation || res.data?.id_conversation;
+      navigate(`/chat/${conversationId}`);
+    } catch (err) {
+      Swal.fire("Erreur", err.message || "Impossible de démarrer la conversation.", "error");
+    }
+  };
 
   const handleShare = () => {
     const url = window.location.href;
