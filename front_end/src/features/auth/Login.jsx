@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaAndroid, FaSignInAlt } from "react-icons/fa";
-
+import { FaSignInAlt } from "react-icons/fa";
 import { API_URLS } from "../../api/api";
+import { AuthContext } from "../../context/AuthContext";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,15 +22,15 @@ const LoginPage = () => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ email: username, password }), // Laravel Auth Controller usually expects email
+        body: JSON.stringify({ email: username, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Save token to localStorage
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // Save token and user to state context reactively
+        login(data.access_token, data.user);
+        
         // Redirect based on role
         if (data.user?.role === "admin") {
           navigate("/admin");
@@ -55,7 +56,7 @@ const LoginPage = () => {
       {/* Main Content Container */}
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row w-full max-w-4xl mx-auto shadow-2xl rounded-[20px] overflow-hidden bg-white">
-          {/* Left Side: Company Info (Hidden on small screens like your CSS) */}
+          {/* Left Side: Company Info */}
           <div className="hidden md:block lg:w-135 overflow-hidden">
             <img
               src="./src/assets/images/loginPicture.jpg"
@@ -137,7 +138,7 @@ const LoginPage = () => {
               <p className="text-gray-600">
                 Don't have an account?{" "}
                 <a
-                  href="/register" // Replace with your actual registration page URL
+                  href="/register"
                   className="text-[#10b981] font-semibold hover:underline"
                 >
                   Register Here

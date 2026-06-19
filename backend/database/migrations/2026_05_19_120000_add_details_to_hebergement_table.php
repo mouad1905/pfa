@@ -9,12 +9,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('hebergement', function (Blueprint $table) {
-            $table->string('titre', 255)->nullable()->after('id_createur');
-            $table->string('type_chambre', 50)->nullable()->after('type');
-            $table->string('genre_colocataires', 30)->nullable()->after('nb_locataires');
-            $table->text('reglement')->nullable()->after('description');
-            $table->string('formule', 20)->default('standard')->after('statut');
-            $table->boolean('actif')->default(true)->after('formule');
+            if (!Schema::hasColumn('hebergement', 'titre')) {
+                $table->string('titre', 255)->nullable()->after('id_createur');
+            }
+            if (!Schema::hasColumn('hebergement', 'type_chambre')) {
+                $table->string('type_chambre', 50)->nullable()->after('type');
+            }
+            if (!Schema::hasColumn('hebergement', 'genre_colocataires')) {
+                $table->string('genre_colocataires', 30)->nullable()->after('nb_locataires');
+            }
+            if (!Schema::hasColumn('hebergement', 'reglement')) {
+                $table->text('reglement')->nullable()->after('description');
+            }
+            if (!Schema::hasColumn('hebergement', 'formule')) {
+                $table->string('formule', 20)->default('standard')->after('statut');
+            }
+            if (!Schema::hasColumn('hebergement', 'actif')) {
+                $table->boolean('actif')->default(true)->after('formule');
+            }
         });
     }
 

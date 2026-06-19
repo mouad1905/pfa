@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\MatiereController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -77,6 +78,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/sent', [MessageController::class, 'sent']);
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
     Route::put('/messages/{id}/read', [MessageController::class, 'markAsRead']);
+
+    // Conversations (Messagerie privée)
+    Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::post('/conversations', [ConversationController::class, 'store']);
+    Route::get('/chat/users', [ConversationController::class, 'getEligibleUsers']);
+    Route::get('/conversations/{id}/messages', [ConversationController::class, 'messages']);
+    Route::post('/conversations/{id}/messages', [ConversationController::class, 'sendMessage']);
+    Route::put('/conversations/{id}/read', [ConversationController::class, 'markAsRead']);
+    Route::get('/conversations/unread-total', [ConversationController::class, 'unreadTotal']);
 
     // Media (Cloudinary upload URL save)
     Route::post('/save-media', [MediaController::class, 'store']);

@@ -17,6 +17,12 @@ export const API_URLS = {
   MESSAGES_UNREAD: `${API_BASE_URL}/messages/unread-count`,
   messageRead: (id) => `${API_BASE_URL}/messages/${id}/read`,
   SAVE_MEDIA: `${API_BASE_URL}/save-media`,
+  CONVERSATIONS: `${API_BASE_URL}/conversations`,
+  conversationMessages: (id) => `${API_BASE_URL}/conversations/${id}/messages`,
+  sendConversationMessage: (id) => `${API_BASE_URL}/conversations/${id}/messages`,
+  conversationRead: (id) => `${API_BASE_URL}/conversations/${id}/read`,
+  CONVERSATIONS_UNREAD_TOTAL: `${API_BASE_URL}/conversations/unread-total`,
+  CHAT_USERS: `${API_BASE_URL}/chat/users`,
 };
 
 const authHeaders = () => {

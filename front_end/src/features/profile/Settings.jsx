@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { API_URLS, fetchData } from "../../api/api";
 import { FaUser, FaPhone, FaGraduationCap, FaSave, FaTimes, FaCog } from "react-icons/fa";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function Settings() {
     about: ""
   });
 
-  const loggedInUser = JSON.parse(localStorage.getItem("user") || "null");
+  const { user: loggedInUser, updateUser } = useContext(AuthContext);
 
   useEffect(() => {
     if (!loggedInUser) {
@@ -95,7 +96,7 @@ export default function Settings() {
         niveau_etude: formData.niveau_etude,
         about: formData.about
       };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      updateUser(updatedUser);
 
       // Visual feedback
       Swal.fire({
@@ -109,7 +110,7 @@ export default function Settings() {
       navigate(`/profile/${loggedInUser.id_user}`);
     } catch (err) {
       console.error("Error updating settings:", err);
-      // Even if API update fails (e.g. backend route issues), let's gracefully update local storage for frontend demo and success
+      // Even if API update fails, gracefully update context for frontend demo
       const updatedUser = {
         ...loggedInUser,
         prenom: formData.prenom,
@@ -118,7 +119,7 @@ export default function Settings() {
         niveau_etude: formData.niveau_etude,
         about: formData.about
       };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      updateUser(updatedUser);
 
       Swal.fire({
         title: "Succès (Local) !",
