@@ -201,9 +201,25 @@ class AuthController extends Controller
             'telephone'    => 'nullable|string|max:20',
             'niveau_etude' => 'nullable|string|max:50',
             'about'        => 'nullable|string|max:1000',
+            'photo_profil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
+        if ($request->hasFile('photo_profil')) {
+            $file = $request->file('photo_profil');
+            if ($file->isValid()) {
+                $validated['photo_profil'] = $this->cloudinary->upload(
+                    $file,
+                    'uniconnect/profiles'
+                );
+            } else {
+                unset($validated['photo_profil']);
+            }
+        } else {
+            unset($validated['photo_profil']);
+        }
+
         $user->update($validated);
+        $user->refresh();
 
         return response()->json([
             'message' => 'Profil mis à jour avec succès',

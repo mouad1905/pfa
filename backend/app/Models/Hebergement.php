@@ -64,6 +64,14 @@ class Hebergement extends Model
     }
 
     /**
+     * Évaluations du logement
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(HebergementEvaluation::class, 'id_hebergement', 'id_hebergement');
+    }
+
+    /**
      * Occupants confirmés (réservations avec statut = confirmee)
      */
     public function occupants()

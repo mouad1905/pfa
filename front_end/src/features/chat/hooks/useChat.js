@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { fetchData, API_URLS } from "../../../api/api";
 import { useAuth } from "../../../hooks/useAuth";
 
-export default function useChat() {
+export default function useChat({ noNavigate } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { token, user: currentUser } = useAuth();
@@ -262,18 +262,22 @@ export default function useChat() {
 
       await loadConversations(conversationId);
       setActiveTab("messages");
-      navigate(`/chat/${conversationId}`);
+      if (!noNavigate) {
+        navigate(`/chat/${conversationId}`);
+      }
       setMobileView("chat");
     } catch (err) {
       Swal.fire("Erreur", err.message || "Impossible d'ouvrir la conversation.", "error");
     }
-  }, [navigate, loadConversations]);
+  }, [navigate, loadConversations, noNavigate]);
 
   const handleSelectConversation = useCallback((conv) => {
     setActiveConversation(conv);
-    navigate(`/chat/${conv.id_conversation}`);
+    if (!noNavigate) {
+      navigate(`/chat/${conv.id_conversation}`);
+    }
     setMobileView("chat");
-  }, [navigate]);
+  }, [navigate, noNavigate]);
 
   const loadContacts = useCallback(async () => {
     if (!token) return;

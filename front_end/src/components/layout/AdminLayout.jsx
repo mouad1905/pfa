@@ -1,4 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import ChatFloat from "../../features/chat/ChatFloat";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -68,6 +69,7 @@ const AdminLayout = () => {
           <Outlet />
         </div>
       </main>
+      <ChatFloat />
     </div>
   );
 };

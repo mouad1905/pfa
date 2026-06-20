@@ -130,26 +130,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { token, user: loggedInUser, logout } = useContext(AuthContext);
 
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
-
-  useEffect(() => {
-    if (!token) return;
-
-    const fetchUnreadCount = async () => {
-      try {
-        const result = await fetchData(API_URLS.CONVERSATIONS_UNREAD_TOTAL);
-        setUnreadChatCount(result.total_unread ?? 0);
-      } catch (err) {
-        console.error("Error fetching unread chat count:", err);
-      }
-    };
-
-    fetchUnreadCount();
-
-    // Poll every 10 seconds for real-time feel
-    const interval = setInterval(fetchUnreadCount, 10000);
-    return () => clearInterval(interval);
-  }, [token]);
+  const bustCache = (url) => {
+    if (!url) return null;
+    try { const u = new URL(url); u.searchParams.set("t", Date.now()); return u.toString(); } catch { return url; }
+  };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -228,16 +212,6 @@ const Navbar = () => {
           <Link to="/support" className={navLinkStyles}>
             Support
           </Link>
-          {token && (
-            <Link to="/chat" className={`${navLinkStyles} flex items-center gap-1.5`}>
-              Chat
-              {unreadChatCount > 0 && (
-                <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-[10px] font-black leading-none animate-pulse">
-                  {unreadChatCount}
-                </span>
-              )}
-            </Link>
-          )}
           {/* Dashboard link — only for professors and landlords */}
         </div>
 
@@ -424,7 +398,7 @@ const Navbar = () => {
                 >
                   {loggedInUser?.photo_profil ? (
                     <img
-                      src={loggedInUser.photo_profil}
+                      src={bustCache(loggedInUser.photo_profil)}
                       alt="photo"
                       className="w-9 h-9 rounded-full object-cover border-2 border-emerald-300"
                       onError={(e) => {
@@ -464,7 +438,7 @@ const Navbar = () => {
                         <div className="relative shrink-0">
                           {loggedInUser?.photo_profil ? (
                             <img
-                              src={loggedInUser.photo_profil}
+                              src={bustCache(loggedInUser.photo_profil)}
                               alt="photo"
                               className="w-11 h-11 rounded-full object-cover border-2 border-emerald-200 shadow-sm"
                               onError={(e) => {
@@ -510,22 +484,6 @@ const Navbar = () => {
                             )}
                           />
                           <span>Voir mon profil</span>
-                        </Link>
-
-                        <Link
-                          to="/chat"
-                          onClick={() => setDropdownOpen(false)}
-                          className={profileMenuLinkClass((p) => p.startsWith("/chat"))}
-                        >
-                          <div className="relative">
-                            <FaCommentDots
-                              className={profileMenuIconClass((p) => p.startsWith("/chat"))}
-                            />
-                            {unreadChatCount > 0 && (
-                              <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
-                            )}
-                          </div>
-                          <span>Messages</span>
                         </Link>
 
                         <Link
@@ -640,13 +598,6 @@ const Navbar = () => {
                 match: (p) => p.startsWith("/support"),
               },
             ];
-            if (token) {
-              mobileMenuItems.push({
-                to: "/chat",
-                label: `Messages ${unreadChatCount > 0 ? `(${unreadChatCount})` : ""}`,
-                match: (p) => p.startsWith("/chat"),
-              });
-            }
             return mobileMenuItems.map(({ to, label, match }) => {
               const isActive = match(location.pathname);
               return (

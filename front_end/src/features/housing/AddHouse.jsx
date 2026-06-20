@@ -64,8 +64,6 @@ const PRESET_IMAGES = [
   },
 ];
 
-
-
 export default function UniConnectListing() {
   const navigate = useNavigate();
   const { token, user } = useContext(AuthContext);
@@ -80,17 +78,65 @@ export default function UniConnectListing() {
   const [neighborhood, setNeighborhood] = useState("Agdal");
   const [price, setPrice] = useState("2500");
   const [type, setType] = useState("Studio");
-  
+
   // Dynamic Flexible Amenities
   const [amenitiesList, setAmenitiesList] = useState([
-    { id: "wifi", label: "WiFi", icon: <FaWifi className="text-slate-800 text-[15px] shrink-0" />, active: true, desc: "High-speed wireless internet" },
-    { id: "electricity", label: "Electricity", icon: <FaBolt className="text-slate-800 text-[15px] shrink-0" />, active: true, desc: "Power grid connection" },
-    { id: "water", label: "Water", icon: <FaTint className="text-slate-800 text-[15px] shrink-0" />, active: true, desc: "Running hot/cold water" },
-    { id: "ac", label: "Air Conditioning", icon: <FaSnowflake className="text-slate-800 text-[15px] shrink-0" />, active: false, desc: "In-unit cooling system" },
-    { id: "heating", label: "Heating", icon: <FaFire className="text-slate-800 text-[15px] shrink-0" />, active: false, desc: "Central or space heating" },
-    { id: "kitchen", label: "Kitchen", icon: <FaUtensils className="text-slate-800 text-[15px] shrink-0" />, active: false, desc: "Full kitchen utilities" },
-    { id: "washing", label: "Washing Machine", icon: <FaTshirt className="text-slate-800 text-[15px] shrink-0" />, active: false, desc: "In-unit laundry machine" },
-    { id: "parking", label: "Parking", icon: <FaCar className="text-slate-800 text-[15px] shrink-0" />, active: false, desc: "Reserved parking space" },
+    {
+      id: "wifi",
+      label: "WiFi",
+      icon: <FaWifi className="text-slate-800 text-[15px] shrink-0" />,
+      active: true,
+      desc: "High-speed wireless internet",
+    },
+    {
+      id: "electricity",
+      label: "Electricity",
+      icon: <FaBolt className="text-slate-800 text-[15px] shrink-0" />,
+      active: true,
+      desc: "Power grid connection",
+    },
+    {
+      id: "water",
+      label: "Water",
+      icon: <FaTint className="text-slate-800 text-[15px] shrink-0" />,
+      active: true,
+      desc: "Running hot/cold water",
+    },
+    {
+      id: "ac",
+      label: "Air Conditioning",
+      icon: <FaSnowflake className="text-slate-800 text-[15px] shrink-0" />,
+      active: false,
+      desc: "In-unit cooling system",
+    },
+    {
+      id: "heating",
+      label: "Heating",
+      icon: <FaFire className="text-slate-800 text-[15px] shrink-0" />,
+      active: false,
+      desc: "Central or space heating",
+    },
+    {
+      id: "kitchen",
+      label: "Kitchen",
+      icon: <FaUtensils className="text-slate-800 text-[15px] shrink-0" />,
+      active: false,
+      desc: "Full kitchen utilities",
+    },
+    {
+      id: "washing",
+      label: "Washing Machine",
+      icon: <FaTshirt className="text-slate-800 text-[15px] shrink-0" />,
+      active: false,
+      desc: "In-unit laundry machine",
+    },
+    {
+      id: "parking",
+      label: "Parking",
+      icon: <FaCar className="text-slate-800 text-[15px] shrink-0" />,
+      active: false,
+      desc: "Reserved parking space",
+    },
   ]);
   const [newAmenityText, setNewAmenityText] = useState("");
 
@@ -121,7 +167,7 @@ export default function UniConnectListing() {
 
   const toggleAmenity = (id) => {
     setAmenitiesList(
-      amenitiesList.map((a) => (a.id === id ? { ...a, active: !a.active } : a))
+      amenitiesList.map((a) => (a.id === id ? { ...a, active: !a.active } : a)),
     );
   };
 
@@ -142,14 +188,12 @@ export default function UniConnectListing() {
     setNewAmenityText("");
   };
 
-
-
   const handleStepClick = (targetStep) => {
     if (targetStep < step) {
       setStep(targetStep);
       return;
     }
-    
+
     // Incrementally validate up to targetStep - 1
     let current = step;
     while (current < targetStep) {
@@ -162,11 +206,19 @@ export default function UniConnectListing() {
   const validateStep = (s) => {
     if (s === 1) {
       if (!title.trim()) {
-        Swal.fire("Attention", "Veuillez entrer un titre pour votre annonce.", "warning");
+        Swal.fire(
+          "Attention",
+          "Veuillez entrer un titre pour votre annonce.",
+          "warning",
+        );
         return false;
       }
       if (!location.trim() || !neighborhood.trim()) {
-        Swal.fire("Attention", "Veuillez spécifier la ville et le quartier.", "warning");
+        Swal.fire(
+          "Attention",
+          "Veuillez spécifier la ville et le quartier.",
+          "warning",
+        );
         return false;
       }
       if (!price || parseFloat(price) <= 0) {
@@ -174,7 +226,11 @@ export default function UniConnectListing() {
         return false;
       }
       if (!description.trim() || description.length < 10) {
-        Swal.fire("Attention", "La description doit faire au moins 10 caractères.", "warning");
+        Swal.fire(
+          "Attention",
+          "La description doit faire au moins 10 caractères.",
+          "warning",
+        );
         return false;
       }
     }
@@ -205,7 +261,11 @@ export default function UniConnectListing() {
   const addFilesToGallery = async (files) => {
     const remaining = MAX_GALLERY_IMAGES - selectedImages.length;
     if (remaining <= 0) {
-      Swal.fire("Limite atteinte", `Maximum ${MAX_GALLERY_IMAGES} photos par annonce.`, "info");
+      Swal.fire(
+        "Limite atteinte",
+        `Maximum ${MAX_GALLERY_IMAGES} photos par annonce.`,
+        "info",
+      );
       return;
     }
 
@@ -213,7 +273,11 @@ export default function UniConnectListing() {
     const validFiles = [];
     for (const f of toAdd) {
       if (!f.type.startsWith("image/")) {
-        Swal.fire("Format non supporté", `${f.name} n'est pas une image valide. Utilisez JPG, PNG ou WEBP.`, "error");
+        Swal.fire(
+          "Format non supporté",
+          `${f.name} n'est pas une image valide. Utilisez JPG, PNG ou WEBP.`,
+          "error",
+        );
         continue;
       }
       validFiles.push(f);
@@ -240,7 +304,11 @@ export default function UniConnectListing() {
       }
     }
     if (hasError) {
-      Swal.fire("Erreur", "Certaines photos n'ont pas pu être chargées (format HEIC/iCloud). Essayez JPG ou PNG.", "warning");
+      Swal.fire(
+        "Erreur",
+        "Certaines photos n'ont pas pu être chargées (format HEIC/iCloud). Essayez JPG ou PNG.",
+        "warning",
+      );
     }
     setImageFileMap(mapUpdate);
     setSelectedImages((prev) => [...prev, ...newUrls]);
@@ -249,7 +317,7 @@ export default function UniConnectListing() {
       Swal.fire(
         "Photos limitées",
         `Seules ${remaining} photo(s) ont été ajoutées (max ${MAX_GALLERY_IMAGES}).`,
-        "info"
+        "info",
       );
     }
   };
@@ -284,7 +352,11 @@ export default function UniConnectListing() {
     e.preventDefault();
     if (!customImageUrl.trim()) return;
     if (!customImageUrl.startsWith("http")) {
-      return Swal.fire("Erreur", "L'URL doit commencer par http:// ou https://", "error");
+      return Swal.fire(
+        "Erreur",
+        "L'URL doit commencer par http:// ou https://",
+        "error",
+      );
     }
     setSelectedImages([...selectedImages, customImageUrl.trim()]);
     setCustomImageUrl("");
@@ -299,11 +371,19 @@ export default function UniConnectListing() {
 
   const handlePublish = async () => {
     if (selectedImages.length < 3) {
-      return Swal.fire("Attention", "Veuillez sélectionner au moins 3 images pour votre hébergement.", "warning");
+      return Swal.fire(
+        "Attention",
+        "Veuillez sélectionner au moins 3 images pour votre hébergement.",
+        "warning",
+      );
     }
 
     if (!token || !user) {
-      return Swal.fire("Connexion requise", "Connectez-vous en tant que locateur ou propriétaire pour publier.", "warning");
+      return Swal.fire(
+        "Connexion requise",
+        "Connectez-vous en tant que locateur ou propriétaire pour publier.",
+        "warning",
+      );
     }
 
     setLoading(true);
@@ -315,7 +395,9 @@ export default function UniConnectListing() {
     if (rules.petsAllowed) rulesList.push("Animaux acceptés");
     if (customRules.trim()) rulesList.push(customRules.trim());
 
-    const activeAmenities = amenitiesList.filter((a) => a.active).map((a) => a.label);
+    const activeAmenities = amenitiesList
+      .filter((a) => a.active)
+      .map((a) => a.label);
 
     const reglementData = {
       rules: rulesList,
@@ -329,14 +411,26 @@ export default function UniConnectListing() {
     formData.append("prix", String(parseFloat(price)));
     formData.append("type", type);
     formData.append("type_chambre", roomType);
-    formData.append("nbr_chambres", String(Math.max(0, parseInt(capacity, 10) || 0)));
+    formData.append(
+      "nbr_chambres",
+      String(Math.max(0, parseInt(capacity, 10) || 0)),
+    );
     formData.append("superficie", String(parseFloat(area) || 0));
-    formData.append("nb_locataires", String(Math.max(0, Number(occupancy) || 0)));
+    formData.append(
+      "nb_locataires",
+      String(Math.max(0, Number(occupancy) || 0)),
+    );
     formData.append("genre_colocataires", gender === "all" ? "mixte" : gender);
-    formData.append("max_capacity", String(Math.max(0, parseInt(spots, 10) || 0)));
+    formData.append(
+      "max_capacity",
+      String(Math.max(0, parseInt(spots, 10) || 0)),
+    );
     formData.append("students_only", studentsOnly ? "1" : "0");
     formData.append("reglement", JSON.stringify(reglementData));
-    formData.append("meuble", furnitureStatus === "Fully Furnished" ? "1" : "0");
+    formData.append(
+      "meuble",
+      furnitureStatus === "Fully Furnished" ? "1" : "0",
+    );
 
     let files = [];
     const httpUrls = [];
@@ -378,7 +472,11 @@ export default function UniConnectListing() {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error creating listing:", error);
-      Swal.fire("Erreur", error.message || "Erreur lors de la publication.", "error");
+      Swal.fire(
+        "Erreur",
+        error.message || "Erreur lors de la publication.",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -389,13 +487,21 @@ export default function UniConnectListing() {
       <main className="max-w-[1120px] mx-auto px-4">
         <div className="bg-white border border-slate-100 rounded-2xl px-4 md:px-6 py-4 mb-6 flex flex-wrap justify-between items-center gap-3 shadow-sm">
           <div>
-            <h1 className="text-lg md:text-xl font-black text-slate-800">Ajouter une annonce</h1>
-            <p className="text-[10px] text-slate-400 font-bold mt-0.5">Étape {step} sur 4</p>
+            <h1 className="text-lg md:text-xl font-black text-slate-800">
+              Ajouter une annonce
+            </h1>
+            <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+              Étape {step} sur 4
+            </p>
           </div>
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
             <button
               type="button"
-              onClick={() => setLayoutMode(layoutMode === "sidebar" ? "horizontal" : "sidebar")}
+              onClick={() =>
+                setLayoutMode(
+                  layoutMode === "sidebar" ? "horizontal" : "sidebar",
+                )
+              }
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 hover:border-[#10b981] hover:text-[#10b981] transition-all cursor-pointer bg-slate-50/50"
             >
               {layoutMode === "sidebar" ? (
@@ -419,12 +525,14 @@ export default function UniConnectListing() {
             </button>
           </div>
         </div>
-        
+
         {/* Horizontal Top Stepper Component */}
         {layoutMode === "horizontal" && (
           <div className="mb-10 text-center">
-            <h2 className="text-xl font-black text-[#0b1c30] mb-6">Créer votre annonce</h2>
-            
+            <h2 className="text-xl font-black text-[#0b1c30] mb-6">
+              Créer votre annonce
+            </h2>
+
             {/* Horizontal Stepper Row */}
             <div className="max-w-xl mx-auto flex items-center justify-between relative mb-6">
               {[
@@ -435,46 +543,51 @@ export default function UniConnectListing() {
               ].map((s, idx) => {
                 const isCompleted = step > s.stepNum;
                 const isActive = step === s.stepNum;
-                
+
                 return (
-                  <div key={s.stepNum} className="flex items-center flex-1 last:flex-initial">
-                    <div 
+                  <div
+                    key={s.stepNum}
+                    className="flex items-center flex-1 last:flex-initial"
+                  >
+                    <div
                       onClick={() => handleStepClick(s.stepNum)}
                       className="flex items-center gap-2 cursor-pointer z-10"
                     >
                       {/* Circle Badge */}
-                      <div 
+                      <div
                         className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300
-                          ${isCompleted 
-                            ? "bg-[#edfdf6] text-[#10b981] border border-[#10b981]" 
-                            : isActive 
-                              ? "bg-[#10b981] text-white" 
-                              : "bg-white border-2 border-slate-200 text-slate-400"
+                          ${
+                            isCompleted
+                              ? "bg-[#edfdf6] text-[#10b981] border border-[#10b981]"
+                              : isActive
+                                ? "bg-[#10b981] text-white"
+                                : "bg-white border-2 border-slate-200 text-slate-400"
                           }`}
                       >
                         {isCompleted ? "✓" : s.stepNum}
                       </div>
-                      
+
                       {/* Text label */}
-                      <span 
+                      <span
                         className={`text-xs font-bold transition-colors duration-300
-                          ${isActive 
-                            ? "text-[#10b981]" 
-                            : isCompleted 
-                              ? "text-slate-600" 
-                              : "text-slate-400"
+                          ${
+                            isActive
+                              ? "text-[#10b981]"
+                              : isCompleted
+                                ? "text-slate-600"
+                                : "text-slate-400"
                           }`}
                       >
                         {s.label}
                       </span>
                     </div>
-                    
+
                     {/* Connecting line to the next step */}
                     {idx < 3 && (
                       <div className="flex-1 mx-4 h-0.5 relative">
                         <div className="absolute inset-0 bg-slate-200 rounded-full" />
-                        <div 
-                          className="absolute inset-0 bg-[#10b981] rounded-full transition-all duration-500" 
+                        <div
+                          className="absolute inset-0 bg-[#10b981] rounded-full transition-all duration-500"
                           style={{ width: step > s.stepNum ? "100%" : "0%" }}
                         />
                       </div>
@@ -483,27 +596,52 @@ export default function UniConnectListing() {
                 );
               })}
             </div>
-            
+
             <div className="h-px bg-slate-200/80 mb-2" />
           </div>
         )}
 
-        <div className={layoutMode === "sidebar" ? "grid grid-cols-1 md:grid-cols-4 gap-8 items-start" : "block"}>
-          
+        <div
+          className={
+            layoutMode === "sidebar"
+              ? "grid grid-cols-1 md:grid-cols-4 gap-8 items-start"
+              : "block"
+          }
+        >
           {/* LEFT STEP SIDEBAR NAVIGATION (Sidebar Layout Mode only) */}
           {layoutMode === "sidebar" && (
             <div className="md:col-span-1 bg-white border border-slate-100 rounded-3xl p-5 shadow-xs text-left sticky top-28">
               <div className="mb-6 px-2">
-                <h3 className="font-black text-[#0b1c30] text-sm leading-tight uppercase tracking-wider">Post a Listing</h3>
-                <span className="text-[10px] text-slate-400 font-bold mt-0.5 block">Step {step} of 4</span>
+                <h3 className="font-black text-[#0b1c30] text-sm leading-tight uppercase tracking-wider">
+                  Post a Listing
+                </h3>
+                <span className="text-[10px] text-slate-400 font-bold mt-0.5 block">
+                  Step {step} of 4
+                </span>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 {[
-                  { stepNum: 1, label: "Basic Details", icon: <FaEdit className="w-4 h-4 shrink-0" /> },
-                  { stepNum: 2, label: "Capacity", icon: <FaUsers className="w-4 h-4 shrink-0" /> },
-                  { stepNum: 3, label: "House Rules", icon: <FaClipboardList className="w-4 h-4 shrink-0" /> },
-                  { stepNum: 4, label: "Media", icon: <FaImage className="w-4 h-4 shrink-0" /> }
+                  {
+                    stepNum: 1,
+                    label: "Basic Details",
+                    icon: <FaEdit className="w-4 h-4 shrink-0" />,
+                  },
+                  {
+                    stepNum: 2,
+                    label: "Capacity",
+                    icon: <FaUsers className="w-4 h-4 shrink-0" />,
+                  },
+                  {
+                    stepNum: 3,
+                    label: "House Rules",
+                    icon: <FaClipboardList className="w-4 h-4 shrink-0" />,
+                  },
+                  {
+                    stepNum: 4,
+                    label: "Media",
+                    icon: <FaImage className="w-4 h-4 shrink-0" />,
+                  },
                 ].map((itemOption) => {
                   const isActive = step === itemOption.stepNum;
                   return (
@@ -526,19 +664,31 @@ export default function UniConnectListing() {
           )}
 
           {/* MAIN WIZARD FORMS */}
-          <div className={layoutMode === "sidebar" ? "md:col-span-3" : "w-full max-w-5xl mx-auto"}>
+          <div
+            className={
+              layoutMode === "sidebar"
+                ? "md:col-span-3"
+                : "w-full max-w-5xl mx-auto"
+            }
+          >
             <form onSubmit={(e) => e.preventDefault()}>
-              
               {/* STEP 1: BASIC DETAILS */}
               {step === 1 && (
                 <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                    <h2 className="text-xl font-black text-[#0b1c30] mb-1">Basic Details</h2>
-                    <p className="text-xs text-slate-400 font-semibold mb-6">Provide the fundamental information about your student housing listing.</p>
+                    <h2 className="text-xl font-black text-[#0b1c30] mb-1">
+                      Basic Details
+                    </h2>
+                    <p className="text-xs text-slate-400 font-semibold mb-6">
+                      Provide the fundamental information about your student
+                      housing listing.
+                    </p>
 
                     {/* Listing Title */}
                     <div className="mb-6">
-                      <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">Listing Title</label>
+                      <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">
+                        Listing Title
+                      </label>
                       <input
                         type="text"
                         value={title}
@@ -552,7 +702,9 @@ export default function UniConnectListing() {
                     {/* Property Type & Rent Price */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
-                        <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">Property Type</label>
+                        <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">
+                          Property Type
+                        </label>
                         <select
                           value={type}
                           onChange={(e) => setType(e.target.value)}
@@ -566,7 +718,9 @@ export default function UniConnectListing() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">Monthly Rent (DH)</label>
+                        <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">
+                          Monthly Rent (DH)
+                        </label>
                         <div className="relative">
                           <input
                             type="number"
@@ -576,7 +730,9 @@ export default function UniConnectListing() {
                             className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-4 pr-12 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 transition-all outline-none focus:border-[#10b981]"
                             required
                           />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">DH</span>
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                            DH
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -590,7 +746,9 @@ export default function UniConnectListing() {
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">City</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">
+                            City
+                          </label>
                           <input
                             type="text"
                             value={location}
@@ -600,7 +758,9 @@ export default function UniConnectListing() {
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">Neighborhood</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">
+                            Neighborhood
+                          </label>
                           <input
                             type="text"
                             value={neighborhood}
@@ -613,7 +773,9 @@ export default function UniConnectListing() {
 
                       {/* Location Map */}
                       <div>
-                        <span className="text-[10px] text-slate-400 font-extrabold uppercase mb-2 block">Location Map</span>
+                        <span className="text-[10px] text-slate-400 font-extrabold uppercase mb-2 block">
+                          Location Map
+                        </span>
                         <div className="bg-slate-100 border border-slate-200 rounded-xl h-44 overflow-hidden relative shadow-inner">
                           <iframe
                             title="Location preview"
@@ -629,7 +791,9 @@ export default function UniConnectListing() {
 
                     {/* Description */}
                     <div className="mb-6">
-                      <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">Description</label>
+                      <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">
+                        Description
+                      </label>
                       <textarea
                         rows={5}
                         value={description}
@@ -642,8 +806,10 @@ export default function UniConnectListing() {
 
                     {/* Key Amenities Included */}
                     <div>
-                      <h4 className="text-xs font-extrabold text-slate-550 mb-3 uppercase tracking-wide">Key Amenities Included</h4>
-                      
+                      <h4 className="text-xs font-extrabold text-slate-550 mb-3 uppercase tracking-wide">
+                        Key Amenities Included
+                      </h4>
+
                       {/* Amenities grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {amenitiesList.map((amenity) => (
@@ -660,9 +826,13 @@ export default function UniConnectListing() {
                           >
                             <div className="flex items-center gap-2">
                               <span className="text-base">{amenity.icon}</span>
-                              <span className="font-extrabold text-xs tracking-tight">{amenity.label}</span>
+                              <span className="font-extrabold text-xs tracking-tight">
+                                {amenity.label}
+                              </span>
                             </div>
-                            <span className={`text-[9px] leading-none block font-medium mt-0.5 ${amenity.active ? "text-emerald-600/70" : "text-slate-400"}`}>
+                            <span
+                              className={`text-[9px] leading-none block font-medium mt-0.5 ${amenity.active ? "text-emerald-600/70" : "text-slate-400"}`}
+                            >
                               {amenity.desc}
                             </span>
                             {amenity.active && (
@@ -690,7 +860,6 @@ export default function UniConnectListing() {
                         </button>
                       </div>
                     </div>
-
                   </div>
                 </div>
               )}
@@ -699,47 +868,72 @@ export default function UniConnectListing() {
               {step === 2 && (
                 <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                    <h2 className="text-xl font-black text-[#0b1c30] mb-1">Capacity & Configuration</h2>
-                    <p className="text-xs text-slate-400 font-semibold mb-6">Define the general capacity, room types, and furniture status of your listing.</p>
+                    <h2 className="text-xl font-black text-[#0b1c30] mb-1">
+                      Capacity & Configuration
+                    </h2>
+                    <p className="text-xs text-slate-400 font-semibold mb-6">
+                      Define the general capacity, room types, and furniture
+                      status of your listing.
+                    </p>
 
                     {/* General Capacity */}
                     <div className="border-b border-slate-100 pb-6 mb-6">
-                      <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-3">General Capacity</h4>
+                      <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-3">
+                        General Capacity
+                      </h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">Total Rooms</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">
+                            Total Rooms
+                          </label>
                           <div className="relative">
                             <FaBuilding className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs shrink-0" />
                             <input
                               type="number"
                               value={capacity}
-                              onChange={(e) => setCapacity(Math.max(1, parseInt(e.target.value) || 1))}
+                              onChange={(e) =>
+                                setCapacity(
+                                  Math.max(1, parseInt(e.target.value) || 1),
+                                )
+                              }
                               placeholder="e.g. 3"
                               className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-3.5 pl-10 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 outline-none focus:border-[#10b981]"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">Max Student Capacity</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">
+                            Max Student Capacity
+                          </label>
                           <div className="relative">
                             <FaUsers className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs shrink-0" />
                             <input
                               type="number"
                               value={spots}
-                              onChange={(e) => setSpots(Math.max(1, parseInt(e.target.value) || 1))}
+                              onChange={(e) =>
+                                setSpots(
+                                  Math.max(1, parseInt(e.target.value) || 1),
+                                )
+                              }
                               placeholder="e.g. 4"
                               className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-3.5 pl-10 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 outline-none focus:border-[#10b981]"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">Surface (m²)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase">
+                            Surface (m²)
+                          </label>
                           <div className="relative">
                             <FaExpandArrowsAlt className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs shrink-0" />
                             <input
                               type="number"
                               value={area}
-                              onChange={(e) => setArea(Math.max(1, parseFloat(e.target.value) || 0))}
+                              onChange={(e) =>
+                                setArea(
+                                  Math.max(1, parseFloat(e.target.value) || 0),
+                                )
+                              }
                               placeholder="e.g. 75"
                               className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-3.5 pl-10 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 outline-none focus:border-[#10b981]"
                             />
@@ -751,12 +945,26 @@ export default function UniConnectListing() {
                     {/* Room Types & Occupancy split */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-6 mb-6 border-b border-slate-100">
                       <div className="md:col-span-7">
-                        <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-3">Room Types</h4>
+                        <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-3">
+                          Room Types
+                        </h4>
                         <div className="flex flex-wrap gap-2">
                           {[
-                            { id: "Single Room", label: "Single Room", icon: <FaUser className="text-xs shrink-0" /> },
-                            { id: "Shared Room", label: "Shared Room", icon: <FaUsers className="text-xs shrink-0" /> },
-                            { id: "Studio", label: "Studio", icon: <FaBox className="text-xs shrink-0" /> }
+                            {
+                              id: "Single Room",
+                              label: "Single Room",
+                              icon: <FaUser className="text-xs shrink-0" />,
+                            },
+                            {
+                              id: "Shared Room",
+                              label: "Shared Room",
+                              icon: <FaUsers className="text-xs shrink-0" />,
+                            },
+                            {
+                              id: "Studio",
+                              label: "Studio",
+                              icon: <FaBox className="text-xs shrink-0" />,
+                            },
                           ].map((itemOption) => {
                             const active = roomType === itemOption.id;
                             return (
@@ -780,18 +988,25 @@ export default function UniConnectListing() {
                       </div>
 
                       <div className="md:col-span-5 bg-slate-50/40 border border-slate-100 rounded-2xl p-4 text-left">
-                        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Current Occupancy</h4>
+                        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">
+                          Current Occupancy
+                        </h4>
                         <div className="flex items-center justify-between gap-4 mb-2">
                           <input
                             type="range"
                             min="0"
                             max={spots}
                             value={occupancy}
-                            onChange={(e) => setOccupancy(parseInt(e.target.value))}
+                            onChange={(e) =>
+                              setOccupancy(parseInt(e.target.value))
+                            }
                             className="flex-1 accent-[#10b981] h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                           />
                           <span className="text-sm font-extrabold text-slate-800 shrink-0">
-                            {occupancy} <span className="text-xs text-slate-400 font-semibold">/ {spots}</span>
+                            {occupancy}{" "}
+                            <span className="text-xs text-slate-400 font-semibold">
+                              / {spots}
+                            </span>
                           </span>
                         </div>
                         <span className="text-[9px] text-slate-400 font-semibold block leading-tight">
@@ -802,14 +1017,25 @@ export default function UniConnectListing() {
 
                     {/* Furniture Status */}
                     <div>
-                      <h4 className="text-xs font-extrabold text-slate-550 mb-3 uppercase tracking-wide">Furniture Status</h4>
-                      
+                      <h4 className="text-xs font-extrabold text-slate-550 mb-3 uppercase tracking-wide">
+                        Furniture Status
+                      </h4>
+
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                         <div className="lg:col-span-2 flex flex-col gap-3 justify-between">
                           {[
-                            { id: "Fully Furnished", desc: "Ready to move in with all essentials." },
-                            { id: "Semi-furnished", desc: "Basic pieces like bed and desk provided." },
-                            { id: "Unfurnished", desc: "Bring your own furniture and decor." }
+                            {
+                              id: "Fully Furnished",
+                              desc: "Ready to move in with all essentials.",
+                            },
+                            {
+                              id: "Semi-furnished",
+                              desc: "Basic pieces like bed and desk provided.",
+                            },
+                            {
+                              id: "Unfurnished",
+                              desc: "Bring your own furniture and decor.",
+                            },
                           ].map((f) => {
                             const active = furnitureStatus === f.id;
                             return (
@@ -823,8 +1049,12 @@ export default function UniConnectListing() {
                                     : "border-slate-200 hover:bg-slate-50"
                                 }`}
                               >
-                                <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wide">{f.id}</h4>
-                                <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">{f.desc}</span>
+                                <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wide">
+                                  {f.id}
+                                </h4>
+                                <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
+                                  {f.desc}
+                                </span>
                               </div>
                             );
                           })}
@@ -840,7 +1070,6 @@ export default function UniConnectListing() {
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
               )}
@@ -851,29 +1080,66 @@ export default function UniConnectListing() {
                   {/* Left Column (2/3 width) */}
                   <div className="lg:col-span-2 space-y-6 text-left">
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                      <h2 className="text-xl font-black text-[#0b1c30] mb-1">House Rules</h2>
-                      <p className="text-xs text-slate-400 font-semibold mb-6">Define the regulations and roommate preferences.</p>
+                      <h2 className="text-xl font-black text-[#0b1c30] mb-1">
+                        House Rules
+                      </h2>
+                      <p className="text-xs text-slate-400 font-semibold mb-6">
+                        Define the regulations and roommate preferences.
+                      </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                         {[
-                          { id: "noSmoking", title: "No Smoking", icon: <FaSmokingBan className="w-5 h-5 text-slate-500 shrink-0" /> },
-                          { id: "quietHours", title: "Quiet Hours", icon: <FaMoon className="w-5 h-5 text-slate-500 shrink-0" /> },
-                          { id: "studyFriendly", title: "Study Friendly", icon: <FaBookOpen className="w-5 h-5 text-slate-500 shrink-0" /> },
-                          { id: "petsAllowed", title: "Pets Allowed", icon: <FaPaw className="w-5 h-5 text-slate-500 shrink-0" /> }
+                          {
+                            id: "noSmoking",
+                            title: "No Smoking",
+                            icon: (
+                              <FaSmokingBan className="w-5 h-5 text-slate-500 shrink-0" />
+                            ),
+                          },
+                          {
+                            id: "quietHours",
+                            title: "Quiet Hours",
+                            icon: (
+                              <FaMoon className="w-5 h-5 text-slate-500 shrink-0" />
+                            ),
+                          },
+                          {
+                            id: "studyFriendly",
+                            title: "Study Friendly",
+                            icon: (
+                              <FaBookOpen className="w-5 h-5 text-slate-500 shrink-0" />
+                            ),
+                          },
+                          {
+                            id: "petsAllowed",
+                            title: "Pets Allowed",
+                            icon: (
+                              <FaPaw className="w-5 h-5 text-slate-500 shrink-0" />
+                            ),
+                          },
                         ].map((rule) => {
                           const val = rules[rule.id];
                           return (
                             <div
                               key={rule.id}
-                              onClick={() => setRules((prev) => ({ ...prev, [rule.id]: !prev[rule.id] }))}
+                              onClick={() =>
+                                setRules((prev) => ({
+                                  ...prev,
+                                  [rule.id]: !prev[rule.id],
+                                }))
+                              }
                               className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all shadow-xs
                               ${
-                                val ? "border-[#10b981] bg-[#edfdf6]/40" : "border-slate-200 hover:bg-slate-50"
+                                val
+                                  ? "border-[#10b981] bg-[#edfdf6]/40"
+                                  : "border-slate-200 hover:bg-slate-50"
                               }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div className="shrink-0">{rule.icon}</div>
-                                <span className="font-extrabold text-slate-800 text-xs uppercase tracking-wide">{rule.title}</span>
+                                <span className="font-extrabold text-slate-800 text-xs uppercase tracking-wide">
+                                  {rule.title}
+                                </span>
                               </div>
                               <input
                                 type="checkbox"
@@ -888,7 +1154,9 @@ export default function UniConnectListing() {
 
                       {/* Custom Rules */}
                       <div>
-                        <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">Custom Rules (Optional)</label>
+                        <label className="block text-xs font-extrabold text-slate-550 mb-2 uppercase tracking-wide">
+                          Custom Rules (Optional)
+                        </label>
                         <textarea
                           rows={4}
                           value={customRules}
@@ -897,7 +1165,8 @@ export default function UniConnectListing() {
                           className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl p-4 text-xs font-semibold focus:ring-2 focus:ring-[#10b981]/15 transition-all outline-none focus:border-[#10b981] resize-none"
                         />
                         <span className="text-[10px] text-slate-400 font-semibold block mt-2">
-                          These rules will be displayed clearly on your property listing page.
+                          These rules will be displayed clearly on your property
+                          listing page.
                         </span>
                       </div>
                     </div>
@@ -915,9 +1184,12 @@ export default function UniConnectListing() {
                         {[
                           { value: "all", label: "Mixed / Any" },
                           { value: "female", label: "Female Only" },
-                          { value: "male", label: "Male Only" }
+                          { value: "male", label: "Male Only" },
                         ].map((g) => (
-                          <label key={g.value} className="flex items-center gap-3 cursor-pointer">
+                          <label
+                            key={g.value}
+                            className="flex items-center gap-3 cursor-pointer"
+                          >
                             <input
                               type="radio"
                               name="gender"
@@ -926,7 +1198,9 @@ export default function UniConnectListing() {
                               onChange={() => setGender(g.value)}
                               className="text-[#10b981] focus:ring-[#10b981] h-4.5 w-4.5 cursor-pointer accent-[#10b981]"
                             />
-                            <span className="text-xs font-bold text-slate-700">{g.label}</span>
+                            <span className="text-xs font-bold text-slate-700">
+                              {g.label}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -946,7 +1220,7 @@ export default function UniConnectListing() {
                             onChange={() => setStudentsOnly(!studentsOnly)}
                             className="sr-only peer"
                           />
-                          <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10b981]"></div>
+                          <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white  after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10b981]"></div>
                         </label>
                       </div>
                       <span className="text-[10px] text-slate-400 font-semibold block mt-2 leading-relaxed">
@@ -960,9 +1234,13 @@ export default function UniConnectListing() {
                         <FaInfoCircle className="w-5 h-5 text-[#10b981] shrink-0" />
                       </div>
                       <div>
-                        <h5 className="font-extrabold text-emerald-800 text-xs uppercase tracking-wider mb-1">Owner Tip</h5>
+                        <h5 className="font-extrabold text-emerald-800 text-xs uppercase tracking-wider mb-1">
+                          Owner Tip
+                        </h5>
                         <span className="text-[10px] text-emerald-700/90 font-medium leading-relaxed block">
-                          Properties that allow light cooking and have 'Quiet Hours' enforced see a 35% higher interest from graduate students.
+                          Properties that allow light cooking and have 'Quiet
+                          Hours' enforced see a 35% higher interest from
+                          graduate students.
                         </span>
                       </div>
                     </div>
@@ -976,8 +1254,12 @@ export default function UniConnectListing() {
                   {/* Left Main Gallery (2/3 width) */}
                   <div className="lg:col-span-2 space-y-6 text-left">
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                      <h2 className="text-xl font-black text-[#0b1c30] mb-1">Step 4: Media</h2>
-                      <p className="text-xs text-slate-400 font-semibold mb-6">Bring your listing to life with high-quality photos.</p>
+                      <h2 className="text-xl font-black text-[#0b1c30] mb-1">
+                        Step 4: Media
+                      </h2>
+                      <p className="text-xs text-slate-400 font-semibold mb-6">
+                        Bring your listing to life with high-quality photos.
+                      </p>
 
                       {/* Hidden File Input for browser selection */}
                       <input
@@ -990,31 +1272,34 @@ export default function UniConnectListing() {
                       />
 
                       {/* Dotted Upload Drag & Drop Area */}
-                      <div 
+                      <div
                         onDragEnter={handleDrag}
                         onDragOver={handleDrag}
                         onDragLeave={handleDrag}
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-3xl p-10 text-center flex flex-col items-center justify-center shadow-xs mb-6 transition-all duration-300
-                          ${dragActive 
-                            ? "bg-[#edfdf6] border-[#10b981] scale-[1.01]" 
-                            : "bg-white border-slate-200  hover:bg-slate-50/30"
+                          ${
+                            dragActive
+                              ? "bg-[#edfdf6] border-[#10b981] scale-[1.01]"
+                              : "bg-white border-slate-200  hover:bg-slate-50/30"
                           }`}
                       >
                         <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-100/50">
                           <FaCloudUploadAlt className="w-8 h-8 text-[#10b981] shrink-0" />
                         </div>
-                        <h3 className="font-extrabold text-slate-800 text-base mb-1">Upload your property photos</h3>
+                        <h3 className="font-extrabold text-slate-800 text-base mb-1">
+                          Upload your property photos
+                        </h3>
                         <span className="text-xs text-slate-400 font-semibold mb-6">
                           Drag and drop your images here, or{" "}
-                          <label 
-                            htmlFor="local-media-uploader" 
+                          <label
+                            htmlFor="local-media-uploader"
                             className="text-[#10b981] font-extrabold cursor-pointer underline hover:text-[#0b9062]"
                           >
                             browse files
                           </label>
                         </span>
-                        
+
                         {/* URL Paste backup */}
                         <div className="flex gap-2 w-full max-w-sm mb-2">
                           <input
@@ -1040,8 +1325,12 @@ export default function UniConnectListing() {
                       {/* Gallery Preview Container */}
                       <div>
                         <div className="flex justify-between items-center mb-3">
-                          <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">GALLERY PREVIEW</h4>
-                          <span className="text-xs text-[#10b981] font-extrabold">{selectedImages.length}/6 · min 3</span>
+                          <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">
+                            GALLERY PREVIEW
+                          </h4>
+                          <span className="text-xs text-[#10b981] font-extrabold">
+                            {selectedImages.length}/6 · min 3
+                          </span>
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -1050,8 +1339,12 @@ export default function UniConnectListing() {
                               key={imgUrl}
                               className="aspect-video bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden relative group border border-slate-150 shadow-xs"
                             >
-                              <img src={imgUrl} alt="Room" className="w-full h-full object-cover" />
-                              
+                              <img
+                                src={imgUrl}
+                                alt="Room"
+                                className="w-full h-full object-cover"
+                              />
+
                               {/* Overlay for actions */}
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <button
@@ -1078,7 +1371,9 @@ export default function UniConnectListing() {
                             className="aspect-video bg-white border-2 border-dashed border-slate-200 hover:border-[#10b981] rounded-2xl flex flex-col gap-1 items-center justify-center cursor-pointer hover:bg-slate-50/55 transition-all shadow-xs"
                           >
                             <FaPlus className="w-5 h-5 text-slate-400 shrink-0" />
-                            <span className="text-[10px] text-slate-400 font-extrabold">Add more</span>
+                            <span className="text-[10px] text-slate-400 font-extrabold">
+                              Add more
+                            </span>
                           </label>
                         </div>
                       </div>
@@ -1089,31 +1384,43 @@ export default function UniConnectListing() {
                   <div className="lg:col-span-1 space-y-6 text-left">
                     {/* Photo Requirements */}
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-                      <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-4">PHOTO REQUIREMENTS</h4>
-                      
+                      <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-4">
+                        PHOTO REQUIREMENTS
+                      </h4>
+
                       <div className="space-y-4">
                         {[
                           {
                             title: "Lighting is Key",
                             desc: "Take bright photos of the common areas. Open all blinds and turn on lights to make spaces feel larger.",
-                            icon: <FaLightbulb className="w-5 h-5 text-[#10b981] shrink-0" />
+                            icon: (
+                              <FaLightbulb className="w-5 h-5 text-[#10b981] shrink-0" />
+                            ),
                           },
                           {
                             title: "Wide Angles",
                             desc: "Shoot from corners to capture the full scale of the rooms. Landscapes are preferred over portraits.",
-                            icon: <FaExpandArrowsAlt className="w-5 h-5 text-[#10b981] shrink-0" />
+                            icon: (
+                              <FaExpandArrowsAlt className="w-5 h-5 text-[#10b981] shrink-0" />
+                            ),
                           },
                           {
                             title: "De-clutter",
                             desc: "Remove personal items from surfaces. A clean space appears more professional and appealing to students.",
-                            icon: <FaBroom className="w-5 h-5 text-[#10b981] shrink-0" />
-                          }
+                            icon: (
+                              <FaBroom className="w-5 h-5 text-[#10b981] shrink-0" />
+                            ),
+                          },
                         ].map((req, idx) => (
                           <div key={idx} className="flex gap-3">
                             <div className="shrink-0 mt-0.5">{req.icon}</div>
                             <div>
-                              <h5 className="font-extrabold text-slate-800 text-xs leading-none mb-1">{req.title}</h5>
-                              <span className="text-[10px] text-slate-400 font-semibold leading-relaxed block">{req.desc}</span>
+                              <h5 className="font-extrabold text-slate-800 text-xs leading-none mb-1">
+                                {req.title}
+                              </h5>
+                              <span className="text-[10px] text-slate-400 font-semibold leading-relaxed block">
+                                {req.desc}
+                              </span>
                             </div>
                           </div>
                         ))}
@@ -1123,10 +1430,13 @@ export default function UniConnectListing() {
                     {/* Pro Tip */}
                     <div className="bg-[#edfdf6] border border-emerald-100 rounded-3xl p-5 shadow-xs">
                       <div className="flex gap-2 items-center mb-1 text-emerald-800">
-                        <span className="font-extrabold text-xs uppercase tracking-wider">Pro Tip:</span>
+                        <span className="font-extrabold text-xs uppercase tracking-wider">
+                          Pro Tip:
+                        </span>
                       </div>
                       <span className="text-[10px] text-emerald-700/90 font-medium leading-relaxed block">
-                        Ajoutez entre 3 et 6 photos pour maximiser l'intérêt. Incluez la cuisine et la salle de bain !
+                        Ajoutez entre 3 et 6 photos pour maximiser l'intérêt.
+                        Incluez la cuisine et la salle de bain !
                       </span>
                     </div>
                   </div>
@@ -1143,7 +1453,7 @@ export default function UniConnectListing() {
                 >
                   Previous Step
                 </button>
-                
+
                 {step === TOTAL_STEPS ? (
                   <button
                     onClick={handlePublish}
@@ -1163,10 +1473,8 @@ export default function UniConnectListing() {
                   </button>
                 )}
               </div>
-
             </form>
           </div>
-
         </div>
       </main>
     </div>

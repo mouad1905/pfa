@@ -62,7 +62,7 @@ export default function MessageInput({
       <button
         type="submit"
         disabled={!value.trim() || sending || disabled}
-        className="p-3.5 rounded-2xl bg-[#10b981] hover:bg-[#0b9062] active:scale-[0.97] disabled:bg-slate-100 text-white disabled:text-slate-350 transition-all cursor-pointer shadow-md shadow-emerald-500/10 shrink-0 border-none flex items-center justify-center"
+        className="p-3.5 h-[46px] rounded-2xl bg-[#10b981] hover:bg-[#0b9062] active:scale-[0.97] disabled:bg-[#10b981] text-white transition-all cursor-pointer shadow-md shadow-emerald-500/10 shrink-0 border-none flex items-center justify-center"
         aria-label="Envoyer le message"
       >
         <FaPaperPlane size={13} className={sending ? "animate-pulse" : ""} />

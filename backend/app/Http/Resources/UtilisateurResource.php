@@ -29,6 +29,7 @@ class UtilisateurResource extends JsonResource
             'certificat'        => $this->certificat,
             'carte_etudiant'    => $this->carte_etudiant,
             'about'             => $this->about,
+            'updated_at'        => $this->updated_at,
             
             // Evaluations relations and aggregates
             'avg_rating'        => isset($this->avg_rating) ? $this->avg_rating : (round($this->evaluationsRecues()->avg('note'), 1) ?: 0.0),

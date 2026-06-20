@@ -13,7 +13,9 @@ import {
   FaUsers,
   FaClock,
   FaShareAlt,
-  FaShieldAlt
+  FaShieldAlt,
+  FaStar,
+  FaRegStar
 } from "react-icons/fa";
 
 const mapApiToHome = (item) => {
@@ -57,10 +59,16 @@ const mapApiToHome = (item) => {
     occupants: item.occupants || [],
     formule: item.formule || "standard",
     created_at: item.created_at,
+    avgRating: item.avg_rating_hebergement || 0,
   };
 };
 
 function HomeDetails() {
+  const bustCache = (url, t) => {
+    if (!url) return null;
+    try { const u = new URL(url); u.searchParams.set("t", t || Date.now()); return u.toString(); } catch { return url; }
+  };
+
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -68,6 +76,13 @@ function HomeDetails() {
   const [home, setHome] = useState(stateHome ? mapApiToHome(stateHome) : null);
   const [loading, setLoading] = useState(!stateHome && !!id);
   const { user: loggedInUser } = useContext(AuthContext);
+  const [evaluations, setEvaluations] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [totalEval, setTotalEval] = useState(0);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -87,6 +102,22 @@ function HomeDetails() {
     };
     load();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch(`${API_BASE}/hebergements/${id}/evaluations`)
+      .then(r => r.json())
+      .then(data => {
+        setAvgRating(data.avg_rating || 0);
+        setTotalEval(data.total || 0);
+        setEvaluations(data.evaluations || []);
+        const mine = (data.evaluations || []).find(
+          e => e.auteur?.id_user === loggedInUser?.id_user
+        );
+        if (mine) setUserRating(mine.note);
+      })
+      .catch(() => {});
+  }, [id, loggedInUser?.id_user]);
 
   const googleMapsUrl = home?.location
     ? `https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco&output=embed&z=15`
@@ -185,6 +216,41 @@ function HomeDetails() {
     }).catch(() => {
       Swal.fire("Erreur", "Impossible de copier le lien.", "error");
     });
+  };
+
+  const handleRateHebergement = async (note) => {
+    if (!loggedInUser) return Swal.fire("Connexion requise", "Connectez-vous pour évaluer.", "warning");
+    if (userRating) return;
+    if (!commentText.trim()) return Swal.fire("Commentaire requis", "Veuillez écrire un commentaire.", "warning");
+    setUserRating(note);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/hebergements/${id}/evaluations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ note, commentaire: commentText.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUserRating(0);
+        throw new Error(data.message || "Erreur");
+      }
+      const evalRes = await fetch(`${API_BASE}/hebergements/${id}/evaluations`);
+      const evalData = await evalRes.json();
+      setAvgRating(evalData.avg_rating || 0);
+      setTotalEval(evalData.total || 0);
+      setEvaluations(evalData.evaluations || []);
+      setCommentText("");
+      Swal.fire("Merci !", "Votre évaluation a été enregistrée.", "success");
+    } catch (err) {
+      Swal.fire("Erreur", err.message, "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReportListing = () => {
@@ -408,7 +474,7 @@ function HomeDetails() {
                     <div key={occ.id_user} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-2xl">
                       <img
                         className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm"
-                        src={occ.photo_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent((occ.prenom||'')+' '+(occ.nom||''))}&background=10b981&color=fff&size=36&bold=true`}
+                        src={bustCache(occ.photo_profil) || `https://ui-avatars.com/api/?name=${encodeURIComponent((occ.prenom||'')+' '+(occ.nom||''))}&background=10b981&color=fff&size=36&bold=true`}
                         alt={occ.prenom}
                       />
                       <div className="text-left">
@@ -487,6 +553,96 @@ function HomeDetails() {
               <FaFlag className="w-3.5 h-3.5 shrink-0" />
               Signaler l'annonce
             </button>
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4 text-center">
+              Évaluation du logement
+            </span>
+
+            {/* Stars */}
+            <div className="flex items-center justify-center gap-1 mb-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  disabled={!!userRating || submitting}
+                  onClick={() => handleRateHebergement(star)}
+                  onMouseEnter={() => !userRating && setHoverRating(star)}
+                  onMouseLeave={() => !userRating && setHoverRating(0)}
+                  className={`text-lg transition-colors ${
+                    userRating ? "cursor-default" : "cursor-pointer"
+                  } ${(hoverRating || userRating) >= star ? "text-amber-400" : "text-slate-200"}`}
+                >
+                  {(hoverRating || userRating) >= star ? <FaStar /> : <FaRegStar />}
+                </button>
+              ))}
+            </div>
+
+            {/* Avg rating */}
+            <p className="text-xs text-slate-400 font-semibold text-center">
+              {avgRating > 0
+                ? `${avgRating.toFixed(1)} / 5 (${totalEval} avis)`
+                : "Aucune évaluation"}
+            </p>
+
+            {/* Comment textarea + submit (only if not yet rated) */}
+            {!userRating && loggedInUser && (
+              <div className="mt-3 space-y-2">
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Écrivez un commentaire..."
+                  rows={2}
+                  className="w-full text-xs border border-slate-200 rounded-xl p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-400 placeholder-slate-300"
+                />
+                <p className="text-[10px] text-slate-400 text-center">
+                  Cliquez sur une étoile pour publier
+                </p>
+              </div>
+            )}
+
+            {/* Your vote summary */}
+            {userRating > 0 && (
+              <p className="text-[10px] text-emerald-600 font-bold text-center mt-2">
+                Votre note : {userRating}/5
+              </p>
+            )}
+
+            {/* Scrollable comments list */}
+            {evaluations.length > 0 && (
+              <div className="mt-3 max-h-36 overflow-y-auto space-y-2 scrollbar-thin pr-1">
+                {evaluations.map((ev) => (
+                  <div key={ev.id_evaluation} className="bg-slate-50 rounded-xl p-2.5 text-left">
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        onClick={() => navigate(`/profile/${ev.auteur?.id_user}`)}
+                        className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0 hover:ring-2 hover:ring-emerald-300 transition-all cursor-pointer overflow-hidden"
+                      >
+                        {ev.auteur?.photo_profil ? (
+                          <img src={bustCache(ev.auteur.photo_profil)} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          ((ev.auteur?.prenom?.[0] || "") + (ev.auteur?.nom?.[0] || "")).toUpperCase()
+                        )}
+                      </button>
+                      <button
+                        onClick={() => navigate(`/profile/${ev.auteur?.id_user}`)}
+                        className="text-[11px] font-bold text-slate-600 hover:text-emerald-600 transition-colors cursor-pointer"
+                      >
+                        {ev.auteur ? `${ev.auteur.prenom} ${ev.auteur.nom}` : "Anonyme"}
+                      </button>
+                      <span className="ml-auto flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <FaStar key={s} className={`w-2.5 h-2.5 ${s <= ev.note ? "text-amber-400" : "text-slate-200"}`} />
+                        ))}
+                      </span>
+                    </div>
+                    {ev.commentaire && (
+                      <p className="text-[11px] text-slate-500 leading-relaxed">{ev.commentaire}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -20,6 +20,7 @@ class HebergementController extends Controller
     {
         $hebergements = Hebergement::where('statut', 'valide')
             ->where('actif', true)
+            ->withAvg('evaluations', 'note')
             ->with(['proprietaire', 'occupants'])
             ->get();
 
@@ -32,6 +33,7 @@ class HebergementController extends Controller
     public function mesHebergements()
     {
         $hebergements = Hebergement::where('id_createur', Auth::id())
+            ->withAvg('evaluations', 'note')
             ->with(['proprietaire', 'occupants'])
             ->orderByDesc('created_at')
             ->get();
@@ -85,7 +87,7 @@ class HebergementController extends Controller
 
             return response()->json([
                 'message' => 'Hébergement créé avec succès',
-                'data'    => new HebergementResource($hebergement->load(['proprietaire', 'occupants'])),
+                'data'    => new HebergementResource($hebergement->loadAvg('evaluations', 'note')->load(['proprietaire', 'occupants'])),
             ], 201);
 
         } catch (\Exception $e) {
@@ -98,7 +100,7 @@ class HebergementController extends Controller
      */
     public function show(int $id)
     {
-        $hebergement = Hebergement::with(['proprietaire', 'occupants'])->find($id);
+        $hebergement = Hebergement::withAvg('evaluations', 'note')->with(['proprietaire', 'occupants'])->find($id);
 
         if (!$hebergement) {
             return response()->json(['message' => 'Hébergement non trouvé'], 404);
@@ -139,7 +141,7 @@ class HebergementController extends Controller
 
         return response()->json([
             'message' => 'Publication mise à jour',
-            'data'    => new HebergementResource($hebergement->load(['proprietaire', 'occupants'])),
+            'data'    => new HebergementResource($hebergement->loadAvg('evaluations', 'note')->load(['proprietaire', 'occupants'])),
         ]);
     }
 
@@ -172,7 +174,7 @@ class HebergementController extends Controller
 
         return response()->json([
             'message' => 'Annonce mise à jour avec succès',
-            'data'    => new HebergementResource($hebergement->load('proprietaire')),
+            'data'    => new HebergementResource($hebergement->loadAvg('evaluations', 'note')->load('proprietaire')),
         ]);
     }
 
@@ -217,7 +219,7 @@ class HebergementController extends Controller
 
         return response()->json([
             'message' => 'Images mises à jour avec succès',
-            'data'    => new HebergementResource($hebergement->load(['proprietaire', 'occupants'])),
+            'data'    => new HebergementResource($hebergement->loadAvg('evaluations', 'note')->load(['proprietaire', 'occupants'])),
         ]);
     }
 }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { API_URLS, fetchData } from "../../api/api";
-import { FaUser, FaPhone, FaGraduationCap, FaSave, FaTimes, FaCog } from "react-icons/fa";
+import API_BASE, { API_URLS, fetchData } from "../../api/api";
+import { FaUser, FaPhone, FaGraduationCap, FaSave, FaTimes, FaCog, FaCamera } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
 export default function Settings() {
@@ -20,7 +20,14 @@ export default function Settings() {
     about: ""
   });
 
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const { user: loggedInUser, updateUser } = useContext(AuthContext);
+
+  const bustCache = (url) => {
+    if (!url) return null;
+    try { const u = new URL(url); u.searchParams.set("t", Date.now()); return u.toString(); } catch { return url; }
+  };
 
   useEffect(() => {
     if (!loggedInUser) {
@@ -64,6 +71,20 @@ export default function Settings() {
     loadUserData();
   }, []);
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({ title: "Fichier trop volumineux", text: "La photo ne doit pas dépasser 5 Mo.", icon: "error", confirmButtonColor: "#ef4444" });
+      e.target.value = "";
+      return;
+    }
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -74,18 +95,41 @@ export default function Settings() {
     setLoading(true);
 
     try {
-      const url = `http://127.0.0.1:8000/api/users/${loggedInUser.id_user}`;
-      // Send a PUT/POST update request to the back-end
-      await fetchData(url, {
-        method: "PUT",
-        body: JSON.stringify({
-          prenom: formData.prenom,
-          nom: formData.nom,
-          telephone: formData.telephone,
-          niveau_etude: formData.niveau_etude,
-          about: formData.about
-        })
-      });
+      const url = `${API_BASE}/users/${loggedInUser.id_user}`;
+      let body;
+      const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
+
+      let apiData = null;
+
+      if (photoFile) {
+        const fd = new FormData();
+        fd.append("prenom", formData.prenom);
+        fd.append("nom", formData.nom);
+        if (formData.telephone) fd.append("telephone", formData.telephone);
+        if (formData.niveau_etude) fd.append("niveau_etude", formData.niveau_etude);
+        if (formData.about) fd.append("about", formData.about);
+        fd.append("photo_profil", photoFile);
+        const res = await fetch(url, { method: "POST", headers, body: fd });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || "Erreur lors de la mise à jour");
+        }
+        const resJson = await res.json();
+        apiData = resJson.data || null;
+      } else {
+        const res = await fetchData(url, {
+          method: "PUT",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prenom: formData.prenom,
+            nom: formData.nom,
+            telephone: formData.telephone,
+            niveau_etude: formData.niveau_etude,
+            about: formData.about
+          })
+        });
+        apiData = res.data || null;
+      }
 
       // Update the local storage user object with new data
       const updatedUser = {
@@ -94,7 +138,8 @@ export default function Settings() {
         nom: formData.nom,
         telephone: formData.telephone,
         niveau_etude: formData.niveau_etude,
-        about: formData.about
+        about: formData.about,
+        photo_profil: apiData?.photo_profil || loggedInUser.photo_profil
       };
       updateUser(updatedUser);
 
@@ -110,25 +155,12 @@ export default function Settings() {
       navigate(`/profile/${loggedInUser.id_user}`);
     } catch (err) {
       console.error("Error updating settings:", err);
-      // Even if API update fails, gracefully update context for frontend demo
-      const updatedUser = {
-        ...loggedInUser,
-        prenom: formData.prenom,
-        nom: formData.nom,
-        telephone: formData.telephone,
-        niveau_etude: formData.niveau_etude,
-        about: formData.about
-      };
-      updateUser(updatedUser);
-
       Swal.fire({
-        title: "Succès (Local) !",
-        text: "Vos paramètres ont été modifiés localement.",
-        icon: "success",
-        confirmButtonColor: "#10b981"
+        title: "Erreur",
+        text: err.message || "Impossible de mettre à jour le profil.",
+        icon: "error",
+        confirmButtonColor: "#ef4444"
       });
-
-      navigate(`/profile/${loggedInUser.id_user}`);
     } finally {
       setLoading(false);
     }
@@ -162,6 +194,38 @@ export default function Settings() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Photo de profil */}
+            <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 rounded-full bg-emerald-50 border border-slate-200 overflow-hidden flex items-center justify-center text-emerald-600 text-2xl font-bold">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="" className="w-full h-full object-cover" />
+                  ) : loggedInUser?.photo_profil ? (
+                    <img src={bustCache(loggedInUser.photo_profil)} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    ((loggedInUser?.prenom?.[0] || "") + (loggedInUser?.nom?.[0] || "")).toUpperCase()
+                  )}
+                </div>
+                <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center cursor-pointer shadow-md shadow-emerald-200 transition border-none">
+                  <FaCamera size={12} />
+                  <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                </label>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm">Photo de profil</h3>
+                <p className="text-[11px] text-slate-400 font-medium mt-0.5">JPG, PNG ou WEBP. Max 2 Mo.</p>
+                {photoFile && (
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                    className="text-[11px] text-red-500 font-bold hover:text-red-600 mt-1 cursor-pointer border-none bg-transparent"
+                  >
+                    Supprimer la photo
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               
               {/* Prénom */}

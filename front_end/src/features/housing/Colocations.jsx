@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { API_URLS, fetchData } from "../../api/api";
+import API_BASE, { API_URLS, fetchData } from "../../api/api";
+import { AuthContext } from "../../context/AuthContext";
 import { filters } from "../../data/filtersData";
 import {
   FaSearch,
@@ -17,12 +18,13 @@ import {
 } from "react-icons/fa";
 
 // ── Card ─────────────────────────────────────────────────────────────────────
-const ColocationCard = ({ c, onClick, plan }) => {
+const ColocationCard = ({ c, onClick, isFavori, onToggleFavori }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const images = (() => {
     const result = [];
     if (c.image) result.push(c.image);
-    if (Array.isArray(c.images) && c.images.length > 0) result.push(...c.images);
+    if (Array.isArray(c.images) && c.images.length > 0)
+      result.push(...c.images);
     return result;
   })();
 
@@ -36,29 +38,10 @@ const ColocationCard = ({ c, onClick, plan }) => {
     setActiveSlide((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  // Dynamic values to match user screenshot 1:1 based on index
-  const presets = [
-    {
-      campus: "5 min from Campus",
-      rating: "4.8",
-      tags: ["WIFI INCLUDED", "QUIET ZONE", "STUDY FRIENDLY"],
-    },
-    {
-      campus: "2 min from Campus",
-      rating: "4.9",
-      tags: ["FULLY FURNISHED", "AC", "PRIVATE BATH"],
-    },
-    {
-      campus: "8 min from Campus",
-      rating: "4.7",
-      tags: ["BUDGET FRIENDLY", "CENTRAL", "SECURE"],
-    },
-  ];
-
-  const itemIndex = c.id % 3;
-  const currentPreset = presets[isNaN(itemIndex) ? 0 : itemIndex];
-
-  const spotsText = c.maxCapacity > 0 ? `${c.occupancy}/${c.maxCapacity} spots` : `${c.occupancy} occupé`;
+  const spotsText =
+    c.maxCapacity > 0
+      ? `${c.occupancy}/${c.maxCapacity} spots`
+      : `${c.occupancy} occupé`;
 
   // Formatting price DH / MO
   const priceDisplay = (() => {
@@ -69,49 +52,38 @@ const ColocationCard = ({ c, onClick, plan }) => {
     return !isNaN(num) ? `${num} DH / M` : `${c.price} / M`;
   })();
 
-  // Dynamically map tags based on rules if available
   const displayTags = (() => {
-    if (c.rules) {
-      const parsedRules = c.rules
-        .split(",")
-        .map((r) => r.trim())
-        .filter(Boolean);
-      if (parsedRules.length > 0) {
-        return parsedRules
-          .map((r) => {
-            const ruleLower = r.toLowerCase();
-            if (ruleLower.includes("fumeur")) return "NO SMOKING";
-            if (ruleLower.includes("calme") || ruleLower.includes("bruit"))
-              return "QUIET ZONE";
-            if (ruleLower.includes("animaux")) return "PETS ALLOWED";
-            if (ruleLower.includes("étude") || ruleLower.includes("etude"))
-              return "STUDY FRIENDLY";
-            if (ruleLower.includes("wifi")) return "WIFI INCLUDED";
-            return r.toUpperCase();
-          })
-          .slice(0, 3);
-      }
+    if (Array.isArray(c.rules) && c.rules.length > 0) {
+      return c.rules
+        .map((r) => {
+          const ruleLower = r.toLowerCase();
+          if (ruleLower.includes("fumeur")) return "NO SMOKING";
+          if (ruleLower.includes("calme") || ruleLower.includes("bruit"))
+            return "QUIET ZONE";
+          if (ruleLower.includes("animaux")) return "PETS ALLOWED";
+          if (ruleLower.includes("étude") || ruleLower.includes("etude"))
+            return "STUDY FRIENDLY";
+          if (ruleLower.includes("wifi")) return "WIFI INCLUDED";
+          return r.toUpperCase();
+        })
+        .slice(0, 3);
     }
-    return currentPreset.tags;
+    const genre =
+      c.gender === "femme"
+        ? "FEMALE ONLY"
+        : c.gender === "homme"
+          ? "MALE ONLY"
+          : "MIXED";
+    const meuble = c.meuble ? "FULLY FURNISHED" : "";
+    return [genre, meuble, c.type?.toUpperCase()].filter(Boolean).slice(0, 3);
   })();
 
-  // Rating and campus time dynamic mapping
-  const displayRating = currentPreset.rating;
-  const displayCampus = currentPreset.campus;
-
-  const isGold = plan === "gold";
-  const isPremium = plan === "premium";
+  const displayRating = c.avgRating > 0 ? c.avgRating.toFixed(1) : null;
 
   return (
     <div
       onClick={onClick}
-      className={`group bg-white rounded-[24px] border shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between p-4 font-poppins relative ${
-        isGold
-          ? "border-amber-400 shadow-amber-100 ring-1 ring-amber-300/40"
-          : isPremium
-            ? "border-emerald-300 shadow-emerald-50"
-            : "border-slate-100"
-      }`}
+      className={`group bg-white rounded-[24px] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between p-4 font-poppins relative`}
     >
       {/* Visual Header / Image Container with exact overlays */}
       <div className="relative h-52 overflow-hidden rounded-[18px] bg-slate-100 shadow-inner flex items-center justify-center">
@@ -164,58 +136,46 @@ const ColocationCard = ({ c, onClick, plan }) => {
           {priceDisplay}
         </div>
 
-        {/* Plan Boost Badges */}
-        {isGold && (
-          <div className="absolute bottom-3.5 right-3.5 z-10 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[8px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider">
-            👑 GOLD CROWN
-          </div>
-        )}
-        {isPremium && !isGold && (
-          <div className="absolute bottom-3.5 right-3.5 z-10 bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-[8px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider">
-            ⭐ PREMIUM BOOST
-          </div>
-        )}
-
         {/* Bottom Left: Distance from campus */}
         <div className="absolute bottom-3.5 left-3.5 bg-black/45 backdrop-blur-xs text-white text-[9px] font-semibold px-2.5 py-0.5 rounded-full shadow-sm">
-          {displayCampus}
+          {c.location || "Logement"}
         </div>
 
         {/* Carousel Slider Arrows (only visible on hover) */}
         {images.length > 1 && (
-            <div className="absolute inset-y-0 inset-x-0 flex items-center justify-between px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              <button
-                onClick={prevSlide}
-                className="w-7 h-7 rounded-full bg-white/95 backdrop-blur border border-slate-100 shadow flex items-center justify-center text-slate-700 hover:scale-105 active:scale-95 hover:bg-white transition-all pointer-events-auto cursor-pointer"
-              >
-                <FaChevronLeft size={10} />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="w-7 h-7 rounded-full bg-white/95 backdrop-blur border border-slate-100 shadow flex items-center justify-center text-slate-700 hover:scale-105 active:scale-95 hover:bg-white transition-all pointer-events-auto cursor-pointer"
-              >
-                <FaChevronRight size={10} />
-              </button>
-            </div>
-          )}
+          <div className="absolute inset-y-0 inset-x-0 flex items-center justify-between px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <button
+              onClick={prevSlide}
+              className="w-7 h-7 rounded-full bg-white/95 backdrop-blur border border-slate-100 shadow flex items-center justify-center text-slate-700 hover:scale-105 active:scale-95 hover:bg-white transition-all pointer-events-auto cursor-pointer"
+            >
+              <FaChevronLeft size={10} />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="w-7 h-7 rounded-full bg-white/95 backdrop-blur border border-slate-100 shadow flex items-center justify-center text-slate-700 hover:scale-105 active:scale-95 hover:bg-white transition-all pointer-events-auto cursor-pointer"
+            >
+              <FaChevronRight size={10} />
+            </button>
+          </div>
+        )}
 
         {/* Bullet Dot indicators */}
         {images.length > 1 && (
-            <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {images.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveSlide(i);
-                  }}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === activeSlide ? "bg-[#10b981] w-3" : "bg-white/60 w-1"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+          <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveSlide(i);
+                }}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === activeSlide ? "bg-[#10b981] w-3" : "bg-white/60 w-1"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Card Details Body */}
@@ -233,7 +193,7 @@ const ColocationCard = ({ c, onClick, plan }) => {
           </div>
 
           {/* Capacity Text */}
-          <div className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide mb-2.5">
+          <div className="text-[11px] ml-1 font-extrabold text-slate-700 uppercase tracking-wide mb-2.5">
             {spotsText}
           </div>
 
@@ -255,25 +215,43 @@ const ColocationCard = ({ c, onClick, plan }) => {
           {/* Rating and Favorite */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <span className="text-amber-400 text-base">★</span>
-              <span className="text-slate-800 text-sm font-bold">
-                {displayRating}
-              </span>
+              {displayRating ? (
+                <>
+                  <span className="text-amber-400 text-base">★</span>
+                  <span className="text-slate-800 text-sm font-bold">
+                    {displayRating}
+                  </span>
+                </>
+              ) : (
+                <span className="text-slate-400 text-[11px] font-semibold">
+                  Nouveau
+                </span>
+              )}
             </div>
-            {/* Outline Favorite Heart Icon */}
-            <svg
-              className="w-5 h-5 text-slate-400 hover:text-red-500 hover:fill-red-500 cursor-pointer transition-colors duration-200"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
+            {/* Favorite Heart Icon */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavori(c.id);
+              }}
+              className={`p-1 rounded-lg transition-all active:scale-90 cursor-pointer border-none ${
+                isFavori ? "text-red-500" : "text-slate-400 hover:text-red-400"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21l-7.682-7.682a4.5 4.5 0 010-6.364z"
-              />
-            </svg>
+              <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill={isFavori ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21l-7.682-7.682a4.5 4.5 0 010-6.364z"
+                />
+              </svg>
+            </button>
           </div>
 
           {/* Exact screenshot-style Green Button */}
@@ -310,28 +288,24 @@ const FilterSelect = ({ value, onChange, options, defaultId }) => {
 
   return (
     <div className="relative min-w-[180px]">
-      {/* Trigger */}
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl shadow-sm border transition-all duration-200
+        className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border transition-all duration-200 active:scale-[0.98]
         ${
           value !== defaultId
-            ? "border-emerald-400 bg-emerald-50 text-emerald-700"
-            : "border-gray-200 bg-white text-gray-600"
+            ? "border-emerald-300 bg-emerald-50 text-emerald-700 shadow-sm"
+            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 shadow-sm"
         }`}
       >
-        <span className="text-xs font-semibold uppercase tracking-wide truncate">
-          {selectedLabel}
-        </span>
+        <span className="text-xs font-bold truncate">{selectedLabel}</span>
 
         <FaChevronDown
-          className={`text-xs transition-transform ${open ? "rotate-180" : ""}`}
+          className={`text-[10px] transition-transform ${open ? "rotate-180" : ""} ${value !== defaultId ? "text-emerald-500" : "text-slate-400"}`}
         />
       </button>
 
-      {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-100 rounded-xl shadow-xl overflow-hidden">
           {options.map((o) => (
             <button
               key={o.id}
@@ -339,17 +313,18 @@ const FilterSelect = ({ value, onChange, options, defaultId }) => {
                 onChange(o.id);
                 setOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition
-                hover:bg-emerald-50 ${
-                  value === o.id
-                    ? "text-emerald-600 font-semibold"
-                    : "text-gray-600"
-                }`}
+              className={`w-full flex items-center justify-between px-4 py-3 text-xs font-semibold transition hover:bg-emerald-50 ${
+                value === o.id
+                  ? "text-emerald-700 bg-emerald-50/50"
+                  : "text-slate-600"
+              }`}
             >
               {o.label}
 
               {value === o.id && (
-                <FaCheck className="text-emerald-500 text-xs" />
+                <span className="w-5 h-5 rounded-md bg-emerald-100 flex items-center justify-center">
+                  <FaCheck className="text-emerald-600 text-[10px]" />
+                </span>
               )}
             </button>
           ))}
@@ -368,6 +343,9 @@ const Colocations = () => {
   const [sortBy, setSortBy] = useState("default");
   const [colocations, setColocations] = useState([]);
   const [_loading, setLoading] = useState(true);
+  const [favoris, setFavoris] = useState([]);
+  const [favoriFilter, setFavoriFilter] = useState(false);
+  const { isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -387,8 +365,21 @@ const Colocations = () => {
           type: item.type,
           roomType: item.type_chambre || "Chambre",
           gender: item.genre_colocataires || "mixte",
-          rules: item.reglement || "",
-          zone: item.prix < 3000 ? "budget" : "campus",
+          rules: (() => {
+            if (!item.reglement) return [];
+            try {
+              const parsed =
+                typeof item.reglement === "string"
+                  ? JSON.parse(item.reglement)
+                  : item.reglement;
+              return Array.isArray(parsed) ? parsed : parsed.rules || [];
+            } catch {
+              return item.reglement
+                .split(",")
+                .map((r) => r.trim())
+                .filter(Boolean);
+            }
+          })(),
           image: item.image || null,
           images: (() => {
             if (item.images) {
@@ -410,7 +401,8 @@ const Colocations = () => {
             "Propriétaire",
           id_poster: item.proprietaire?.id_user,
           description: item.description,
-          formule: item.formule || "standard",
+          avgRating: item.avg_rating_hebergement || 0,
+          meuble: item.meuble ?? false,
         }));
         setColocations(mappedData);
       } catch (error) {
@@ -421,6 +413,42 @@ const Colocations = () => {
     };
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchFavoris = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/favoris`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (res.ok) setFavoris(await res.json());
+      } catch {}
+    };
+    fetchFavoris();
+  }, [isAuthenticated]);
+
+  const toggleFavori = async (hebergementId) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/favoris/${hebergementId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.favori) {
+          setFavoris((prev) => [...prev, hebergementId]);
+        } else {
+          setFavoris((prev) => prev.filter((id) => id !== hebergementId));
+        }
+      }
+    } catch {}
+  };
 
   // Build room options dynamically from data
   const roomOptions = useMemo(() => {
@@ -439,8 +467,6 @@ const Colocations = () => {
   const visible = useMemo(() => {
     let result = [...colocations];
 
-    // Zone tab
-    if (active === "campus") result = result.filter((c) => c.zone === "campus");
     if (active === "budget") result = result.filter((c) => c.priceNum < 3000);
 
     // Full-text search
@@ -472,21 +498,25 @@ const Colocations = () => {
       result = result.filter((c) => String(c.rooms) === roomFilter);
     }
 
-    // Sort: Gold first, then Premium, then standard
-    const planWeight = (c) => {
-      const plan = localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
-      if (plan === "gold") return 2;
-      if (plan === "premium") return 1;
-      return 0;
-    };
+    if (favoriFilter) {
+      result = result.filter((c) => favoris.includes(c.id));
+    }
 
     if (sortBy === "price_asc") result.sort((a, b) => a.priceNum - b.priceNum);
     else if (sortBy === "price_desc")
       result.sort((a, b) => b.priceNum - a.priceNum);
-    else result.sort((a, b) => planWeight(b) - planWeight(a));
 
     return result;
-  }, [colocations, active, search, priceRange, roomFilter, sortBy]);
+  }, [
+    colocations,
+    active,
+    search,
+    priceRange,
+    roomFilter,
+    sortBy,
+    favoriFilter,
+    favoris,
+  ]);
 
   const activeFilterCount = [
     search.trim() !== "",
@@ -494,6 +524,7 @@ const Colocations = () => {
     roomFilter !== "all",
     sortBy !== "default",
     active !== "all",
+    favoriFilter,
   ].filter(Boolean).length;
 
   const clearAll = () => {
@@ -502,22 +533,17 @@ const Colocations = () => {
     setRoomFilter("all");
     setSortBy("default");
     setActive("all");
+    setFavoriFilter(false);
   };
 
   return (
-    <section className="min-h-screen bg-gray-100 py-4 mt-25 px-4 sm:px-8 font-poppins">
+    <section className="min-h-screen bg-gray-100 py-4 mt-32 px-4 sm:px-8 font-poppins">
       <div className="max-w-7xl mx-auto">
         {/* ── HEADER ── */}
         <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0b1c30] leading-tight tracking-tight">
-              Annonces <span className="text-emerald-600">Colocation</span>
-            </h1>
-            <p className="text-gray-400 mt-1 font-medium">
-              {visible.length} pépite{visible.length !== 1 ? "s" : ""} trouvée
-              {visible.length !== 1 ? "s" : ""} à Rabat
-            </p>
-          </div>
+          <h1 className="text-4xl font-extrabold text-[#0b1c30] leading-tight tracking-tight">
+            Annonces <span className="text-emerald-600">Colocation</span>
+          </h1>
 
           <div>
             <button
@@ -555,18 +581,30 @@ const Colocations = () => {
         {/* ── FILTER ROW ── */}
         <div className="flex  flex-wrap items-center gap-3 mb-4">
           {/* Zone quick filters */}
-          <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex gap-1.5 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200">
             {filters.map((f) => {
               const Icon = f.icon;
 
-              return (
+              return f.disabled ? (
+                <div
+                  key={f.id}
+                  className="relative flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider text-slate-300 cursor-not-allowed select-none"
+                  title="Bientôt disponible"
+                >
+                  <Icon className="text-sm" />
+                  {f.label}
+                  <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-sm">
+                    BIENTÔT
+                  </span>
+                </div>
+              ) : (
                 <button
                   key={f.id}
                   onClick={() => setActive(f.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] ${
                     active === f.id
-                      ? "bg-emerald-400 text-white shadow-md"
-                      : "text-gray-400 hover:text-emerald-700"
+                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
+                      : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
                   }`}
                 >
                   <Icon className="text-sm" />
@@ -595,73 +633,96 @@ const Colocations = () => {
             defaultId="default"
           />
 
-          {/* Clear all */}
-          {activeFilterCount > 0 && (
+          {/* Favoris toggle */}
+          {isAuthenticated && (
             <button
-              onClick={clearAll}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-red-50  border border-red-100 text-xs font-bold uppercase tracking-widest hover:bg-red-100 transition"
+              onClick={() => setFavoriFilter((p) => !p)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.97] ${
+                favoriFilter
+                  ? "bg-red-50 border border-red-200 text-red-600"
+                  : "bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+              }`}
             >
-              <FaTimes />
-              Effacer ({activeFilterCount})
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill={favoriFilter ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21l-7.682-7.682a4.5 4.5 0 010-6.364z"
+                />
+              </svg>
+              Favoris
             </button>
           )}
         </div>
 
         {/* ── ACTIVE FILTER TAGS ── */}
         {activeFilterCount > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex items-center gap-2.5 mb-6 overflow-x-auto scrollbar-thin">
+            <button
+              onClick={clearAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition shrink-0 border-none cursor-pointer"
+            >
+              <FaTimes className="text-[9px]" />
+              Effacer ({activeFilterCount})
+            </button>
             {search && (
-              <span className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
-                🔍 "{search}"
+              <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
+                {search}
                 <button
                   onClick={() => setSearch("")}
-                  className="text-gray-400 hover:text-gray-700 ml-0.5"
+                  className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-500 transition"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-[7px]" />
                 </button>
               </span>
             )}
             {priceRange !== "all_prices" && (
-              <span className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                💰 {PRICE_RANGES.find((r) => r.id === priceRange)?.label}
+              <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
+                {PRICE_RANGES.find((r) => r.id === priceRange)?.label}
                 <button
                   onClick={() => setPriceRange("all_prices")}
-                  className="text-emerald-400 hover:text-emerald-700 ml-0.5"
+                  className="w-4 h-4 rounded bg-emerald-200 hover:bg-emerald-300 flex items-center justify-center text-emerald-600 transition"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-[7px]" />
                 </button>
               </span>
             )}
             {roomFilter !== "all" && (
-              <span className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                🏠 {roomOptions.find((r) => r.id === roomFilter)?.label}
+              <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
+                {roomOptions.find((r) => r.id === roomFilter)?.label}
                 <button
                   onClick={() => setRoomFilter("all")}
-                  className="text-emerald-400 hover:text-emerald-700 ml-0.5"
+                  className="w-4 h-4 rounded bg-emerald-200 hover:bg-emerald-300 flex items-center justify-center text-emerald-600 transition"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-[7px]" />
                 </button>
               </span>
             )}
             {sortBy !== "default" && (
-              <span className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full">
-                ↕ {SORT_OPTIONS.find((s) => s.id === sortBy)?.label}
+              <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-lg">
+                {SORT_OPTIONS.find((s) => s.id === sortBy)?.label}
                 <button
                   onClick={() => setSortBy("default")}
-                  className="text-gray-400 hover:text-gray-700 ml-0.5"
+                  className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-500 transition"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-[7px]" />
                 </button>
               </span>
             )}
             {active !== "all" && (
-              <span className="flex items-center gap-1.5 bg-gray-800 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+              <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-lg">
                 {filters.find((f) => f.id === active)?.label}
                 <button
                   onClick={() => setActive("all")}
-                  className="text-gray-400 hover:text-white ml-0.5"
+                  className="w-4 h-4 rounded bg-blue-200 hover:bg-blue-300 flex items-center justify-center text-blue-600 transition"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-[7px]" />
                 </button>
               </span>
             )}
@@ -687,17 +748,15 @@ const Colocations = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visible.map((c) => {
-              const plan = localStorage.getItem(`unicons_pub_formula_${c.id}`) || "standard";
-              return (
-                <ColocationCard
-                  key={c.id}
-                  c={c}
-                  plan={plan}
-                  onClick={() => navigate(`/home/${c.id}`, { state: c })}
-                />
-              );
-            })}
+            {visible.map((c) => (
+              <ColocationCard
+                key={c.id}
+                c={c}
+                isFavori={favoris.includes(c.id)}
+                onToggleFavori={toggleFavori}
+                onClick={() => navigate(`/home/${c.id}`, { state: c })}
+              />
+            ))}
           </div>
         )}
       </div>

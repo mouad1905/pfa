@@ -30,6 +30,7 @@ class HebergementResource extends JsonResource
             'actif'              => (bool) ($this->actif ?? true),
             'image'              => $this->image_principale,
             'images'             => $this->images_galerie ?? [],
+            'avg_rating_hebergement' => (float) ($this->evaluations_avg_note ?? 0),
             'occupants'          => $this->whenLoaded('occupants', function () {
                 return $this->occupants->map(fn ($r) => [
                     'id_user'   => $r->etudiant->id_user,

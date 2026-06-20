@@ -29,6 +29,7 @@ import Security from "../features/profile/Security";
 import ScrollToTop from "../components/layout/ScrollToTop";
 import ProtectedRoute from "./ProtectedRoute";
 import Chat from "../features/chat/Chat";
+import ChatFloat from "../features/chat/ChatFloat";
 
 function PublicLayout() {
   return (
@@ -38,6 +39,7 @@ function PublicLayout() {
         <Outlet />
       </div>
       <Footer />
+      <ChatFloat />
     </>
   );
 }

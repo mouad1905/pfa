@@ -13,6 +13,8 @@ use App\Http\Controllers\MatiereController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\HebergementEvaluationController;
+use App\Http\Controllers\FavoriController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,7 @@ Route::get('/hebergements/{id}', [HebergementController::class, 'show']);
 Route::get('/cours', [CoursController::class, 'index']);
 Route::get('/cours/{id}', [CoursController::class, 'show']);
 Route::get('/matieres', [MatiereController::class, 'index']);
+Route::get('/hebergements/{id}/evaluations', [HebergementEvaluationController::class, 'index']);
 
 // Réclamations publiques (soumission sans compte obligatoire)
 Route::post('/reclamations', [ReclamationController::class, 'store']);
@@ -37,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return new \App\Http\Resources\UtilisateurResource($request->user());
     });
     Route::put('/users/{id}', [AuthController::class, 'updateProfile']);
+    Route::post('/users/{id}', [AuthController::class, 'updateProfile']);
 
     // Réservations (pour les étudiants uniquement)
     Route::middleware('role:etudiant')->group(function () {
@@ -67,6 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Paiements (tous les utilisateurs connectés)
     Route::post('/paiements', [PaiementController::class, 'store']);
+
+    // Favoris
+    Route::get('/favoris', [FavoriController::class, 'index']);
+    Route::post('/favoris/{hebergementId}', [FavoriController::class, 'toggle']);
+
+    // Évaluations des logements
+    Route::post('/hebergements/{id}/evaluations', [HebergementEvaluationController::class, 'store']);
 
     // Signalements
     Route::post('/signalements', [SignalementController::class, 'store']);
