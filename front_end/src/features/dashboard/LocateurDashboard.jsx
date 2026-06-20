@@ -7,17 +7,7 @@ const Icon = ({ name, className = "" }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
 );
 
-const formatTime = (dateStr) => {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  const now = new Date();
-  const diff = now - d;
-  if (diff < 86400000) {
-    return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  }
-  if (diff < 172800000) return "Hier";
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-};
+
 
 const listingStatus = (pub) => {
   if (pub.statut === "en_attente") {
@@ -43,15 +33,12 @@ export default function LocateurDashboard({ user }) {
   const navigate = useNavigate();
   const [annonces, setAnnonces] = useState([]);
   const [candidatures, setCandidatures] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     annonces: 0,
     actives: 0,
-    messages: 0,
     candidatures: 0,
     en_attente: 0,
-    non_lus: 0,
   });
 
   useEffect(() => {
@@ -104,42 +91,16 @@ export default function LocateurDashboard({ user }) {
         createdAt: r.created_at,
       }));
 
-      let msgList = [];
-      try {
-        const msgRes = await fetchData(API_URLS.MESSAGES_INBOX);
-        const msgs = Array.isArray(msgRes) ? msgRes : msgRes.data || [];
-        msgList = msgs.map((m) => ({
-          id: `msg-${m.id_message}`,
-          name: m.expediteur
-            ? `${m.expediteur.prenom || ""} ${m.expediteur.nom || ""}`.trim() || "Étudiant"
-            : "Étudiant",
-          time: formatTime(m.created_at),
-          listing: m.hebergement?.titre || m.sujet || "Logement",
-          preview: m.contenu,
-          avatar: `https://i.pravatar.cc/150?u=${m.expediteur?.id_user || m.id_message}`,
-          unread: m.statut === "envoye",
-          expediteurId: m.expediteur?.id_user,
-          messageId: m.id_message,
-          hebergementId: m.id_hebergement,
-        }));
-      } catch {
-        // Fallback to empty messages
-      }
-
       const activeCount = hebList.filter((a) => a.active && a.statut === "valide").length;
       const pendingCand = resList.filter((r) => r.statut === "en_attente").length;
-      const newMsg = msgList.filter((m) => m.unread).length;
 
       setAnnonces(hebList);
       setCandidatures(resList);
-      setMessages(msgList);
       setStats({
         annonces: hebList.length,
         actives: activeCount,
-        messages: msgList.length,
         candidatures: resList.length,
         en_attente: pendingCand,
-        non_lus: newMsg,
       });
     } catch (err) {
       console.error(err);
@@ -196,11 +157,8 @@ export default function LocateurDashboard({ user }) {
   const statCards = [
     { icon: "home", label: "Annonces", value: stats.annonces, detail: `${stats.actives} active${stats.actives > 1 ? "s" : ""}` },
     { icon: "assignment_ind", label: "Candidatures", value: stats.candidatures, detail: `${stats.en_attente} en attente` },
-    { icon: "chat_bubble", label: "Messages", value: stats.messages, detail: `${stats.non_lus} non lu${stats.non_lus > 1 ? "s" : ""}` },
     { icon: "checklist", label: "Annonces actives", value: stats.actives, detail: `sur ${stats.annonces} totale${stats.annonces > 1 ? "s" : ""}` },
   ];
-
-  const newMessagesCount = messages.filter((m) => m.unread).length;
 
   return (
     <div
@@ -228,7 +186,7 @@ export default function LocateurDashboard({ user }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {statCards.map((s) => (
             <div
               key={s.label}
@@ -367,97 +325,8 @@ export default function LocateurDashboard({ user }) {
           )}
         </section>
 
-        {/* Messages & Candidatures */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Messages */}
-          <section className="bg-white rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-[#bbcabf]/30 flex flex-col min-h-[320px]">
-            <div className="p-4 sm:p-5 border-b border-[#bbcabf]/30 flex justify-between items-center">
-              <h2 className="text-lg sm:text-xl font-semibold">Messages</h2>
-              {newMessagesCount > 0 && (
-                <span className="bg-[#006c49] text-white text-xs px-3 py-0.5 rounded-full font-medium">
-                  {newMessagesCount} Nouveau{newMessagesCount > 1 ? "x" : ""}
-                </span>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto max-h-[400px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#bbcabf] [&::-webkit-scrollbar-thumb]:rounded-full">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className="p-4 sm:p-5 hover:bg-[#eff4ff] transition-colors cursor-pointer border-b border-[#bbcabf]/20"
-                >
-                  <div className="flex gap-3 sm:gap-4">
-                    <img
-                      src={msg.avatar}
-                      alt=""
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-[#bbcabf] shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between gap-2">
-                        <p className="font-bold truncate">{msg.name}</p>
-                        <span className="text-xs text-[#3c4a42] shrink-0">{msg.time}</span>
-                      </div>
-                      <p className="text-xs text-[#006c49] font-medium truncate">{msg.listing}</p>
-                      <p className="text-xs text-[#3c4a42] mt-1 line-clamp-2">{msg.preview}</p>
-                    </div>
-                  </div>
-                    <div className="flex justify-end mt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        Swal.fire({
-                          title: `Répondre à ${msg.name}`,
-                          input: "textarea",
-                          inputPlaceholder: "Écrivez votre réponse...",
-                          inputAttributes: { rows: 4 },
-                          showCancelButton: true,
-                          confirmButtonText: "Envoyer",
-                          cancelButtonText: "Annuler",
-                          confirmButtonColor: "#006c49",
-                          preConfirm: (reply) => {
-                            if (!reply || !reply.trim()) {
-                              Swal.showValidationMessage("Veuillez écrire un message.");
-                              return false;
-                            }
-                            return reply.trim();
-                          },
-                        }).then(async (result) => {
-                          if (!result.isConfirmed || !result.value) return;
-                          try {
-                            const res = await fetch("http://127.0.0.1:8000/api/messages", {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                Authorization: `Bearer ${localStorage.getItem("token")}`,
-                              },
-                              body: JSON.stringify({
-                                id_destinataire: msg.expediteurId,
-                                id_hebergement: msg.hebergementId,
-                                sujet: `Re: ${msg.listing}`,
-                                contenu: result.value,
-                              }),
-                            });
-                            const data = await res.json();
-                            if (!res.ok) throw new Error(data.error || "Erreur");
-                            Swal.fire("Envoyé", "Votre réponse a été envoyée.", "success");
-                            loadData();
-                          } catch (err) {
-                            Swal.fire("Erreur", err.message, "error");
-                          }
-                        });
-                      }}
-                      className="text-[#006c49] text-sm font-medium border border-[#006c49] px-4 py-1 rounded-lg hover:bg-[#006c49]/10 transition-colors cursor-pointer bg-white"
-                    >
-                      Répondre
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Candidatures */}
-          <section className="bg-white rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-[#bbcabf]/30 flex flex-col min-h-[320px]">
+        {/* Candidatures */}
+        <div className="bg-white rounded-xl shadow-[0_4px_15px_rgba(0,0,0,0.04)] border border-[#bbcabf]/30 flex flex-col min-h-[320px]">
             <div className="p-4 sm:p-5 border-b border-[#bbcabf]/30 flex justify-between items-center">
               <h2 className="text-lg sm:text-xl font-semibold">Candidatures</h2>
               <span className="text-[#006c49] text-sm font-medium">
@@ -544,12 +413,22 @@ export default function LocateurDashboard({ user }) {
                         )}
                         <button
                           type="button"
-                          onClick={() =>
-                            Swal.fire("Contact", `Contacter ${name}`, "info")
-                          }
-                          className="w-10 flex items-center justify-center border border-[#bbcabf] rounded-lg hover:bg-[#eff4ff] transition-all bg-white cursor-pointer"
+                          title="Message"
+                          onClick={async () => {
+                            try {
+                              const res = await fetchData(API_URLS.CONVERSATIONS, {
+                                method: "POST",
+                                body: JSON.stringify({ id_destinataire: c.etudiant?.id_user }),
+                              });
+                              const convId = res.id_conversation || res.data?.id_conversation;
+                              if (convId) navigate(`/chat/${convId}`);
+                            } catch (err) {
+                              Swal.fire("Erreur", err.message, "error");
+                            }
+                          }}
+                          className="w-10 flex items-center justify-center border border-[#bbcabf] rounded-lg hover:bg-[#eff4ff] hover:text-[#006c49] transition-all bg-white cursor-pointer"
                         >
-                          <Icon name={isAccepted ? "chat" : "mail"} className="text-[20px] text-[#3c4a42]" />
+                          <Icon name="chat" className="text-[20px] text-[#3c4a42]" />
                         </button>
                       </div>
                     </div>
@@ -557,7 +436,6 @@ export default function LocateurDashboard({ user }) {
                 })
               )}
             </div>
-          </section>
         </div>
       </div>
     </div>

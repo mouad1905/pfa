@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/mes-hebergements', [HebergementController::class, 'mesHebergements']);
         Route::post('/hebergements', [HebergementController::class, 'store']);
         Route::put('/hebergements/{id}', [HebergementController::class, 'update']);
+        Route::put('/hebergements/{id}/images', [HebergementController::class, 'updateImages']);
         Route::put('/hebergements/{id}/publication', [HebergementController::class, 'updatePublication']);
         Route::get('/mes-reservations', [ReservationController::class, 'mesReservationsProprietaire']);
         Route::put('/reservations/{id}/statut', [ReservationController::class, 'updateStatut']);

@@ -4,6 +4,7 @@ export const API_URLS = {
   LOGIN: `${API_BASE_URL}/login`,
   REGISTER: `${API_BASE_URL}/register`,
   HEBERGEMENTS: `${API_BASE_URL}/hebergements`,
+  HEBERGEMENT_IMAGES: (id) => `${API_BASE_URL}/hebergements/${id}/images`,
   MES_HEBERGEMENTS: `${API_BASE_URL}/mes-hebergements`,
   MES_RESERVATIONS: `${API_BASE_URL}/mes-reservations`,
   reservationStatut: (id) => `${API_BASE_URL}/reservations/${id}/statut`,
