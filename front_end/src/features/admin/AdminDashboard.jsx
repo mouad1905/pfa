@@ -4,28 +4,41 @@ import {
   FaUsers, 
   FaHome, 
   FaBookOpen, 
-  FaRegCalendarCheck, 
   FaCoins, 
   FaClock, 
-  FaSpinner, 
   FaCheckCircle, 
   FaArrowUp,
-  FaShieldAlt
+  FaFlag,
+  FaFileAlt,
+  FaStar,
+  FaBookmark,
+  FaBan,
+  FaTimesCircle,
+  FaUserCheck,
+  FaChartBar,
 } from "react-icons/fa";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({});
   const [recentReservations, setRecentReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reservationsLoading, setReservationsLoading] = useState(true);
+  const [evolution, setEvolution] = useState(null);
   const [error, setError] = useState(null);
 
   const loadStats = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchData(`${API_BASE_URL}/admin/statistiques`);
-      setStats(data);
+      const [statsData, evolutionData] = await Promise.all([
+        fetchData(`${API_BASE_URL}/admin/statistiques`),
+        fetchData(`${API_BASE_URL}/admin/statistiques/evolution`).catch(() => null),
+      ]);
+      setStats(statsData);
+      setEvolution(evolutionData);
     } catch (err) {
       console.error("Error fetching dashboard statistics:", err);
       setError("Impossible de charger les statistiques depuis la base de données.");
@@ -51,15 +64,6 @@ const AdminDashboard = () => {
     loadStats();
     loadRecentReservations();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 bg-white rounded-3xl shadow-sm border border-slate-100">
-        <FaSpinner className="animate-spin text-teal-600 text-5xl mb-4" />
-        <p className="text-slate-500 font-semibold tracking-wide">Calcul des statistiques de la plateforme...</p>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -156,6 +160,50 @@ const AdminDashboard = () => {
         </div>
 
       </div>
+
+      {/* Courbes */}
+      {evolution && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Réservations */}
+          <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100">
+            <h3 className="text-sm font-bold text-slate-700 mb-1">Évolution des réservations</h3>
+            <p className="text-xs text-slate-400 mb-4">12 derniers mois</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={evolution.reservations}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="mois" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 13 }}
+                  labelFormatter={(v) => `Mois : ${v}`}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="total" name="Réservations" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Évaluations */}
+          <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100">
+            <h3 className="text-sm font-bold text-slate-700 mb-1">Évolution des évaluations</h3>
+            <p className="text-xs text-slate-400 mb-4">12 derniers mois</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={evolution.evaluations}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="mois" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 13 }}
+                  labelFormatter={(v) => `Mois : ${v}`}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="total" name="Évaluations" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="moyenne" name="Moyenne" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Row 2: New stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
