@@ -10,6 +10,7 @@ export const API_URLS = {
   reservationStatut: (id) => `${API_BASE_URL}/reservations/${id}/statut`,
   COURS: `${API_BASE_URL}/cours`,
   MES_COURS: `${API_BASE_URL}/mes-cours`,
+  PROF_STATS: `${API_BASE_URL}/professeur/statistiques`,
   USER: `${API_BASE_URL}/user`,
   LOGOUT: `${API_BASE_URL}/logout`,
   MESSAGES: `${API_BASE_URL}/messages`,

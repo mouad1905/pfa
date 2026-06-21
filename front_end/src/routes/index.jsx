@@ -24,6 +24,7 @@ import ManageUsers from "../features/admin/ManageUsers";
 import ManageSignales from "../features/admin/ManageSignales";
 import AddHouse from "../features/housing/AddHouse";
 import EditHouse from "../features/housing/EditHouse";
+import EditCourse from "../features/revisions/EditCourse";
 import Dashboard from "../features/dashboard/Dashboard";
 import Security from "../features/profile/Security";
 import ScrollToTop from "../components/layout/ScrollToTop";
@@ -79,6 +80,7 @@ export default function AppRoutes() {
         <Route path="/security" element={<Security />} />
         <Route path="/addHouse" element={<AddHouse />} />
         <Route path="/editHouse/:id" element={<EditHouse />} />
+        <Route path="/editCours/:id" element={<EditCourse />} />
       </Route>
     </Routes>
     </>

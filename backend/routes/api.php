@@ -62,8 +62,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cours (Professeur / Admin)
     Route::middleware('role:professeur,admin')->group(function () {
+        Route::get('/professeur/statistiques', [CoursController::class, 'getStats']);
         Route::get('/mes-cours', [CoursController::class, 'mesCours']);
         Route::post('/cours', [CoursController::class, 'store']);
+        Route::put('/cours/{id}', [CoursController::class, 'update']);
     });
 
     // Évaluations (étudiants uniquement — un étudiant évalue un professeur/propriétaire)
