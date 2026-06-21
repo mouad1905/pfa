@@ -24,12 +24,6 @@ export const API_URLS = {
   conversationRead: (id) => `${API_BASE_URL}/conversations/${id}/read`,
   CONVERSATIONS_UNREAD_TOTAL: `${API_BASE_URL}/conversations/unread-total`,
   CHAT_USERS: `${API_BASE_URL}/chat/users`,
-  NOTIFICATIONS: `${API_BASE_URL}/notifications`,
-  NOTIFICATIONS_UNREAD: `${API_BASE_URL}/notifications/unread-count`,
-  notificationRead: (id) => `${API_BASE_URL}/notifications/${id}/read`,
-  NOTIFICATIONS_READ_ALL: `${API_BASE_URL}/notifications/read-all`,
-  notificationDelete: (id) => `${API_BASE_URL}/notifications/${id}`,
-  NOTIFICATIONS_DELETE_ALL: `${API_BASE_URL}/notifications/all`,
 };
 
 const authHeaders = () => {

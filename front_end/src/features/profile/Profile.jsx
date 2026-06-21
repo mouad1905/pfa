@@ -466,7 +466,7 @@ export default function StudentProfile() {
               </div>
 
               <button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate(user?.role === "admin" ? "/admin" : "/dashboard")}
                 className="mt-8 w-full py-2 bg-white text-[#006b53] rounded-lg font-bold hover:bg-[#f8f9fa] transition-colors flex items-center justify-center gap-2"
               >
                 <FaChartLine size={14} />

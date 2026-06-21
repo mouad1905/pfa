@@ -10,7 +10,15 @@ import {
   FaSpinner, 
   FaCheckCircle, 
   FaArrowUp,
-  FaShieldAlt
+  FaShieldAlt,
+  FaFlag,
+  FaFileAlt,
+  FaStar,
+  FaBookmark,
+  FaChartBar,
+  FaUserCheck,
+  FaBan,
+  FaTimesCircle
 } from "react-icons/fa";
 
 const AdminDashboard = () => {
