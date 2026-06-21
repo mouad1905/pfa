@@ -345,7 +345,7 @@ const Colocations = () => {
   const [_loading, setLoading] = useState(true);
   const [favoris, setFavoris] = useState([]);
   const [favoriFilter, setFavoriFilter] = useState(false);
-  const { isAuthenticated } = useContext(AuthContext);
+  const { user, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -545,15 +545,23 @@ const Colocations = () => {
             Annonces <span className="text-emerald-600">Colocation</span>
           </h1>
 
-          <div>
-            <button
-              onClick={() => navigate("/addHouse")}
-              className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-md cursor-pointer"
-            >
-              <FaHome />
-              Ajouter une annonce
-            </button>
-          </div>
+          {(!isAuthenticated || user?.role === "locateur" || user?.role === "proprietaire") && (
+            <div>
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate("/register/locateur");
+                  } else {
+                    navigate("/addHouse");
+                  }
+                }}
+                className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-md cursor-pointer"
+              >
+                <FaHome />
+                Ajouter une annonce
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── SEARCH BAR ── */}

@@ -203,6 +203,13 @@ class ConversationController extends Controller
 
         $conversation->touch();
 
+        \App\Models\Notification::create([
+            'id_user' => $destUser->id_user,
+            'type' => 'message',
+            'message' => 'Nouveau message de ' . ($message->expediteur->prenom ?? '') . ' ' . ($message->expediteur->nom ?? ''),
+            'id_conversation' => $conversation->id_conversation,
+        ]);
+
         return response()->json([
             'status' => 'success',
             'data' => $message->load('expediteur', 'destinataire')

@@ -86,13 +86,17 @@ export default function StudentProfile() {
     loadUser();
   }, [id]);
 
+  const isHousingOwner = user?.role === "locateur" || user?.role === "proprietaire";
+  const isProfessor = user?.role === "professeur";
+
   useEffect(() => {
     if (!user?.id_user) return;
     const fetchCounts = async () => {
       try {
-        const [convRes, courseRes] = await Promise.allSettled([
+        const resourceUrl = isHousingOwner ? API_URLS.MES_HEBERGEMENTS : API_URLS.MES_COURS;
+        const [convRes, resourceRes] = await Promise.allSettled([
           fetchData(API_URLS.CONVERSATIONS),
-          fetchData(API_URLS.MES_COURS),
+          fetchData(resourceUrl),
         ]);
         if (convRes.status === "fulfilled") {
           const data = convRes.value;
@@ -104,8 +108,8 @@ export default function StudentProfile() {
                 : 0,
           );
         }
-        if (courseRes.status === "fulfilled") {
-          const data = courseRes.value;
+        if (resourceRes.status === "fulfilled") {
+          const data = resourceRes.value;
           setUserResourcesCount(
             Array.isArray(data)
               ? data.length
@@ -117,7 +121,7 @@ export default function StudentProfile() {
       } catch {}
     };
     fetchCounts();
-  }, [user?.id_user]);
+  }, [user?.id_user, isHousingOwner]);
 
   if (loading) {
     return (
@@ -446,13 +450,13 @@ export default function StudentProfile() {
                   Statistiques d'Activité
                 </p>
                 <h3 className="text-xl font-semibold mb-6">
-                  Engagement Académique
+                  {isHousingOwner ? "Activité Locative" : "Engagement Académique"}
                 </h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
-                  <p className="text-xs opacity-80">Ressources</p>
+                  <p className="text-xs opacity-80">{isHousingOwner ? "Annonces" : "Ressources"}</p>
                   <p className="text-2xl font-bold">{resourcesCount}</p>
                 </div>
                 <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm border border-white/20">

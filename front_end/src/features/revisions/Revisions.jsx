@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { API_URLS, fetchData } from "../../api/api";
 import { FaArrowRight } from "react-icons/fa";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 const availabilityIcon = (availability) => {
   const v = availability?.toLowerCase();
@@ -25,10 +26,16 @@ const availabilityIcon = (availability) => {
 };
 
 const Revisions = () => {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [revisions, setRevisions] = useState([]);
   const [_loading, setLoading] = useState(true);
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedMode, setSelectedMode] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,16 +68,21 @@ const Revisions = () => {
     loadData();
   }, []);
 
+  const subjects = [...new Set(revisions.map((r) => r.subject))].sort();
+  const levels = [...new Set(revisions.map((r) => r.level))].sort();
+  const modes = [...new Set(revisions.map((r) => r.availability))].sort();
+
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
   }, [searchParams]);
 
   const filteredData = revisions
     .filter((item) => {
-      // Filter by search
       if (!item.subject.toLowerCase().includes(search.toLowerCase()))
         return false;
-      // Hide courses deactivated by their professor
+      if (selectedSubject && item.subject !== selectedSubject) return false;
+      if (selectedLevel && item.level !== selectedLevel) return false;
+      if (selectedMode && item.availability !== selectedMode) return false;
       const status = localStorage.getItem(`unicons_pub_status_${item.id}`);
       return status !== "false";
     })
@@ -119,9 +131,18 @@ const Revisions = () => {
                 professionnelle.
               </p>
             </div>
-            <div className="flex  ">
-              <Link to="/addPartenaire">
-                <button className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-md cursor-pointer">
+            {(!isAuthenticated || user?.role === "professeur") && (
+              <div>
+                <button
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate("/register/professor");
+                    } else {
+                      navigate("/addPartenaire");
+                    }
+                  }}
+                  className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-md cursor-pointer"
+                >
                   <span
                     className="material-symbols-outlined"
                     style={{ fontVariationSettings: "'FILL' 1", fontSize: 20 }}
@@ -130,40 +151,115 @@ const Revisions = () => {
                   </span>
                   Devenir Partenaire
                 </button>
-              </Link>
-            </div>
+              </div>
+            )}
           </section>
 
           {/* Search & Filter Bar */}
-          <section className="p-2 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-4 mb-12 items-center shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
-            <div className="relative grow w-full">
-              <span
-                className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                style={{ fontSize: 20 }}
+          <section className="mb-8">
+            <div className="p-2 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-4 items-center shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+              <div className="relative grow w-full">
+                <span
+                  className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  style={{ fontSize: 20 }}
+                >
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearch(value);
+                    setSearchParams({ search: value });
+                  }}
+                  placeholder="Rechercher par matière, description…"
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-base outline-none"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all cursor-pointer ${
+                  showFilters
+                    ? "bg-emerald-700 text-white"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
               >
-                search
-              </span>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSearch(value);
-                  setSearchParams({ search: value }); // ✅ update URL
-                }}
-                placeholder="Rechercher par titre, quartier, description…"
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-base outline-none"
-              />
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 20 }}
+                >
+                  tune
+                </span>
+                Filtres
+                {(selectedSubject || selectedLevel || selectedMode) && (
+                  <span className="w-2 h-2 rounded-full bg-white ml-1" />
+                )}
+              </button>
             </div>
-            <button className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-all cursor-pointer">
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 20 }}
-              >
-                tune
-              </span>
-              Filtrer
-            </button>
+
+            {/* Filter Panel */}
+            {showFilters && (
+              <div className="mt-4 p-5 bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+                <div className="flex flex-wrap items-end gap-6">
+                  <div className="grow min-w-[160px]">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Matière
+                    </label>
+                    <select
+                      value={selectedSubject}
+                      onChange={(e) => setSelectedSubject(e.target.value)}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 transition text-sm"
+                    >
+                      <option value="">Toutes les matières</option>
+                      {subjects.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grow min-w-[160px]">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Niveau
+                    </label>
+                    <select
+                      value={selectedLevel}
+                      onChange={(e) => setSelectedLevel(e.target.value)}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 transition text-sm"
+                    >
+                      <option value="">Tous les niveaux</option>
+                      {levels.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grow min-w-[160px]">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Mode
+                    </label>
+                    <select
+                      value={selectedMode}
+                      onChange={(e) => setSelectedMode(e.target.value)}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 transition text-sm"
+                    >
+                      <option value="">Tous les modes</option>
+                      {modes.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedSubject("");
+                      setSelectedLevel("");
+                      setSelectedMode("");
+                    }}
+                    className="px-5 py-3 text-sm font-semibold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all cursor-pointer"
+                  >
+                    Réinitialiser
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Instructor Grid */}

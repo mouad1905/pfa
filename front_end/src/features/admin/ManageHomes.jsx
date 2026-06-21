@@ -229,9 +229,13 @@ const ManageHomes = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                            <FaUser size={11} />
-                          </div>
+                          {home.proprietaire?.photo_profil ? (
+                            <img src={home.proprietaire.photo_profil} alt="" className="w-7 h-7 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                              <FaUser size={11} />
+                            </div>
+                          )}
                           <div>
                             <p className="font-semibold text-slate-700 text-xs capitalize">
                               {home.proprietaire?.prenom} {home.proprietaire?.nom}

@@ -56,6 +56,7 @@ const mapApiToHome = (item) => {
     images: item.images?.length ? item.images : item.image ? [item.image] : [],
     description: item.description || "",
     poster: `${item.proprietaire?.prenom || ""} ${item.proprietaire?.nom || ""}`.trim() || "Propriétaire",
+    posterPhoto: item.proprietaire?.photo_profil || null,
     proprietaireId: item.proprietaire?.id_user || item.id_createur,
     occupants: item.occupants || [],
     formule: item.formule || "standard",
@@ -468,9 +469,13 @@ const AdminHomeDetail = () => {
 
           <div className="bg-slate-50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm">
             <div className="relative shrink-0">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#10b981] border border-emerald-100 shadow-inner flex items-center justify-center font-extrabold text-base">
-                {posterInitials}
-              </div>
+              {home.posterPhoto ? (
+                <img src={home.posterPhoto} alt="" className="w-12 h-12 rounded-full object-cover border border-emerald-100" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#10b981] border border-emerald-100 shadow-inner flex items-center justify-center font-extrabold text-base">
+                  {posterInitials}
+                </div>
+              )}
               <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow">
                 <FaCheck className="w-2 h-2 text-white" />
               </span>

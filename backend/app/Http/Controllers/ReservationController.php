@@ -68,9 +68,28 @@ class ReservationController extends Controller
         $reservation->statut = $newStatut;
         $reservation->save();
 
+        $reservation->load('etudiant', 'hebergement');
+        $titreLogement = $reservation->hebergement->titre ?? 'un logement';
+
+        if ($newStatut === 'confirmee') {
+            \App\Models\Notification::create([
+                'id_user' => $reservation->id_etudiant,
+                'type' => 'reservation_accepted',
+                'message' => 'Votre réservation pour ' . $titreLogement . ' a été acceptée.',
+                'id_reservation' => $reservation->id_reservation,
+            ]);
+        } elseif ($newStatut === 'annulee') {
+            \App\Models\Notification::create([
+                'id_user' => $reservation->id_etudiant,
+                'type' => 'reservation_rejected',
+                'message' => 'Votre réservation pour ' . $titreLogement . ' a été refusée.',
+                'id_reservation' => $reservation->id_reservation,
+            ]);
+        }
+
         return response()->json([
             'message' => 'Statut de la candidature mis à jour',
-            'data'    => new ReservationResource($reservation->load(['etudiant', 'hebergement'])),
+            'data'    => new ReservationResource($reservation),
         ]);
     }
 
@@ -85,6 +104,17 @@ class ReservationController extends Controller
                 'date_debut'     => $validated['date_debut'] ?? null,
                 'date_fin'       => $validated['date_fin'] ?? null,
                 'statut'         => 'en_attente'
+            ]);
+
+            $reservation->load('hebergement', 'etudiant');
+            $proprietaireId = $reservation->hebergement->id_createur;
+            $etudiantName = ($reservation->etudiant->prenom ?? '') . ' ' . ($reservation->etudiant->nom ?? '');
+
+            \App\Models\Notification::create([
+                'id_user' => $proprietaireId,
+                'type' => 'reservation_request',
+                'message' => "$etudiantName a envoyé une demande de réservation pour " . ($reservation->hebergement->titre ?? 'un logement'),
+                'id_reservation' => $reservation->id_reservation,
             ]);
 
             return response()->json([

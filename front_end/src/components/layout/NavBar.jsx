@@ -25,61 +25,68 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  // Persistent local state with premium mock notifications
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem("unicons_notifications");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing notifications", e);
-      }
-    }
-    return [
-      {
-        id: 1,
-        title: "Annonce Publiée",
-        text: "Félicitations ! Votre colocation 'Studio Lumineux Agdal' a été approuvée et est en ligne. 🎉",
-        time: "Il y a 5 min",
-        unread: true,
-        type: "success",
-      },
-      {
-        id: 2,
-        title: "Demande de Coloc",
-        text: "Ahmed a envoyé une demande pour rejoindre votre colocation à Agdal. 🏠",
-        time: "Il y a 1 heure",
-        unread: true,
-        type: "request",
-      },
-      {
-        id: 3,
-        title: "Cours Confirmé",
-        text: "Prof. Bensaid a accepté votre cours de révision en Algèbre pour demain à 14h. 📚",
-        time: "Il y a 2 heures",
-        unread: false,
-        type: "info",
-      },
-      {
-        id: 4,
-        title: "Profil Incomplet",
-        text: "Pensez à ajouter votre niveau d'études dans les paramètres pour de meilleures suggestions. ⚙️",
-        time: "Il y a 1 jour",
-        unread: false,
-        type: "warning",
-      },
-    ];
-  });
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem(
-      "unicons_notifications",
-      JSON.stringify(notifications),
-    );
-  }, [notifications]);
-
+  const navigate = useNavigate();
+  const { token, user: loggedInUser, logout } = useContext(AuthContext);
   const location = useLocation();
+
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const bustCache = (url) => {
+    if (!url) return null;
+    try { const u = new URL(url); u.searchParams.set("t", Date.now()); return u.toString(); } catch { return url; }
+  };
+
+  const notifTypeMap = {
+    message: "info",
+    reservation_request: "request",
+    reservation_accepted: "success",
+    reservation_rejected: "warning",
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return "À l'instant";
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Il y a ${diffHours} h`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `Il y a ${diffDays} j`;
+    return date.toLocaleDateString("fr-FR");
+  };
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      setNotifLoading(true);
+      const res = await fetchData(API_URLS.NOTIFICATIONS);
+      const list = res.data || [];
+      setNotifications(
+        list.map((n) => ({
+          id: n.id_notification,
+          title: n.type === "message" ? "Nouveau Message" : n.type === "reservation_request" ? "Demande de Réservation" : n.type === "reservation_accepted" ? "Réservation Acceptée" : n.type === "reservation_rejected" ? "Réservation Refusée" : "Notification",
+          text: n.message,
+          time: formatTime(n.created_at),
+          unread: !n.lu,
+          type: notifTypeMap[n.type] || "info",
+        })),
+      );
+    } catch {
+      // silently fail
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   const profileMenuLinkClass = (pathMatch) => {
     const isActive =
@@ -127,32 +134,36 @@ const Navbar = () => {
     isScrolledOrNotHome ? "text-slate-800" : "text-white"
   }`;
 
-  const navigate = useNavigate();
-  const { token, user: loggedInUser, logout } = useContext(AuthContext);
-
-  const bustCache = (url) => {
-    if (!url) return null;
-    try { const u = new URL(url); u.searchParams.set("t", Date.now()); return u.toString(); } catch { return url; }
-  };
-
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  const toggleNotificationRead = (id) => {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, unread: !n.unread } : n)),
-    );
+  const toggleNotificationRead = async (id) => {
+    try {
+      await fetchData(API_URLS.notificationRead(id), { method: "PUT" });
+      setNotifications(
+        notifications.map((n) => (n.id === id ? { ...n, unread: !n.unread } : n)),
+      );
+    } catch {}
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter((n) => n.id !== id));
+  const deleteNotification = async (id) => {
+    try {
+      await fetchData(API_URLS.notificationDelete(id), { method: "DELETE" });
+      setNotifications(notifications.filter((n) => n.id !== id));
+    } catch {}
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
+  const markAllAsRead = async () => {
+    try {
+      await fetchData(API_URLS.NOTIFICATIONS_READ_ALL, { method: "PUT" });
+      setNotifications(notifications.map((n) => ({ ...n, unread: false })));
+    } catch {}
   };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
+  const clearAllNotifications = async () => {
+    try {
+      await fetchData(API_URLS.NOTIFICATIONS_DELETE_ALL, { method: "DELETE" });
+      setNotifications([]);
+    } catch {}
   };
 
   return (
