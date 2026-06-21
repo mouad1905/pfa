@@ -41,7 +41,7 @@ function ProfessorDashboard({ user }) {
   }, []);
 
   return (
-    <div className="bg-[#f8f9ff] pt-24 pb-12 min-h-screen font-poppins">
+    <div className="bg-[#f8f9ff] pb-12 min-h-full font-poppins">
       <main className="max-w-6xl mx-auto px-4">
         <div className="rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 sm:p-8 text-white mb-8 shadow-lg">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -121,7 +121,7 @@ export default function Dashboard() {
 
   if (!isProf && !isLoc) {
     return (
-      <div className="bg-[#f8f9ff] pt-24 pb-12 min-h-screen flex items-center justify-center px-4">
+      <div className="bg-[#f8f9ff] pb-12 flex items-center justify-center px-4 min-h-[60vh]">
         <p className="text-slate-400 font-semibold text-center">
           Seuls les professeurs ou locateurs peuvent accéder au tableau de bord.
         </p>

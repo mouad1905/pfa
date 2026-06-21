@@ -478,10 +478,28 @@ function HomeDetails() {
                         src={bustCache(occ.photo_profil) || `https://ui-avatars.com/api/?name=${encodeURIComponent((occ.prenom||'')+' '+(occ.nom||''))}&background=10b981&color=fff&size=36&bold=true`}
                         alt={occ.prenom}
                       />
-                      <div className="text-left">
+                      <div className="text-left flex-1">
                         <p className="font-bold text-slate-800 text-xs">{occ.prenom} {occ.nom}</p>
                         <span className="text-[10px] text-slate-400 font-semibold">Occupant</span>
                       </div>
+                      <button
+                        type="button"
+                        title={`Contacter ${occ.prenom}`}
+                        onClick={async () => {
+                          try {
+                            const res = await fetchData(API_URLS.CONVERSATIONS, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ id_destinataire: occ.id_user }),
+                            });
+                            const convId = res.id_conversation || res.data?.id_conversation;
+                            if (convId) navigate(`/chat/${convId}`);
+                          } catch {}
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-[#10b981] hover:border-emerald-200 hover:bg-emerald-50 transition-all cursor-pointer shrink-0"
+                      >
+                        <FaCommentAlt size={13} />
+                      </button>
                     </div>
                   ))}
                 </div>

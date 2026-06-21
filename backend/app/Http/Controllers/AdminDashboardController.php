@@ -24,64 +24,170 @@ class AdminDashboardController extends Controller
      */
     public function getStats()
     {
+        $safeCount = function ($model, $column = null, $value = null) {
+            try {
+                $q = $model::query();
+                if ($column) $q->where($column, $value);
+                return $q->count();
+            } catch (\Exception) { return 0; }
+        };
+
+        $safeSum = function ($model, $column) {
+            try {
+                return $model::sum($column) ?: 0;
+            } catch (\Exception) { return 0; }
+        };
+
+        $safeAvg = function ($model, $column) {
+            try {
+                return round($model::avg($column), 1) ?: 0;
+            } catch (\Exception) { return 0; }
+        };
+
         return response()->json([
             'utilisateurs' => [
-                'total' => Utilisateur::count(),
-                'etudiants' => Utilisateur::where('role', 'etudiant')->count(),
-                'professeurs' => Utilisateur::where('role', 'professeur')->count(),
-                'proprietaires' => Utilisateur::where('role', 'proprietaire')->count(),
-                'locateurs' => Utilisateur::where('role', 'locateur')->count(),
-                'admins' => Utilisateur::where('role', 'admin')->count(),
-                'suspendus' => Utilisateur::where('statut', 'suspendu')->count(),
-                'en_attente' => Utilisateur::where('statut', 'en_attente')->count(),
-                'actifs' => Utilisateur::where('statut', 'actif')->count(),
+                'total' => $safeCount(Utilisateur::class),
+                'etudiants' => $safeCount(Utilisateur::class, 'role', 'etudiant'),
+                'professeurs' => $safeCount(Utilisateur::class, 'role', 'professeur'),
+                'proprietaires' => $safeCount(Utilisateur::class, 'role', 'proprietaire'),
+                'locateurs' => $safeCount(Utilisateur::class, 'role', 'locateur'),
+                'admins' => $safeCount(Utilisateur::class, 'role', 'admin'),
+                'suspendus' => $safeCount(Utilisateur::class, 'statut', 'suspendu'),
+                'en_attente' => $safeCount(Utilisateur::class, 'statut', 'en_attente'),
+                'actifs' => $safeCount(Utilisateur::class, 'statut', 'actif'),
                 'inscrits_7j' => Utilisateur::where('created_at', '>=', now()->subDays(7))->count(),
                 'inscrits_30j' => Utilisateur::where('created_at', '>=', now()->subDays(30))->count(),
             ],
             'annonces' => [
-                'hebergements_valides' => Hebergement::where('statut', 'valide')->count(),
-                'hebergements_en_attente' => Hebergement::where('statut', 'en_attente')->count(),
-                'hebergements_rejetes' => Hebergement::where('statut', 'rejete')->count(),
-                'cours_valides' => Cours::where('statut', 'valide')->count(),
-                'cours_en_attente' => Cours::where('statut', 'en_attente')->count(),
-                'cours_rejetes' => Cours::where('statut', 'rejete')->count(),
+                'hebergements_valides' => $safeCount(Hebergement::class, 'statut', 'valide'),
+                'hebergements_en_attente' => $safeCount(Hebergement::class, 'statut', 'en_attente'),
+                'hebergements_rejetes' => $safeCount(Hebergement::class, 'statut', 'rejete'),
+                'cours_valides' => $safeCount(Cours::class, 'statut', 'valide'),
+                'cours_en_attente' => $safeCount(Cours::class, 'statut', 'en_attente'),
+                'cours_rejetes' => $safeCount(Cours::class, 'statut', 'rejete'),
             ],
             'reservations' => [
-                'total' => Reservation::count(),
-                'en_attente' => Reservation::where('statut', 'en_attente')->count(),
-                'confirmees' => Reservation::where('statut', 'confirmee')->count(),
-                'annulees' => Reservation::where('statut', 'annulee')->count(),
+                'total' => $safeCount(Reservation::class),
+                'en_attente' => $safeCount(Reservation::class, 'statut', 'en_attente'),
+                'confirmees' => $safeCount(Reservation::class, 'statut', 'confirmee'),
+                'annulees' => $safeCount(Reservation::class, 'statut', 'annulee'),
             ],
             'finances' => [
-                'total_transactions' => Paiement::count(),
-                'chiffre_affaires' => Paiement::sum('montant'),
-                'reussi' => Paiement::where('statut', 'reussi')->count(),
-                'echoue' => Paiement::where('statut', 'echoue')->count(),
+                'total_transactions' => $safeCount(Paiement::class),
+                'chiffre_affaires' => $safeSum(Paiement::class, 'montant'),
+                'reussi' => $safeCount(Paiement::class, 'statut', 'reussi'),
+                'echoue' => $safeCount(Paiement::class, 'statut', 'echoue'),
             ],
             'signalements' => [
-                'total' => Signalement::count(),
-                'en_attente' => Signalement::where('statut', 'en_attente')->count(),
-                'traites' => Signalement::where('statut', 'traite')->count(),
-                'rejetes' => Signalement::where('statut', 'rejete')->count(),
+                'total' => $safeCount(Signalement::class),
+                'en_attente' => $safeCount(Signalement::class, 'statut', 'en_attente'),
+                'traites' => $safeCount(Signalement::class, 'statut', 'traite'),
+                'rejetes' => $safeCount(Signalement::class, 'statut', 'rejete'),
             ],
             'reclamations' => [
-                'total' => Reclamation::count(),
-                'en_attente' => Reclamation::where('statut', 'en_attente')->count(),
-                'traitees' => Reclamation::where('statut', 'traitee')->count(),
-                'rejetees' => Reclamation::where('statut', 'rejetee')->count(),
+                'total' => $safeCount(Reclamation::class),
+                'en_attente' => $safeCount(Reclamation::class, 'statut', 'en_attente'),
+                'traitees' => $safeCount(Reclamation::class, 'statut', 'traitee'),
+                'rejetees' => $safeCount(Reclamation::class, 'statut', 'rejetee'),
             ],
             'evaluations' => [
-                'total' => Evaluation::count(),
-                'moyenne_generale' => round(Evaluation::avg('note'), 1) ?: 0,
-                'notes_5' => Evaluation::where('note', 5)->count(),
-                'notes_4' => Evaluation::where('note', 4)->count(),
-                'notes_3' => Evaluation::where('note', 3)->count(),
-                'notes_2' => Evaluation::where('note', 2)->count(),
-                'notes_1' => Evaluation::where('note', 1)->count(),
+                'total' => $safeCount(Evaluation::class),
+                'moyenne_generale' => $safeAvg(Evaluation::class, 'note'),
+                'notes_5' => $safeCount(Evaluation::class, 'note', 5),
+                'notes_4' => $safeCount(Evaluation::class, 'note', 4),
+                'notes_3' => $safeCount(Evaluation::class, 'note', 3),
+                'notes_2' => $safeCount(Evaluation::class, 'note', 2),
+                'notes_1' => $safeCount(Evaluation::class, 'note', 1),
             ],
             'matieres' => [
-                'total' => Matiere::count(),
+                'total' => $safeCount(Matiere::class),
             ],
+        ]);
+    }
+
+    /**
+     * Données d'évolution mensuelle pour les courbes (réservations + évaluations)
+     */
+    public function getEvolution()
+    {
+        $months = 12;
+
+        $reservations = collect();
+        try {
+            $reservations = Reservation::selectRaw("TO_CHAR(created_at, 'YYYY-MM') as mois, COUNT(*) as total")
+                ->where('created_at', '>=', now()->subMonths($months))
+                ->groupByRaw("TO_CHAR(created_at, 'YYYY-MM')")
+                ->orderBy('mois')
+                ->get()
+                ->keyBy('mois');
+        } catch (\Exception) {
+            try {
+                $reservations = Reservation::selectRaw("strftime('%Y-%m', created_at) as mois, COUNT(*) as total")
+                    ->where('created_at', '>=', now()->subMonths($months))
+                    ->groupByRaw("strftime('%Y-%m', created_at)")
+                    ->orderBy('mois')
+                    ->get()
+                    ->keyBy('mois');
+            } catch (\Exception) {
+                try {
+                    $reservations = Reservation::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as mois, COUNT(*) as total")
+                        ->where('created_at', '>=', now()->subMonths($months))
+                        ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
+                        ->orderBy('mois')
+                        ->get()
+                        ->keyBy('mois');
+                } catch (\Exception) {}
+            }
+        }
+
+        $evaluations = collect();
+        try {
+            $evaluations = Evaluation::selectRaw("TO_CHAR(date_evaluation, 'YYYY-MM') as mois, COUNT(*) as total, AVG(note) as moyenne")
+                ->where('date_evaluation', '>=', now()->subMonths($months))
+                ->groupByRaw("TO_CHAR(date_evaluation, 'YYYY-MM')")
+                ->orderBy('mois')
+                ->get()
+                ->keyBy('mois');
+        } catch (\Exception) {
+            try {
+                $evaluations = Evaluation::selectRaw("strftime('%Y-%m', date_evaluation) as mois, COUNT(*) as total, AVG(note) as moyenne")
+                    ->where('date_evaluation', '>=', now()->subMonths($months))
+                    ->groupByRaw("strftime('%Y-%m', date_evaluation)")
+                    ->orderBy('mois')
+                    ->get()
+                    ->keyBy('mois');
+            } catch (\Exception) {
+                try {
+                    $evaluations = Evaluation::selectRaw("DATE_FORMAT(date_evaluation, '%Y-%m') as mois, COUNT(*) as total, AVG(note) as moyenne")
+                        ->where('date_evaluation', '>=', now()->subMonths($months))
+                        ->groupByRaw("DATE_FORMAT(date_evaluation, '%Y-%m')")
+                        ->orderBy('mois')
+                        ->get()
+                        ->keyBy('mois');
+                } catch (\Exception) {}
+            }
+        }
+
+        // Compléter les 12 mois avec des zéros
+        $labels = collect();
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $labels->push(now()->subMonths($i)->format('Y-m'));
+        }
+
+        $resData = $labels->map(fn($m) => [
+            'mois' => $m,
+            'total' => (int) ($reservations[$m]->total ?? 0),
+        ]);
+
+        $evalData = $labels->map(fn($m) => [
+            'mois' => $m,
+            'total' => (int) ($evaluations[$m]->total ?? 0),
+            'moyenne' => round((float) ($evaluations[$m]->moyenne ?? 0), 1),
+        ]);
+
+        return response()->json([
+            'reservations' => $resData,
+            'evaluations'  => $evalData,
         ]);
     }
 

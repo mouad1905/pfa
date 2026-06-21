@@ -14,6 +14,14 @@ import {
   FaUserShield
 } from "react-icons/fa";
 
+const BACKEND_BASE = API_BASE_URL.replace('/api', '');
+
+const resolveDocUrl = (url) => {
+  if (!url) return url;
+  if (url.startsWith('http')) return url;
+  return BACKEND_BASE + '/' + url.replace(/^\//, '');
+};
+
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -455,9 +463,9 @@ const ManageUsers = () => {
                     <p className="text-xs text-slate-400">Scan du document d'identité officiel</p>
                   </div>
                 </div>
-                {selectedUser.document_identite ? (
+                  {selectedUser.document_identite ? (
                   <a 
-                    href={selectedUser.document_identite} 
+                    href={resolveDocUrl(selectedUser.document_identite)} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="p-2 bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-600 rounded-lg transition"
@@ -484,7 +492,7 @@ const ManageUsers = () => {
                   </div>
                   {selectedUser.carte_etudiant ? (
                     <a 
-                      href={selectedUser.carte_etudiant} 
+                      href={resolveDocUrl(selectedUser.carte_etudiant)} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="p-2 bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg transition"
@@ -512,7 +520,7 @@ const ManageUsers = () => {
                   </div>
                   {selectedUser.certificat ? (
                     <a 
-                      href={selectedUser.certificat} 
+                      href={resolveDocUrl(selectedUser.certificat)} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="p-2 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg transition"

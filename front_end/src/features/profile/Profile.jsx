@@ -175,6 +175,7 @@ export default function StudentProfile() {
       : ["Informatique", "Fès", "EMSI"];
 
   const sidebarLinks = [
+    { icon: <FaChartLine size={18} />, label: "Tableau de bord", path: "/dashboard" },
     { icon: <FaComment size={18} />, label: "Messages", path: "/chat" },
     { icon: <FaUsers size={18} />, label: "Communautés", path: "/colocations" },
     {
@@ -224,102 +225,7 @@ export default function StudentProfile() {
   };
 
   return (
-    <div className="flex min-h-screen mt-6 bg-[#f8f9fa] text-[#191c1d] font-['Inter',sans-serif] pt-20">
-      {/* ============ LEFT SIDEBAR ============ */}
-      <aside className="h-[calc(100vh-100px)] w-[300px] sticky left-0 top-20 bg-[#f8f9fa] shadow-sm flex-col p-4 border-r border-[#bccac2] hidden md:flex z-40">
-        <div className="mb-8 px-2">
-          <h1 className="font-bold text-2xl text-[#006b53] tracking-tight">
-            Academic Portal
-          </h1>
-        </div>
-
-        <nav className="flex-1 space-y-1 overflow-y-auto">
-          {sidebarLinks.map((link) => {
-            const isActive =
-              location.pathname === link.path ||
-              (link.path !== "/" && location.pathname.startsWith(link.path));
-            return (
-              <button
-                key={link.path}
-                onClick={() => navigate(link.path)}
-                className={`flex items-center gap-4 w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-[#d0e2f3] text-[#546573] font-semibold"
-                    : "text-[#4f606f] hover:bg-[#e7e8e9]"
-                }`}
-              >
-                {link.icon}
-                <span className="text-base">{link.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto pt-2 border-t border-[#bccac2]">
-          <div className="flex items-center gap-4 p-2 rounded-lg bg-[#f3f4f5]">
-            <img
-              className="w-10 h-10 rounded-full object-cover"
-              src={
-                bustCache(user.photo_profil, user.updated_at) ||
-                avatarFallback(user.prenom, user.nom, 40)
-              }
-              alt={user.prenom}
-              onError={(e) => {
-                e.target.src = avatarFallback(user.prenom, user.nom, 40);
-              }}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm truncate font-bold">
-                {user.prenom} {user.nom}
-              </p>
-              <p className="text-xs text-[#4f606f] truncate">
-                {user.niveau_etude ? `${user.niveau_etude} - ` : ""}
-                {user.role || ""}
-              </p>
-            </div>
-          </div>
-          {isOwnProfile ? (
-            <button
-              onClick={() => navigate("/settings")}
-              className="mt-2 w-full py-2 px-4 rounded-full bg-[#00a884] text-white text-sm font-medium hover:bg-[#006b53] transition-colors cursor-pointer border-none"
-            >
-              Modifier le profil
-            </button>
-          ) : (
-            loggedInUser && (
-              <button
-                onClick={async () => {
-                  try {
-                    Swal.showLoading();
-                    const response = await fetchData(API_URLS.CONVERSATIONS, {
-                      method: "POST",
-                      body: JSON.stringify({ id_destinataire: user.id_user }),
-                    });
-                    Swal.close();
-                    const conversationId =
-                      response.id_conversation ||
-                      response.data?.id_conversation;
-                    navigate(`/chat/${conversationId}`);
-                  } catch (err) {
-                    Swal.fire(
-                      "Erreur",
-                      err.message || "Impossible d'ouvrir la conversation.",
-                      "error",
-                    );
-                  }
-                }}
-                className="mt-2 w-full py-2 px-4 rounded-full bg-[#00a884] text-white text-sm font-medium hover:bg-[#006b53] transition-colors cursor-pointer border-none flex items-center justify-center gap-2"
-              >
-                Envoyer un message
-              </button>
-            )
-          )}
-        </div>
-      </aside>
-
-      {/* ============ MAIN CONTENT ============ */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#f8f9fa] overflow-x-hidden">
-        <div className="p-4 md:p-8 max-w-[1200px] mx-auto w-full space-y-6">
+    <div className="p-4 md:p-8 max-w-[1200px] mx-auto w-full space-y-6">
           {/* ===== PROFILE HEADER CARD ===== */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-12 bg-white rounded-xl p-6 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden shadow-[0px_4px_12px_rgba(0,0,0,0.05)] ">
@@ -592,7 +498,5 @@ export default function StudentProfile() {
             </div>
           </section>
         </div>
-      </main>
-    </div>
   );
 }

@@ -162,7 +162,7 @@ export default function LocateurDashboard({ user }) {
 
   return (
     <div
-      className="min-h-screen pt-24 pb-12 text-[#0b1c30] font-[Inter,sans-serif]"
+      className="pb-12 text-[#0b1c30] font-[Inter,sans-serif]"
       style={{ background: "#f8f9ff" }}
     >
       <div className="max-w-[1120px] mx-auto px-4 sm:p-6 space-y-6 sm:space-y-8">
@@ -354,9 +354,13 @@ export default function LocateurDashboard({ user }) {
                     >
                       <div className="flex justify-between mb-3 sm:mb-4 gap-2">
                         <div className="flex gap-3 min-w-0">
-                          <div className="w-12 h-12 rounded-lg bg-[#adedd3] flex items-center justify-center shrink-0">
-                            <Icon name="person" className="text-[#006c49]" />
-                          </div>
+                          {c.etudiant?.photo_profil ? (
+                            <img src={`${c.etudiant.photo_profil}?t=${Date.now()}`} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-[#adedd3] flex items-center justify-center shrink-0">
+                              <Icon name="person" className="text-[#006c49]" />
+                            </div>
+                          )}
                           <div className="min-w-0">
                             <p className="font-bold truncate">{name || "Étudiant"}</p>
                             <p className="text-xs text-[#3c4a42] truncate">
@@ -402,28 +406,52 @@ export default function LocateurDashboard({ user }) {
                               Refuser
                             </button>
                           </>
+                        ) : isAccepted ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              Swal.fire({
+                                title: "Supprimer l'étudiant ?",
+                                text: "Cet étudiant sera retiré de votre colocation.",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#3085d6",
+                                confirmButtonText: "Oui, supprimer",
+                                cancelButtonText: "Annuler",
+                              }).then((r) => {
+                                if (r.isConfirmed) handleCandidatureStatut(c.id, "annulee");
+                              });
+                            }}
+                            className="flex-1 min-w-[100px] border border-red-300 text-red-600 py-2 rounded-lg text-sm font-semibold hover:bg-red-50 transition-all cursor-pointer bg-white"
+                          >
+                            Supprimer
+                          </button>
                         ) : (
                           <button
                             type="button"
                             disabled
                             className="flex-1 border border-[#bbcabf] text-[#3c4a42] py-2 rounded-lg text-sm font-semibold opacity-50 cursor-not-allowed bg-white"
                           >
-                            {isAccepted ? "Finalisé" : "Clôturé"}
+                            Clôturé
                           </button>
                         )}
                         <button
                           type="button"
                           title="Message"
                           onClick={async () => {
+                            const destId = c.etudiant?.id_user;
+                            if (!destId) return;
                             try {
                               const res = await fetchData(API_URLS.CONVERSATIONS, {
                                 method: "POST",
-                                body: JSON.stringify({ id_destinataire: c.etudiant?.id_user }),
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ id_destinataire: destId }),
                               });
                               const convId = res.id_conversation || res.data?.id_conversation;
                               if (convId) navigate(`/chat/${convId}`);
-                            } catch (err) {
-                              Swal.fire("Erreur", err.message, "error");
+                            } catch {
+                              // silently fail
                             }
                           }}
                           className="w-10 flex items-center justify-center border border-[#bbcabf] rounded-lg hover:bg-[#eff4ff] hover:text-[#006c49] transition-all bg-white cursor-pointer"

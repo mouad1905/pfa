@@ -30,7 +30,7 @@ export default function Security() {
   };
 
   return (
-    <div className="bg-[#f8f9ff] pt-24 pb-12 min-h-screen font-poppins">
+    <div className="bg-[#f8f9ff] min-h-screen pb-12 font-poppins">
       <main className="max-w-xl mx-auto px-4">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">

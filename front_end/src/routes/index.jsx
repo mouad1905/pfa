@@ -30,6 +30,7 @@ import ScrollToTop from "../components/layout/ScrollToTop";
 import ProtectedRoute from "./ProtectedRoute";
 import Chat from "../features/chat/Chat";
 import ChatFloat from "../features/chat/ChatFloat";
+import AppLayout from "../components/layout/AppLayout";
 
 function PublicLayout() {
   return (
@@ -65,8 +66,6 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/colocations" element={<Colocations />} />
         <Route path="/revisions" element={<Revisions />} />
-        <Route path="/profile/:id?" element={<Profile />} />
-        <Route path="/settings" element={<Settings />} />
         <Route path="/chat/:id?" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/support" element={<Support />} />
         <Route path="/home/:id" element={<InfoHome />} />
@@ -79,6 +78,13 @@ export default function AppRoutes() {
         <Route path="/security" element={<Security />} />
         <Route path="/addHouse" element={<AddHouse />} />
         <Route path="/editHouse/:id" element={<EditHouse />} />
+
+        <Route element={<AppLayout />}>
+          <Route path="/profile/:id?" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/security" element={<Security />} />
+        </Route>
       </Route>
     </Routes>
     </>

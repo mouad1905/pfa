@@ -1,39 +1,51 @@
 import { useState, useEffect } from "react";
 import API_BASE_URL, { fetchData } from "../../api/api";
-import { 
-  FaUsers, 
-  FaHome, 
-  FaBookOpen, 
-  FaRegCalendarCheck, 
-  FaCoins, 
-  FaClock, 
-  FaSpinner, 
-  FaCheckCircle, 
-  FaArrowUp,
-  FaShieldAlt,
-  FaFlag,
-  FaFileAlt,
-  FaStar,
-  FaBookmark,
-  FaChartBar,
-  FaUserCheck,
-  FaBan,
-  FaTimesCircle
+import {
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line,
+} from "recharts";
+import {
+  FaUsers, FaHome, FaBookOpen, FaStar, FaEllipsisH, FaClipboardList, FaCheckCircle,
+  FaClock, FaTimesCircle, FaShieldAlt, FaFlag, FaFileAlt, FaCheck, FaUserCog,
+  FaChartLine, FaChartBar, FaCog, FaExclamationCircle,
 } from "react-icons/fa";
 
+const CustomTooltipContent = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100 text-xs">
+        <p className="font-bold text-gray-700 mb-1">{label}</p>
+        {payload.map((entry, idx) => (
+          <p key={idx} style={{ color: entry.color }} className="font-medium">
+            {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const formatMois = (mois) => {
+  const d = new Date(mois + "-01");
+  return d.toLocaleDateString("fr-FR", { month: "short" });
+};
+
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [recentReservations, setRecentReservations] = useState([]);
+  const [stats, setStats] = useState({});
+  const [evolution, setEvolution] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [reservationsLoading, setReservationsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadStats = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchData(`${API_BASE_URL}/admin/statistiques`);
-      setStats(data);
+      const [statsData, evolutionData] = await Promise.all([
+        fetchData(`${API_BASE_URL}/admin/statistiques`),
+        fetchData(`${API_BASE_URL}/admin/statistiques/evolution`).catch(() => null),
+      ]);
+      setStats(statsData);
+      setEvolution(evolutionData);
     } catch (err) {
       console.error("Error fetching dashboard statistics:", err);
       setError("Impossible de charger les statistiques depuis la base de données.");
@@ -42,418 +54,396 @@ const AdminDashboard = () => {
     }
   };
 
-  const loadRecentReservations = async () => {
-    try {
-      setReservationsLoading(true);
-      const data = await fetchData(`${API_BASE_URL}/admin/reservations`);
-      setRecentReservations(data.data || data || []);
-    } catch (err) {
-      console.error("Error fetching recent reservations:", err);
-      setRecentReservations([]);
-    } finally {
-      setReservationsLoading(false);
-    }
-  };
-
   useEffect(() => {
     loadStats();
-    loadRecentReservations();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 bg-white rounded-3xl shadow-sm border border-slate-100">
-        <FaSpinner className="animate-spin text-teal-600 text-5xl mb-4" />
-        <p className="text-slate-500 font-semibold tracking-wide">Calcul des statistiques de la plateforme...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-3xl text-center shadow-sm">
-        <p className="font-bold text-lg mb-2">Une erreur est survenue</p>
-        <p className="text-slate-500 text-sm mb-4">{error}</p>
-        <button 
-          onClick={loadStats} 
-          className="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold transition cursor-pointer shadow-md"
-        >
-          Réessayer
-        </button>
-      </div>
-    );
-  }
-
-  // Extract counts for readability
   const users = stats.utilisateurs || { total: 0, etudiants: 0, professeurs: 0, proprietaires: 0, locateurs: 0, admins: 0, suspendus: 0, en_attente: 0, actifs: 0, inscrits_7j: 0, inscrits_30j: 0 };
   const annonces = stats.annonces || { hebergements_valides: 0, hebergements_en_attente: 0, hebergements_rejetes: 0, cours_valides: 0, cours_en_attente: 0, cours_rejetes: 0 };
-  const reservations = stats.reservations || { total: 0, en_attente: 0, confirmees: 0, annulees: 0 };
+  const reservations = stats.reservations || { total: 0, en_attente: 0, confirmees: 0, annulees: 0, en_cours: 0, expirees: 0 };
   const finances = stats.finances || { total_transactions: 0, chiffre_affaires: 0, reussi: 0, echoue: 0 };
   const signalements = stats.signalements || { total: 0, en_attente: 0, traites: 0, rejetes: 0 };
   const reclamations = stats.reclamations || { total: 0, en_attente: 0, traitees: 0, rejetees: 0 };
   const evaluations = stats.evaluations || { total: 0, moyenne_generale: 0, notes_5: 0, notes_4: 0, notes_3: 0, notes_2: 0, notes_1: 0 };
-  const matieres = stats.matieres || { total: 0 };
+
+  const evolutionReservations = (evolution?.reservations || []).map(r => ({ ...r, name: formatMois(r.mois) }));
+  const evolutionEvaluations = (evolution?.evaluations || []).map(e => ({ ...e, name: formatMois(e.mois) }));
+
+  const totalHebergements = annonces.hebergements_valides + annonces.hebergements_en_attente;
+  const totalCours = annonces.cours_valides + annonces.cours_en_attente;
+  const satisfactionPct = evaluations.total > 0
+    ? Math.round((evaluations.moyenne_generale / 5) * 100)
+    : 0;
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-rose-50 border border-rose-100 text-rose-700 p-10 rounded-3xl text-center shadow-sm max-w-md">
+          <FaExclamationCircle className="text-4xl text-rose-400 mx-auto mb-3" />
+          <p className="font-bold text-lg mb-2">Une erreur est survenue</p>
+          <p className="text-slate-500 text-sm mb-5">{error}</p>
+          <button
+            onClick={loadStats}
+            className="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-xl font-bold transition cursor-pointer shadow-md"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      <div>
-        <h1 className="text-2xl font-extrabold text-slate-800">Vue d'ensemble</h1>
-        <p className="text-slate-500 text-sm mt-1">Consultez l'activité en temps réel de votre plateforme UniConnect.</p>
+    <div>
+
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-[22px] font-extrabold text-[#1e293b] tracking-tight">Tableau de bord</h1>
+        <p className="text-sm text-slate-400 mt-1">Aperçu général de l'activité de la plateforme</p>
       </div>
 
-      {/* Grid of Key Statistics Card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Card 1: Users */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-between hover:shadow-md transition duration-200">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Utilisateurs</span>
-            <h3 className="text-3xl font-extrabold text-slate-800">{users.total}</h3>
-            <p className="text-xs text-slate-500 font-medium">
-              <span className="text-teal-600 font-bold">{users.etudiants}</span> étudiants · <span className="text-blue-600 font-bold">{users.professeurs}</span> profs · <span className="text-amber-600 font-bold">{users.proprietaires + users.locateurs}</span> proprio.
-            </p>
-            <p className="text-xs text-slate-400 font-medium">
-              +{users.inscrits_7j} cette semaine · +{users.inscrits_30j} ce mois
-            </p>
+      {/* Metric Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+            <FaUsers className="text-[#008282] text-xl" />
           </div>
-          <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center shadow-xs">
-            <FaUsers size={22} />
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Utilisateurs</p>
+            <h3 className="text-2xl font-black text-[#1e293b]">{users.total}</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              <span className="text-teal-600 font-bold">{users.etudiants}</span> étudiants · <span className="text-teal-600 font-bold">{users.professeurs}</span> profs
+            </p>
           </div>
         </div>
 
-        {/* Card 2: Accommodations */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-between hover:shadow-md transition duration-200">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hébergements</span>
-            <h3 className="text-3xl font-extrabold text-slate-800">{annonces.hebergements_valides + annonces.hebergements_en_attente}</h3>
-            <p className="text-xs text-slate-500 font-medium">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+            <FaHome className="text-indigo-500 text-xl" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hébergements</p>
+            <h3 className="text-2xl font-black text-[#1e293b]">{totalHebergements}</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
               <span className="text-emerald-600 font-bold">{annonces.hebergements_valides}</span> validés · <span className="text-amber-500 font-bold">{annonces.hebergements_en_attente}</span> en attente
             </p>
           </div>
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-xs">
-            <FaHome size={22} />
-          </div>
         </div>
 
-        {/* Card 3: Support Courses */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-between hover:shadow-md transition duration-200">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cours de Soutien</span>
-            <h3 className="text-3xl font-extrabold text-slate-800">{annonces.cours_valides + annonces.cours_en_attente}</h3>
-            <p className="text-xs text-slate-500 font-medium">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center shrink-0">
+            <FaBookOpen className="text-sky-500 text-xl" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cours</p>
+            <h3 className="text-2xl font-black text-[#1e293b]">{totalCours}</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
               <span className="text-emerald-600 font-bold">{annonces.cours_valides}</span> validés · <span className="text-amber-500 font-bold">{annonces.cours_en_attente}</span> en attente
             </p>
           </div>
-          <div className="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center shadow-xs">
-            <FaBookOpen size={22} />
-          </div>
         </div>
 
-        {/* Card 4: Revenue */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-between hover:shadow-md transition duration-200">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires</span>
-            <h3 className="text-3xl font-extrabold text-slate-800">{Number(finances.chiffre_affaires).toLocaleString('fr-FR')} DH</h3>
-            <p className="text-xs  font-medium flex items-center gap-1 text-emerald-600 ">
-              <FaArrowUp size={10} /> {finances.total_transactions} Transactions payées
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+            <FaStar className="text-amber-500 text-xl" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Satisfaction</p>
+            <h3 className="text-2xl font-black text-[#1e293b]">{satisfactionPct}%</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              <span className="text-amber-600 font-bold">{evaluations.moyenne_generale}</span> / 5 · {evaluations.total} avis
             </p>
           </div>
-          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-xs">
-            <FaCoins size={22} />
-          </div>
         </div>
 
       </div>
 
-      {/* Row 2: New stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Card 5: Signalements */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 hover:shadow-md transition duration-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Signalements</span>
-            <div className="w-9 h-9 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center">
-              <FaFlag size={16} />
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-[#1e293b]">Réservations (12 mois)</h3>
+              <p className="text-[11px] text-slate-400">Évolution mensuelle des réservations</p>
             </div>
+            <FaEllipsisH className="text-slate-300" />
           </div>
-          <h3 className="text-3xl font-extrabold text-slate-800">{signalements.total}</h3>
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium">
-            {signalements.en_attente > 0 ? (
-              <span className="text-amber-600 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {signalements.en_attente} en attente
-              </span>
-            ) : null}
-            <span className="text-emerald-600">{signalements.traites} traités</span>
-            <span className="text-slate-400">{signalements.rejetes} rejetés</span>
-          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={evolutionReservations}>
+              <defs>
+                <linearGradient id="colorReserv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#008282" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#008282" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip content={<CustomTooltipContent />} />
+              <Area type="monotone" dataKey="total" stroke="#008282" strokeWidth={2} fill="url(#colorReserv)" name="Réservations" />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Card 6: Réclamations */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 hover:shadow-md transition duration-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Réclamations</span>
-            <div className="w-9 h-9 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center">
-              <FaFileAlt size={16} />
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-[#1e293b]">Évaluations (12 mois)</h3>
+              <p className="text-[11px] text-slate-400">Volume et note moyenne mensuelle</p>
             </div>
+            <FaEllipsisH className="text-slate-300" />
           </div>
-          <h3 className="text-3xl font-extrabold text-slate-800">{reclamations.total}</h3>
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium">
-            {reclamations.en_attente > 0 ? (
-              <span className="text-amber-600 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {reclamations.en_attente} en attente
-              </span>
-            ) : null}
-            <span className="text-emerald-600">{reclamations.traitees} traitées</span>
-            <span className="text-slate-400">{reclamations.rejetees} rejetées</span>
-          </div>
-        </div>
-
-        {/* Card 7: Évaluations */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 hover:shadow-md transition duration-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Évaluations</span>
-            <div className="w-9 h-9 bg-yellow-50 text-yellow-600 rounded-lg flex items-center justify-center">
-              <FaStar size={16} />
-            </div>
-          </div>
-          <h3 className="text-3xl font-extrabold text-slate-800">{evaluations.total}</h3>
-          <div className="mt-2 flex items-center gap-2 text-xs font-medium">
-            <span className="text-amber-600 font-bold text-sm">{evaluations.moyenne_generale}</span>
-            <span className="text-slate-400">/ 5 de moyenne</span>
-          </div>
-          <div className="mt-1.5 flex items-center gap-1 text-xs text-slate-400">
-            {[5,4,3,2,1].map(n => (
-              <span key={n} className="flex items-center gap-0.5">
-                <FaStar size={10} className="text-yellow-400" />{n}:{evaluations[`notes_${n}`]}
-                {n > 1 && <span className="mx-0.5">·</span>}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Card 8: Matières */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 hover:shadow-md transition duration-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Matières</span>
-            <div className="w-9 h-9 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center">
-              <FaBookmark size={16} />
-            </div>
-          </div>
-          <h3 className="text-3xl font-extrabold text-slate-800">{matieres.total}</h3>
-          <p className="mt-2 text-xs text-slate-400 font-medium">matières académiques proposées</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={evolutionEvaluations}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} domain={[0, 5]} />
+              <Tooltip content={<CustomTooltipContent />} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+              <Bar yAxisId="left" dataKey="total" fill="#008282" radius={[4, 4, 0, 0]} name="Total évaluations" />
+              <Line yAxisId="right" type="monotone" dataKey="moyenne" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: "#f59e0b" }} name="Moyenne /5" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Activités & Réservations */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-xs border border-slate-100 space-y-6">
-          <h3 className="font-bold text-slate-800 text-lg">Activités & Réservations</h3>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-50 rounded-xl text-center">
-              <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total</div>
-              <div className="text-2xl font-black text-slate-800 mt-1">{reservations.total}</div>
-            </div>
-            <div className="p-4 bg-emerald-50 text-emerald-800 rounded-xl text-center">
-              <div className="text-emerald-600 text-xs font-semibold uppercase tracking-wider">Confirmées</div>
-              <div className="text-2xl font-black text-emerald-800 mt-1">{reservations.confirmees}</div>
-            </div>
-            <div className="p-4 bg-amber-50 text-amber-800 rounded-xl text-center">
-              <div className="text-amber-600 text-xs font-semibold uppercase tracking-wider">En attente</div>
-              <div className="text-2xl font-black text-amber-800 mt-1">{reservations.en_attente}</div>
-            </div>
-            <div className="p-4 bg-rose-50 text-rose-800 rounded-xl text-center">
-              <div className="text-rose-600 text-xs font-semibold uppercase tracking-wider">Annulées</div>
-              <div className="text-2xl font-black text-rose-800 mt-1">{reservations.annulees}</div>
+      {/* Activités & Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+
+        {/* Left: Activités & Réservations + Audit */}
+        <div className="lg:col-span-2 space-y-5">
+
+          {/* Activités & Réservations */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <h3 className="text-sm font-bold text-[#1e293b] mb-4">Activités & Réservations</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <FaClipboardList className="text-slate-400 text-xl mx-auto mb-1" />
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+                <p className="text-xl font-black text-[#1e293b] mt-0.5">{reservations.total}</p>
+              </div>
+              <div className="bg-emerald-50 rounded-xl p-4 text-center">
+                <FaCheckCircle className="text-emerald-500 text-xl mx-auto mb-1" />
+                <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Confirmées</p>
+                <p className="text-xl font-black text-emerald-800 mt-0.5">{reservations.confirmees}</p>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-4 text-center">
+                <FaClock className="text-amber-500 text-xl mx-auto mb-1" />
+                <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">En attente</p>
+                <p className="text-xl font-black text-amber-800 mt-0.5">{reservations.en_attente}</p>
+              </div>
+              <div className="bg-rose-50 rounded-xl p-4 text-center">
+                <FaTimesCircle className="text-rose-400 text-xl mx-auto mb-1" />
+                <p className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">Annulées</p>
+                <p className="text-xl font-black text-rose-800 mt-0.5">{reservations.annulees}</p>
+              </div>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-6 space-y-4">
-            <h4 className="text-sm font-bold text-slate-700">Audit des validations requises</h4>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
+          {/* Audit des validations */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <FaShieldAlt className="text-[#008282] text-lg" />
+              <h3 className="text-sm font-bold text-[#1e293b]">Audit des validations requises</h3>
+            </div>
+            <div className="space-y-2.5">
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
-                    <FaHome size={16} />
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                    <FaHome className="text-indigo-500 text-sm" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-slate-800 text-sm">Hébergements en attente</h5>
-                    <p className="text-xs text-slate-400">Annonces nécessitant une validation physique</p>
+                    <p className="text-xs font-bold text-[#1e293b]">Hébergements en attente</p>
+                    <p className="text-[10px] text-slate-400">Annonces nécessitant validation</p>
                   </div>
                 </div>
                 {annonces.hebergements_en_attente > 0 ? (
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg animate-pulse">
+                  <span className="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg animate-pulse">
                     {annonces.hebergements_en_attente} À VALIDER
                   </span>
                 ) : (
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg flex items-center gap-1">
-                    <FaCheckCircle size={10} /> À jour
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg flex items-center gap-1">
+                    <FaCheck className="text-xs" /> À jour
                   </span>
                 )}
               </div>
-              <div className="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-sky-50 text-sky-600 rounded-lg flex items-center justify-center">
-                    <FaBookOpen size={16} />
+                  <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+                    <FaBookOpen className="text-sky-500 text-sm" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-slate-800 text-sm">Cours de soutien en attente</h5>
-                    <p className="text-xs text-slate-400">Offres de révision nécessitant une validation</p>
+                    <p className="text-xs font-bold text-[#1e293b]">Cours de soutien en attente</p>
+                    <p className="text-[10px] text-slate-400">Offres de révision nécessitant validation</p>
                   </div>
                 </div>
                 {annonces.cours_en_attente > 0 ? (
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg animate-pulse">
+                  <span className="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg animate-pulse">
                     {annonces.cours_en_attente} À VALIDER
                   </span>
                 ) : (
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg flex items-center gap-1">
-                    <FaCheckCircle size={10} /> À jour
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg flex items-center gap-1">
+                    <FaCheck className="text-xs" /> À jour
                   </span>
                 )}
               </div>
 
-              {/* Signalements pending */}
-              <div className="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center">
-                    <FaFlag size={16} />
+                  <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                    <FaFlag className="text-rose-500 text-sm" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-slate-800 text-sm">Signalements</h5>
-                    <p className="text-xs text-slate-400">{signalements.traites} traités · {signalements.rejetes} rejetés</p>
+                    <p className="text-xs font-bold text-[#1e293b]">Signalements</p>
+                    <p className="text-[10px] text-slate-400">{signalements.traites} traités · {signalements.rejetes} rejetés</p>
                   </div>
                 </div>
                 {signalements.en_attente > 0 ? (
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg animate-pulse">
+                  <span className="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg animate-pulse">
                     {signalements.en_attente} À TRAITER
                   </span>
                 ) : (
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg flex items-center gap-1">
-                    <FaCheckCircle size={10} /> Aucun en attente
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg flex items-center gap-1">
+                    <FaCheck className="text-xs" /> Aucun
                   </span>
                 )}
               </div>
 
-              {/* Reclamations pending */}
-              <div className="flex justify-between items-center p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center">
-                    <FaFileAlt size={16} />
+                  <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                    <FaFileAlt className="text-orange-500 text-sm" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-slate-800 text-sm">Réclamations</h5>
-                    <p className="text-xs text-slate-400">{reclamations.traitees} traitées · {reclamations.rejetees} rejetées</p>
+                    <p className="text-xs font-bold text-[#1e293b]">Réclamations</p>
+                    <p className="text-[10px] text-slate-400">{reclamations.traitees} traitées · {reclamations.rejetees} rejetées</p>
                   </div>
                 </div>
                 {reclamations.en_attente > 0 ? (
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg animate-pulse">
+                  <span className="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg animate-pulse">
                     {reclamations.en_attente} À TRAITER
                   </span>
                 ) : (
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg flex items-center gap-1">
-                    <FaCheckCircle size={10} /> Aucune en attente
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg flex items-center gap-1">
+                    <FaCheck className="text-xs" /> Aucune
                   </span>
                 )}
               </div>
+
             </div>
           </div>
+
         </div>
 
-        {/* Stats & Activity Panel */}
-        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 space-y-5">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg">
-            <FaChartBar className="text-teal-600" />
-            <h3>Répartition & Activité</h3>
-          </div>
+        {/* Right Sidebar */}
+        <div className="space-y-5">
 
-          {/* Utilisateurs breakdown */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Statut des comptes</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600 flex items-center gap-1.5">
-                  <FaUserCheck className="text-emerald-500" size={12} /> Actifs
-                </span>
-                <span className="font-bold text-slate-800">{users.actifs}</span>
+          {/* Statut des comptes */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <FaUserCog className="text-[#008282] text-lg" />
+              <h3 className="text-sm font-bold text-[#1e293b]">Statut des comptes</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span className="text-xs text-slate-600">Actifs</span>
+                </div>
+                <span className="text-xs font-bold text-[#1e293b]">{users.actifs}</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600 flex items-center gap-1.5">
-                  <FaClock className="text-amber-500" size={12} /> En attente
-                </span>
-                <span className="font-bold text-slate-800">{users.en_attente}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <span className="text-xs text-slate-600">En attente</span>
+                </div>
+                <span className="text-xs font-bold text-[#1e293b]">{users.en_attente}</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600 flex items-center gap-1.5">
-                  <FaBan className="text-rose-500" size={12} /> Suspendus
-                </span>
-                <span className="font-bold text-slate-800">{users.suspendus}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                  <span className="text-xs text-slate-600">Suspendus</span>
+                </div>
+                <span className="text-xs font-bold text-[#1e293b]">{users.suspendus}</span>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Paiements</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600 flex items-center gap-1.5">
-                  <FaCheckCircle className="text-emerald-500" size={12} /> Réussis
-                </span>
-                <span className="font-bold text-slate-800">{finances.reussi}</span>
+          {/* Inscriptions récentes */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <FaChartLine className="text-[#008282] text-lg" />
+              <h3 className="text-sm font-bold text-[#1e293b]">Inscriptions récentes</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-600">Cette semaine</span>
+                <span className="text-xs font-bold text-teal-600">+{users.inscrits_7j}</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600 flex items-center gap-1.5">
-                  <FaTimesCircle className="text-rose-500" size={12} /> Échoués
-                </span>
-                <span className="font-bold text-slate-800">{finances.echoue}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-600">Ce mois</span>
+                <span className="text-xs font-bold text-teal-600">+{users.inscrits_30j}</span>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Inscriptions récentes</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600">Cette semaine (7j)</span>
-                <span className="font-bold text-teal-600">+{users.inscrits_7j}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-600">Ce mois (30j)</span>
-                <span className="font-bold text-teal-600">+{users.inscrits_30j}</span>
-              </div>
+          {/* Distribution des notes */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <FaStar className="text-[#008282] text-lg" />
+              <h3 className="text-sm font-bold text-[#1e293b]">Distribution des notes</h3>
             </div>
-          </div>
-
-          <div className="border-t border-slate-100 pt-4">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Distribution des notes</h4>
-            <div className="space-y-1.5">
-              {[5,4,3,2,1].map(n => {
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map((n) => {
                 const maxVal = Math.max(evaluations.notes_5, evaluations.notes_4, evaluations.notes_3, evaluations.notes_2, evaluations.notes_1, 1);
                 const pct = (evaluations[`notes_${n}`] / maxVal) * 100;
                 return (
-                  <div key={n} className="flex items-center gap-2 text-xs">
-                    <span className="w-4 text-yellow-500 font-bold">{n}★</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
+                  <div key={n} className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-amber-500 w-3">{n}</span>
+                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="w-6 text-right text-slate-500 font-medium">{evaluations[`notes_${n}`]}</span>
+                    <span className="text-[11px] text-slate-400 font-medium w-5 text-right">{evaluations[`notes_${n}`]}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <button 
-            onClick={loadStats}
-            className="w-full mt-2 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
-          >
-            <FaClock /> Actualiser les statistiques
-          </button>
+
+
         </div>
 
       </div>
+
+      {/* Mobile Bottom Nav */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+        <div className="flex items-center justify-around">
+          <button className="flex flex-col items-center gap-0.5 text-[#008282]">
+            <FaChartBar className="text-lg" />
+            <span className="text-[10px] font-bold">Dashboard</span>
+          </button>
+          <button className="flex flex-col items-center gap-0.5 text-slate-400">
+            <FaHome className="text-lg" />
+            <span className="text-[10px] font-medium">Hébergements</span>
+          </button>
+          <button className="flex flex-col items-center gap-0.5 text-slate-400">
+            <FaBookOpen className="text-lg" />
+            <span className="text-[10px] font-medium">Cours</span>
+          </button>
+          <button className="flex flex-col items-center gap-0.5 text-slate-400">
+            <FaCog className="text-lg" />
+            <span className="text-[10px] font-medium">Paramètres</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 };
