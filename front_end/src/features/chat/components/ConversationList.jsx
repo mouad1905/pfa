@@ -1,4 +1,3 @@
-import React from "react";
 import { FaRegPaperPlane, FaExclamationTriangle } from "react-icons/fa";
 import { getRoleInfo, getAvatarUrl, formatTime } from "../utils";
 

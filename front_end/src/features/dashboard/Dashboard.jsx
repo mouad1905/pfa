@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { FaPlus, FaBook, FaHome, FaEye, FaClock, FaCheckCircle } from "react-icons/fa";
+import { useState, useEffect, useContext } from "react";
+import { FaPlus, FaBook, FaEye, FaClock, FaCheckCircle } from "react-icons/fa";
 import { Link, Navigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { fetchData, API_URLS } from "../../api/api";

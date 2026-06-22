@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { API_URLS, fetchData } from "../../api/api";
 import { AuthContext } from "../../context/AuthContext";
 import {
-  FaUsers,
-  FaFolderOpen,
-  FaCommentDots,
   FaCog,
   FaCheckCircle,
   FaPen,
@@ -20,7 +17,6 @@ import {
   FaMagic,
   FaChartLine,
   FaComments,
-  FaComment,
 } from "react-icons/fa";
 
 function bustCache(url, t) {
@@ -59,7 +55,6 @@ function StarRating({ value = 0, size = 18 }) {
 export default function StudentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -168,23 +163,6 @@ export default function StudentProfile() {
   const discussionsCount = conversationsCount;
 
   const about = user.about && user.about.trim() ? user.about : null;
-
-  const tags =
-    user.tags && user.tags.length > 0
-      ? user.tags
-      : ["Informatique", "Fès", "EMSI"];
-
-  const sidebarLinks = [
-    { icon: <FaChartLine size={18} />, label: "Tableau de bord", path: "/dashboard" },
-    { icon: <FaComment size={18} />, label: "Messages", path: "/chat" },
-    { icon: <FaUsers size={18} />, label: "Communautés", path: "/colocations" },
-    {
-      icon: <FaFolderOpen size={18} />,
-      label: "Ressources",
-      path: "/revisions",
-    },
-    { icon: <FaCog size={18} />, label: "Paramètres", path: "/settings" },
-  ];
 
   const handleEditProfile = () => navigate("/settings");
 
@@ -371,13 +349,20 @@ export default function StudentProfile() {
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate(user?.role === "admin" ? "/admin" : "/dashboard")}
-                className="mt-8 w-full py-2 bg-white text-[#006b53] rounded-lg font-bold hover:bg-[#f8f9fa] transition-colors flex items-center justify-center gap-2"
-              >
-                <FaChartLine size={14} />
-                Voir Analyse Complète
-              </button>
+              {user?.role === "etudiant" ? (
+                <div className="mt-8 w-full py-2 bg-white/15 text-white rounded-lg font-bold flex items-center justify-center gap-2 border border-white/30">
+                  <FaCheckCircle size={14} />
+                  Étudiant vérifié
+                </div>
+              ) : (
+                <button
+                  onClick={() => navigate(user?.role === "admin" ? "/admin" : "/dashboard")}
+                  className="mt-8 w-full py-2 bg-white text-[#006b53] rounded-lg font-bold hover:bg-[#f8f9fa] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FaChartLine size={14} />
+                  Voir Analyse Complète
+                </button>
+              )}
             </div>
 
             {/* Account Management */}
@@ -392,16 +377,35 @@ export default function StudentProfile() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={handleEditProfile}
-                  className="inline-flex items-center gap-2 px-6 py-2 bg-[#e7e8e9] text-[#3d4a44] text-sm font-medium rounded-lg hover:bg-[#e1e3e4] transition-colors group cursor-pointer"
-                >
-                  <FaCog
-                    className="group-hover:rotate-45 transition-transform"
-                    size={16}
-                  />
-                  Modifier le profil
-                </button>
+                {isOwnProfile ? (
+                  <button
+                    onClick={handleEditProfile}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-[#e7e8e9] text-[#3d4a44] text-sm font-medium rounded-lg hover:bg-[#e1e3e4] transition-colors group cursor-pointer"
+                  >
+                    <FaCog className="group-hover:rotate-45 transition-transform" size={16} />
+                    Modifier le profil
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetchData(API_URLS.CONVERSATIONS, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ id_destinataire: user.id_user }),
+                        });
+                        const convId = res.id_conversation || res.data?.id_conversation;
+                        if (convId) navigate(`/chat/${convId}`);
+                      } catch (err) {
+                        Swal.fire("Erreur", "Impossible de démarrer la conversation.", "error");
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-[#006b53] text-white text-sm font-medium rounded-lg hover:bg-[#005044] transition-colors cursor-pointer"
+                  >
+                    <FaEnvelope size={16} />
+                    Contacter
+                  </button>
+                )}
                 <button
                   onClick={handleReport}
                   className="inline-flex items-center gap-2 px-6 py-2 bg-[#ffdad6] text-[#93000a] text-sm font-medium rounded-lg hover:opacity-90 transition-opacity cursor-pointer"

@@ -7,8 +7,6 @@ import {
   FaBan, 
   FaSpinner, 
   FaTrashAlt, 
-  FaClock, 
-  FaGraduationCap,
   FaFileAlt,
   FaTimes,
   FaDownload,

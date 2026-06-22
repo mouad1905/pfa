@@ -1,4 +1,3 @@
-import React from "react";
 import { FaUserPlus, FaTimes, FaSearch, FaUser } from "react-icons/fa";
 import { getRoleInfo } from "../utils";
 

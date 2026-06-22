@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
 import {
   FaPaperPlane,
   FaPhone,
@@ -39,9 +42,32 @@ export default function ContactSection() {
     },
   ];
 
+  useEffect(() => {
+    const sections = gsap.utils.toArray("[data-anim]");
+    sections.forEach((section) => {
+      const anim = section.getAttribute("data-anim");
+      const items = section.querySelectorAll("[data-item]");
+      if (anim === "stagger-fade-up" && items.length) {
+        gsap.fromTo(items,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1,
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+      if (anim === "fade-up") {
+        gsap.fromTo(section,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+    });
+    return () => ScrollTrigger.getAll().forEach(st => st.kill());
+  }, []);
+
   return (
     <div className="w-full overflow-x-hidden bg-slate-50 font-poppins">
-      <section className=" pt-24 sm:pt-36 pb-10 sm:pb-16 px-4 sm:px-6 lg:px-8">
+      <section data-anim="fade-up" className=" pt-24 sm:pt-36 pb-10 sm:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Infos contact */}
@@ -64,12 +90,13 @@ export default function ContactSection() {
                 vous répondons rapidement pour simplifier votre vie étudiante.
               </p>
 
-              <div className="bg-emerald-50 w-full rounded-2xl px-4 sm:px-6 py-2 divide-y divide-dashed divide-emerald-200/80 border border-emerald-100/60">
+              <div data-anim="stagger-fade-up" className="bg-emerald-50 w-full rounded-2xl px-4 sm:px-6 py-2 divide-y divide-dashed divide-emerald-200/80 border border-emerald-100/60">
                 {contactItems.map((item, i) => {
                   const Icon = item.icon;
                   return (
                     <a
                       key={i}
+                      data-item
                       href={item.href}
                       target={
                         item.href.startsWith("http") ? "_blank" : undefined
@@ -95,7 +122,7 @@ export default function ContactSection() {
             </div>
 
             {/* Formulaire */}
-            <div className="w-full order-1 lg:order-2 bg-white rounded-2xl shadow-lg border border-gray-100 px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+            <div data-anim="fade-up" className="w-full order-1 lg:order-2 bg-white rounded-2xl shadow-lg border border-gray-100 px-4 sm:px-6 md:px-8 py-6 sm:py-8">
               <p className="text-emerald-500 text-xs sm:text-sm font-bold tracking-widest uppercase text-center mb-1">
                 Formulaire
               </p>

@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
 import { API_URLS, fetchData } from "../../api/api";
 import { FaArrowRight } from "react-icons/fa";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
@@ -78,8 +81,13 @@ const Revisions = () => {
 
   const filteredData = revisions
     .filter((item) => {
-      if (!item.subject.toLowerCase().includes(search.toLowerCase()))
-        return false;
+      const q = search.toLowerCase();
+      if (q) {
+        const matchSubject = item.subject.toLowerCase().includes(q);
+        const matchName = item.name.toLowerCase().includes(q);
+        const matchDesc = (item.description || "").toLowerCase().includes(q);
+        if (!matchSubject && !matchName && !matchDesc) return false;
+      }
       if (selectedSubject && item.subject !== selectedSubject) return false;
       if (selectedLevel && item.level !== selectedLevel) return false;
       if (selectedMode && item.availability !== selectedMode) return false;
@@ -97,6 +105,29 @@ const Revisions = () => {
       };
       return planWeight(b) - planWeight(a);
     });
+
+  useEffect(() => {
+    const sections = gsap.utils.toArray("[data-anim]");
+    sections.forEach((section) => {
+      const anim = section.getAttribute("data-anim");
+      const items = section.querySelectorAll("[data-item]");
+      if (anim === "stagger-fade-up" && items.length) {
+        gsap.fromTo(items,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1,
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+      if (anim === "fade-up") {
+        gsap.fromTo(section,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+    });
+    return () => ScrollTrigger.getAll().forEach(st => st.kill());
+  }, []);
 
   return (
     <>
@@ -116,7 +147,7 @@ const Revisions = () => {
       >
         <div className="max-w-300 mx-auto">
           {/* Hero Header */}
-          <section className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          <section data-anim="fade-up" className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="max-w-2xl">
               <span className="text-emerald-600 text-xs font-semibold uppercase tracking-wider mb-2 block">
                 Réservez un cours
@@ -173,7 +204,7 @@ const Revisions = () => {
                     setSearch(value);
                     setSearchParams({ search: value });
                   }}
-                  placeholder="Rechercher par matière, description…"
+                  placeholder="Rechercher par matière, professeur, description…"
                   className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-base outline-none"
                 />
               </div>
@@ -263,7 +294,7 @@ const Revisions = () => {
           </section>
 
           {/* Instructor Grid */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <section data-anim="stagger-fade-up" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredData.map((profile) => {
               const plan =
                 localStorage.getItem(`unicons_pub_formula_${profile.id}`) ||
@@ -274,6 +305,7 @@ const Revisions = () => {
               return (
                 <div
                   key={profile.id}
+                  data-item
                   className={`group bg-white rounded-xl overflow-hidden border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative ${
                     isGold
                       ? "border-amber-400 shadow-md shadow-amber-100/60 ring-1 ring-amber-300/30"

@@ -41,29 +41,6 @@ import {
 
 const TOTAL_STEPS = 4;
 
-const PRESET_IMAGES = [
-  {
-    url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80",
-    label: "Chambre Cosy Minimaliste",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80",
-    label: "Espace Bureau / Études",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=600&q=80",
-    label: "Chambre Élégante",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=600&q=80",
-    label: "Chambre Lumineuse",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80",
-    label: "Appartement Design",
-  },
-];
-
 export default function UniConnectListing() {
   const navigate = useNavigate();
   const { token, user } = useContext(AuthContext);

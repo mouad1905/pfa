@@ -3,10 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { API_URLS, fetchData, fetchFormData } from "../../api/api";
 import Swal from "sweetalert2";
 import {
-  FaArrowLeft, FaEdit, FaUsers, FaClipboardList, FaImage,
-  FaMapMarkerAlt, FaBuilding, FaUser, FaBox, FaSmokingBan,
+  FaArrowLeft, FaImage,
+  FaMapMarkerAlt, FaSmokingBan,
   FaMoon, FaBookOpen, FaPaw, FaUserFriends, FaGraduationCap,
-  FaExpandArrowsAlt,
 } from "react-icons/fa";
 
 const TOTAL_STEPS = 4;
@@ -24,7 +23,7 @@ export default function EditHouse() {
   const [location, setLocation] = useState("");
   const [price, setPrice] = useState("");
   const [type, setType] = useState("appartement");
-  const [typeChambre, setTypeChambre] = useState("");
+
   const [amenitiesList, setAmenitiesList] = useState([]);
   const [newAmenityText, setNewAmenityText] = useState("");
 
@@ -65,7 +64,6 @@ export default function EditHouse() {
         setNeighborhood(dashIdx > 0 ? loc.slice(dashIdx + 3) : "");
         setPrice(h.prix || "");
         setType(h.type || "appartement");
-        setTypeChambre(h.type_chambre || "");
         setCapacity(parseInt(h.nbr_chambres) || 1);
         setSpots(parseInt(h.max_capacity) || 1);
         setRoomType(h.type_chambre || "Shared Room");

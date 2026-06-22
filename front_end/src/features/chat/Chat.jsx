@@ -45,7 +45,7 @@ export default function Chat({ noFrame }) {
   };
 
   return (
-    <div className={`${noFrame ? "" : "bg-[#f8fafc] pt-30 pb-4 min-h-screen"}`}>
+    <div className={`${noFrame ? "" : "bg-[#f8fafc]  pb-4 min-h-screen"}`}>
       <div
         className={`${noFrame ? "h-full" : "px-0 h-[calc(100vh-120px)] min-h-[500px]"}`}
       >

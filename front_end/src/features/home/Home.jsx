@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FaArrowRight,
@@ -10,9 +10,13 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import bg from "../../assets/images/hero-bg.png";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Counter = ({ target, duration = 2000, suffix = "" }) => {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = React.useState(0);
   const ref = useRef(null);
   const hasAnimated = useRef(false);
 
@@ -24,7 +28,6 @@ const Counter = ({ target, duration = 2000, suffix = "" }) => {
 
     const animate = () => {
       let start = null;
-
       const step = (timestamp) => {
         if (!start) start = timestamp;
         const progress = Math.min((timestamp - start) / duration, 1);
@@ -33,7 +36,6 @@ const Counter = ({ target, duration = 2000, suffix = "" }) => {
         if (progress < 1) requestAnimationFrame(step);
         else setCount(target);
       };
-
       requestAnimationFrame(step);
     };
 
@@ -51,19 +53,73 @@ const Counter = ({ target, duration = 2000, suffix = "" }) => {
     return () => observer.disconnect();
   }, [target, duration]);
 
-  return (
-    <span ref={ref}>
-      {count}
-      {suffix}
-    </span>
-  );
+  return <span ref={ref}>{count}{suffix}</span>;
 };
 
 const HomePage = () => {
+  const heroRef = useRef(null);
+  const badgeRef = useRef(null);
+  const headingRef = useRef(null);
+  const paragraphRef = useRef(null);
+  const buttonsRef = useRef(null);
+  const floatCardRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.fromTo(badgeRef.current, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5 })
+        .fromTo(headingRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.2")
+        .fromTo(paragraphRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3")
+        .fromTo(buttonsRef.current?.children, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.15 }, "-=0.3");
+      if (floatCardRef.current) {
+        tl.fromTo(floatCardRef.current, { opacity: 0, y: 40, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.7 }, "-=0.2");
+      }
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    const sections = gsap.utils.toArray("[data-anim]");
+    sections.forEach((section) => {
+      const anim = section.getAttribute("data-anim");
+      const items = section.querySelectorAll("[data-item]");
+      if (anim === "stagger-fade-up" && items.length) {
+        gsap.fromTo(items,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+            stagger: 0.12,
+            scrollTrigger: { trigger: section, start: "top 80%" }
+          }
+        );
+      }
+      if (anim === "fade-up") {
+        gsap.fromTo(section,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.7, ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 80%" } }
+        );
+      }
+    });
+
+    const splitSections = gsap.utils.toArray("[data-anim-split]");
+    splitSections.forEach((section) => {
+      const left = section.querySelector("[data-side='left']");
+      const right = section.querySelector("[data-side='right']");
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: section, start: "top 80%" }
+      });
+      if (left) tl.fromTo(left, { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.7, ease: "power2.out" });
+      if (right) tl.fromTo(right, { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.7, ease: "power2.out" }, "-=0.4");
+    });
+
+    return () => ScrollTrigger.getAll().forEach(st => st.kill());
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      {/* Hero — emerald on mobile, image background from md+ */}
-      <section className="relative w-full overflow-hidden bg-emerald-900 md:bg-emerald-700 min-h-0 md:min-h-screen">
+      {/* Hero */}
+      <section ref={heroRef} className="relative w-full overflow-hidden bg-emerald-900 md:bg-emerald-700 min-h-0 md:min-h-screen">
         <div
           className="hidden md:block absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${bg})` }}
@@ -71,7 +127,7 @@ const HomePage = () => {
         />
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16 pt-28 pb-14 sm:pt-32 sm:pb-16 md:pt-36 md:pb-20 flex flex-col md:translate-y-14 md:-translate-x-20">
-          <div className="inline-flex w-fit items-center gap-2 sm:gap-3 bg-white/15 border border-white/25 px-3 sm:px-4 py-2 rounded-lg backdrop-blur-sm mb-6 sm:mb-8">
+          <div ref={badgeRef} className="inline-flex w-fit items-center gap-2 sm:gap-3 bg-white/15 border border-white/25 px-3 sm:px-4 py-2 rounded-lg backdrop-blur-sm mb-6 sm:mb-8">
             <svg
               className="w-4 h-4 text-emerald-200 shrink-0"
               fill="none"
@@ -91,18 +147,18 @@ const HomePage = () => {
           </div>
 
           <div className="w-full max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serifHero font-bold text-white mb-4 sm:mb-6 leading-tight text-left">
+            <h1 ref={headingRef} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serifHero font-bold text-white mb-4 sm:mb-6 leading-tight text-left">
               Connect, Study, Live Better with{" "}
               <span className="text-emerald-200 md:text-emerald-400">
                 UniConnect
               </span>
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-emerald-50 md:text-slate-200 mb-8 sm:mb-10 text-left max-w-xl">
+            <p ref={paragraphRef} className="text-sm sm:text-base md:text-lg text-emerald-50 md:text-slate-200 mb-8 sm:mb-10 text-left max-w-xl">
               Your all-in-one platform for finding the perfect student housing
               and study groups. Join our community and elevate your university
               experience!
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+            <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
               <Link
                 to="/colocations"
                 className="w-full sm:w-auto justify-center bg-white text-emerald-700 md:bg-emerald-500 md:text-white px-6 sm:px-8 py-3 rounded-xl font-semibold text-sm sm:text-base hover:bg-emerald-50 md:hover:bg-emerald-600 transition-all duration-300 shadow-lg flex items-center gap-2 cursor-pointer"
@@ -110,7 +166,7 @@ const HomePage = () => {
                 Explore The Offers <FaArrowRight />
               </Link>
               <Link
-                to="/login"
+                to="/register"
                 className="w-full sm:w-auto justify-center border-2 border-white/60 text-white px-6 sm:px-8 py-3 rounded-xl font-semibold text-sm sm:text-base hover:bg-white/15 transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
                 Create Account <FaUser />
@@ -118,7 +174,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="hidden md:flex mt-auto justify-end -translate-y-14">
+          <div ref={floatCardRef} className="hidden md:flex mt-auto justify-end -translate-y-14">
             <div className="animate-[float_4s_ease-in-out_infinite] flex items-center gap-4 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-2xl w-fit">
               <div className="flex -space-x-3">
                 {[
@@ -155,7 +211,7 @@ const HomePage = () => {
       </section>
 
       {/* Stats */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 md:px-12 lg:px-24 bg-linear-to-r from-emerald-50 to-teal-50 w-full">
+      <section data-anim="fade-up" className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 md:px-12 lg:px-24 bg-linear-to-r from-emerald-50 to-teal-50 w-full">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
           {[
             { target: 50, suffix: "K+", label: "Students Connected" },
@@ -176,7 +232,7 @@ const HomePage = () => {
       </section>
 
       {/* Features */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 lg:px-24 bg-white w-full">
+      <section data-anim="stagger-fade-up" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 lg:px-24 bg-white w-full">
         <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-10 sm:mb-16 px-2">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 sm:mb-6">
@@ -218,6 +274,7 @@ const HomePage = () => {
               <Link
                 key={title}
                 to={to}
+                data-item
                 className="group bg-linear-to-br from-gray-50 to-white p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100 cursor-pointer h-full flex flex-col"
               >
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -240,7 +297,7 @@ const HomePage = () => {
       </section>
 
       {/* Comment ça marche */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 bg-white w-full">
+      <section data-anim="fade-up" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 bg-white w-full">
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
@@ -271,6 +328,7 @@ const HomePage = () => {
             ].map((step) => (
               <div
                 key={step.title}
+                data-item
                 className="relative z-10 flex flex-col items-center px-2"
               >
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white mb-4 sm:mb-6 shadow-lg shadow-emerald-200">
@@ -294,7 +352,7 @@ const HomePage = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 md:px-8 bg-white w-full pb-16 sm:pb-20">
+      <section data-anim="stagger-fade-up" className="py-12 sm:py-16 px-4 sm:px-6 md:px-8 bg-white w-full pb-16 sm:pb-20">
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-8 sm:mb-10">
             <h2 className="font-bold text-gray-900 text-xl sm:text-2xl">
@@ -310,45 +368,22 @@ const HomePage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 w-full">
             {[
-              {
-                to: "/revisions?search=mathématiques",
-                icon: "calculate",
-                title: "Mathématiques",
-                count: "120+",
-              },
-              {
-                to: "/revisions?search=programmation",
-                icon: "code",
-                title: "Programmation",
-                count: "85+",
-              },
-              {
-                to: "/revisions?search=physique",
-                icon: "bolt",
-                title: "Physique",
-                count: "64+",
-              },
-              {
-                to: "/revisions?search=Économie",
-                icon: "trending_up",
-                title: "Économie",
-                count: "42+",
-              },
+              { to: "/revisions?search=mathématiques", icon: "calculate", title: "Mathématiques", count: "120+" },
+              { to: "/revisions?search=programmation", icon: "code", title: "Programmation", count: "85+" },
+              { to: "/revisions?search=physique", icon: "bolt", title: "Physique", count: "64+" },
+              { to: "/revisions?search=Économie", icon: "trending_up", title: "Économie", count: "42+" },
             ].map((cat) => (
               <Link
                 key={cat.title}
                 to={cat.to}
+                data-item
                 className="group p-5 sm:p-6 rounded-xl hover:bg-emerald-50 transition-all border border-transparent hover:border-emerald-200 cursor-pointer bg-white shadow-[0_10px_25px_rgba(0,0,0,0.08)] block h-full"
               >
                 <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mb-4 shadow-sm text-emerald-600">
                   <span className="material-symbols-outlined">{cat.icon}</span>
                 </div>
-                <h3 className="font-semibold text-base sm:text-lg mb-1">
-                  {cat.title}
-                </h3>
-                <p className="text-sm text-slate-500">
-                  {cat.count} Tuteurs disponibles
-                </p>
+                <h3 className="font-semibold text-base sm:text-lg mb-1">{cat.title}</h3>
+                <p className="text-sm text-slate-500">{cat.count} Tuteurs disponibles</p>
               </Link>
             ))}
           </div>
@@ -356,8 +391,8 @@ const HomePage = () => {
       </section>
 
       {/* About */}
-      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 flex flex-col lg:flex-row gap-8 lg:gap-10 items-center">
-        <div className="w-full lg:w-1/2 grid grid-cols-2 gap-3 sm:gap-4">
+      <section data-anim-split className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 flex flex-col lg:flex-row gap-8 lg:gap-10 items-center">
+        <div data-side="left" className="w-full lg:w-1/2 grid grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-2 sm:space-y-3">
             <img
               src="/src/assets/images/students2.jpg"
@@ -365,24 +400,18 @@ const HomePage = () => {
               alt="Student"
             />
             <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-4">
-              <span className="text-3xl sm:text-5xl font-bold text-emerald-500">
-                New
-              </span>
+              <span className="text-3xl sm:text-5xl font-bold text-emerald-500">New</span>
               <p className="text-gray-900 text-sm sm:text-lg font-bold leading-tight">
-                Platform
-                <br />
-                Launching
+                Platform<br />Launching
               </p>
             </div>
           </div>
-          <div className=" space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="bg-emerald-500 rounded-2xl p-4 sm:p-6 text-white flex flex-col sm:flex-row items-center justify-center gap-2 text-center">
               <div className="bg-white/20 p-4 sm:p-5 rounded-full">
                 <FaCheckCircle className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
-              <p className="font-extrabold text-lg sm:text-2xl">
-                Live Better Together
-              </p>
+              <p className="font-extrabold text-lg sm:text-2xl">Live Better Together</p>
             </div>
             <img
               src="/src/assets/images/students1.jpg"
@@ -392,7 +421,7 @@ const HomePage = () => {
           </div>
         </div>
 
-        <div className="w-full lg:w-1/2 space-y-4 sm:space-y-5">
+        <div data-side="right" className="w-full lg:w-1/2 space-y-4 sm:space-y-5">
           <h5 className="flex items-center gap-3 text-emerald-500 font-bold uppercase text-lg sm:text-2xl">
             <FaBook /> About US
           </h5>
@@ -411,10 +440,7 @@ const HomePage = () => {
               "Connect with compatible roommates",
               "Smart filters for budget, location & lifestyle",
             ].map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-3 font-semibold text-slate-800 text-sm sm:text-base"
-              >
+              <li key={item} className="flex items-start gap-3 font-semibold text-slate-800 text-sm sm:text-base">
                 <span className="text-emerald-500 text-lg shrink-0">✓</span>
                 {item}
               </li>
@@ -432,7 +458,7 @@ const HomePage = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-12 lg:px-24 bg-gray-900 text-white w-full">
+      <section data-anim="fade-up" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-12 lg:px-24 bg-gray-900 text-white w-full">
         <div className="max-w-4xl mx-auto text-center w-full">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 sm:mb-6">
             Ready to transform your{" "}

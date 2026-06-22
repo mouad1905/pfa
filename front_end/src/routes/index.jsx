@@ -66,7 +66,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/colocations" element={<Colocations />} />
         <Route path="/revisions" element={<Revisions />} />
-        <Route path="/chat/:id?" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+
         <Route path="/support" element={<Support />} />
         <Route path="/home/:id" element={<InfoHome />} />
         <Route path="/register" element={<ChooseRole />} />
@@ -74,8 +74,6 @@ export default function AppRoutes() {
         <Route path="/register/student" element={<StudentRegister />} />
         <Route path="/register/professor" element={<ProfRegister />} />
         <Route path="/register/locateur" element={<LocateurRegister />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/security" element={<Security />} />
         <Route path="/addHouse" element={<AddHouse />} />
         <Route path="/editHouse/:id" element={<EditHouse />} />
 
@@ -84,6 +82,7 @@ export default function AppRoutes() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/security" element={<Security />} />
+          <Route path="/chat/:id?" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         </Route>
       </Route>
     </Routes>

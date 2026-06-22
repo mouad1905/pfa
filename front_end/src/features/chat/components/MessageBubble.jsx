@@ -1,4 +1,3 @@
-import React from "react";
 import { FaClock, FaCheck, FaCheckDouble, FaExclamationCircle, FaRedo } from "react-icons/fa";
 import { formatMessageTime } from "../utils";
 

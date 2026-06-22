@@ -3,19 +3,32 @@ import { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import API_BASE, { fetchData, API_URLS } from "../../api/api";
 import { AuthContext } from "../../context/AuthContext";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
-  FaCouch,
   FaCheck,
   FaCommentAlt,
   FaFlag,
-  FaUsers,
   FaClock,
   FaShareAlt,
   FaShieldAlt,
-  FaStar,
-  FaRegStar
+  FaUserPlus,
+  FaEnvelope,
+  FaExternalLinkAlt,
+  FaWifi,
+  FaBolt,
+  FaTint,
+  FaSnowflake,
+  FaFire,
+  FaUtensils,
+  FaTshirt,
+  FaParking,
+  FaStar as FaStarFilled,
+  FaRegStar as FaStarEmpty
 } from "react-icons/fa";
 
 const mapApiToHome = (item) => {
@@ -62,6 +75,28 @@ const mapApiToHome = (item) => {
     created_at: item.created_at,
     avgRating: item.avg_rating_hebergement || 0,
   };
+};
+
+const amenityIconMap = {
+  wifi: FaWifi,
+  electricity: FaBolt,
+  eau: FaTint,
+  water: FaTint,
+  "air conditioning": FaSnowflake,
+  climatisation: FaSnowflake,
+  heating: FaFire,
+  chauffage: FaFire,
+  kitchen: FaUtensils,
+  cuisine: FaUtensils,
+  "washing machine": FaTshirt,
+  "machine à laver": FaTshirt,
+  parking: FaParking,
+};
+
+const getAmenityIcon = (name) => {
+  const key = name.toLowerCase().trim();
+  const Icon = amenityIconMap[key];
+  return Icon ? <Icon className="w-4 h-4" /> : <FaCheck className="w-4 h-4" />;
 };
 
 function HomeDetails() {
@@ -120,6 +155,29 @@ function HomeDetails() {
       .catch(() => {});
   }, [id, loggedInUser?.id_user]);
 
+  useEffect(() => {
+    const sections = gsap.utils.toArray("[data-anim]");
+    sections.forEach((section) => {
+      const anim = section.getAttribute("data-anim");
+      const items = section.querySelectorAll("[data-item]");
+      if (anim === "stagger-fade-up" && items.length) {
+        gsap.fromTo(items,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1,
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+      if (anim === "fade-up") {
+        gsap.fromTo(section,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+    });
+    return () => ScrollTrigger.getAll().forEach(st => st.kill());
+  }, []);
+
   const googleMapsUrl = home?.location
     ? `https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco&output=embed&z=15`
     : "";
@@ -127,7 +185,7 @@ function HomeDetails() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center mt-20">
-        <div className="w-10 h-10 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-slate-500 font-medium mt-4">Chargement de l'annonce...</p>
       </div>
     );
@@ -136,7 +194,7 @@ function HomeDetails() {
   if (!home) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center mt-20">
-        <p className="text-stone-400 text-sm tracking-wide">Logement non trouvé</p>
+        <p className="text-slate-400 text-sm">Logement non trouvé</p>
       </div>
     );
   }
@@ -264,181 +322,187 @@ function HomeDetails() {
       confirmButtonText: "Signaler",
       cancelButtonText: "Annuler",
       confirmButtonColor: "#ef4444",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed && result.value) {
-        Swal.fire("Signalé", "L'annonce a été signalée aux modérateurs.", "success");
+        try {
+          await fetchData(`http://127.0.0.1:8000/api/signalements`, {
+            method: "POST",
+            body: JSON.stringify({
+              id_cible: home.proprietaireId,
+              id_hebergement: home.id,
+              raison: "Problème d'annonce",
+              details: result.value,
+            }),
+          });
+          Swal.fire("Signalé", "L'annonce a été signalée aux modérateurs.", "success");
+        } catch (err) {
+          Swal.fire("Erreur", err.message || "Impossible de soumettre le signalement.", "error");
+        }
       }
     });
   };
 
+  // Pad images to fill bento grid (need at least 5 for full layout)
+  const bentoImages = [...displayImages];
+  while (bentoImages.length < 5) {
+    bentoImages.push(bentoImages[0] || "");
+  }
+
   return (
-    <div className="mt-20 max-w-[1120px] mx-auto px-4 sm:px-6 py-8 font-poppins text-[#0b1c30]">
-      {/* Back button */}
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-4 mt-28 font-poppins text-slate-900">
+      {/* Back Link */}
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-teal-600 transition-colors cursor-pointer"
+        className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer mb-2"
       >
-        <FaArrowLeft className="text-[10px]" /> Retour aux annonces
+        <FaArrowLeft className="text-[18px]" />
+        <span className="text-[10px] font-bold uppercase tracking-widest">RETOUR AUX ANNONCES</span>
       </button>
 
-      {/* Gallery */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="overflow-hidden rounded-[24px] h-[480px] shadow-sm hover:shadow-md transition-shadow relative">
+      {/* Bento Gallery */}
+      <section data-anim="stagger-fade-up" className="grid grid-cols-2 md:grid-cols-4 gap-3" style={{ gridTemplateRows: "repeat(2, minmax(0, 200px))" }}>
+        <div data-item className="col-span-2 row-span-2 rounded-xl overflow-hidden shadow-sm border border-slate-200">
           <img
-            src={displayImages[0]}
-            alt="Main Space"
-            className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700 cursor-pointer"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+            src={bentoImages[0]}
+            alt="Main"
           />
         </div>
-        {displayImages.length > 1 && (
-          <div className="grid grid-cols-2 gap-4 h-[480px] content-start">
-            {displayImages.slice(1).map((img, idx) => (
-              <div key={idx} className="overflow-hidden rounded-[20px] shadow-sm hover:shadow-md transition-shadow h-[230px]">
-                <img
-                  src={img}
-                  alt={`Photo ${idx + 2}`}
-                  className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-500 cursor-pointer"
-                />
-              </div>
-            ))}
+        {bentoImages.slice(1, 5).map((img, idx) => (
+          <div data-item key={idx} className="rounded-xl overflow-hidden shadow-sm border border-slate-200">
+            <img
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+              src={img}
+              alt={`Photo ${idx + 2}`}
+            />
           </div>
-        )}
-      </div>
+        ))}
+      </section>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white border border-slate-100 rounded-3xl p-6 shadow-sm mb-8 gap-4">
-        <div className="text-left">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight tracking-tight mb-2">
-            {home.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+      {/* Property Header */}
+      <section data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             {home.type && (
-              <span className="bg-emerald-50 text-[#10b981] border border-emerald-100 px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
-                {home.type}
-              </span>
+              <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-[12px] font-bold uppercase">{home.type}</span>
             )}
             {home.studentsOnly && (
-              <span className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
-                Students Only
-              </span>
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[12px] font-bold uppercase">STUDENTS ONLY</span>
             )}
-            <span className="bg-purple-50 text-purple-600 border border-purple-100 px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
-              {home.formule}
-            </span>
+            <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-[12px] font-bold uppercase">{home.formule}</span>
           </div>
-          {home.location && (
-            <a
-              href={`https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-slate-400 font-semibold text-sm hover:text-[#10b981] transition-colors"
-            >
-              <FaMapMarkerAlt className="w-4 h-4 shrink-0 text-slate-350" />
-              <span>{home.location}</span>
-            </a>
-          )}
-          {home.created_at && (
-            <p className="flex items-center gap-1.5 text-xs text-slate-400 mt-1.5">
-              <FaClock className="text-[10px]" />
-              Publiée le {new Date(home.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-            </p>
-          )}
+          <h1 className="text-2xl font-extrabold text-slate-900">{home.title}</h1>
+          <div className="flex items-center gap-4 text-slate-500 text-sm flex-wrap">
+            {home.location && (
+              <div className="flex items-center gap-1">
+                <FaMapMarkerAlt className="text-[18px] text-emerald-600" />
+                <span>{home.location}</span>
+              </div>
+            )}
+            {home.created_at && (
+              <div className="flex items-center gap-1">
+                <FaClock className="text-[18px] text-emerald-600" />
+                <span>Publiée le {new Date(home.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="bg-[#10b981] text-white rounded-[20px] px-6 py-4 flex flex-col items-center justify-center min-w-[170px] text-center shadow-sm w-full md:w-auto self-stretch md:self-auto">
-          <span className="text-2xl font-black">{home.priceNum} DH</span>
-          <span className="text-[10px] font-bold opacity-90 mt-0.5 leading-tight uppercase tracking-wider">/ mois</span>
+        <div className="bg-emerald-600 px-6 py-4 rounded-xl text-center min-w-[180px]">
+          <div className="text-white text-2xl font-black leading-tight">{home.priceNum} DH</div>
+          <div className="text-emerald-200 text-[14px]">/ mois</div>
         </div>
-      </div>
+      </section>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LEFT: Details + Map */}
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left: Details */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-5 text-left">
-              AMÉNAGEMENTS INCLUS
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 text-left">
+          {/* Amenities */}
+          <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold mb-4">Aménagements inclus</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {(home.amenities?.length > 0 ? home.amenities : ["WiFi", "Electricité", "Eau"]).map((amenity, idx) => (
-                <div key={idx} className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                    <FaCheck className="w-6 h-6" />
-                  </div>
+                <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-emerald-600 text-lg">{getAmenityIcon(amenity)}</span>
                   <div>
-                    <h4 className="font-bold text-slate-800 text-sm">{amenity}</h4>
-                    <span className="text-xs text-slate-400 font-semibold block mt-0.5">Inclus</span>
+                    <div className="font-bold text-sm text-slate-800">{amenity}</div>
+                    <div className="text-[12px] text-emerald-600">Inclus</div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
 
-            {home.meuble && home.furniture && (
-              <div className="flex items-center gap-4 mb-6 text-left border-t border-slate-100 pt-4">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                  <FaCouch className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm">{home.furniture}</h4>
-                  <span className="text-xs text-slate-400 font-semibold block mt-0.5">Statut du meublement</span>
-                </div>
-              </div>
-            )}
-
-            {home.description && (
-              <p className="text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-5 mt-2 text-left">
+          {/* Description */}
+          {home.description && (
+            <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-3">Description</h3>
+              <p className="text-slate-600 leading-relaxed text-base">
                 {home.description}
               </p>
-            )}
+            </div>
+          )}
 
+          {/* Specs Table */}
+          <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
             {(() => {
               const specs = [
-                home.area != null && { label: "Superficie", value: `${home.area} m²` },
-                home.rooms != null && { label: "Chambres", value: `${home.rooms}` },
-                home.gender && { label: "Colocataires", value: home.gender === "female" || home.gender === "femme" ? "Filles uniquement" : home.gender === "male" || home.gender === "homme" ? "Garçons uniquement" : "Colocation Mixte" },
-                home.roomType && { label: "Type de chambre", value: home.roomType },
-                { label: "Meublé", value: home.meuble ? "Oui" : "Non" },
-                maxCapacity > 1 && { label: "Capacité max", value: `${maxCapacity} étudiants` },
-                currentOccupants > 0 && { label: "Occupé", value: `${currentOccupants} place${currentOccupants > 1 ? "s" : ""}` },
-                home.studentsOnly && { label: "Étudiants seulement", value: "Oui" },
+                home.area != null && { label: "SUPERFICIE", value: `${home.area} m²` },
+                home.rooms != null && { label: "CHAMBRES", value: `${home.rooms}` },
+                { label: "COLOCATAIRES", value: home.gender === "femme" ? "Filles uniquement" : home.gender === "homme" ? "Garçons uniquement" : "Colocation Mixte" },
+                home.roomType && { label: "TYPE DE CHAMBRE", value: home.roomType },
+                { label: "MEUBLÉ", value: home.meuble ? "Oui" : "Non" },
+                maxCapacity > 0 && { label: "CAPACITÉ MAX", value: `${maxCapacity} étudiants` },
+                currentOccupants > 0 && { label: "OCCUPÉ", value: `${currentOccupants} place${currentOccupants > 1 ? "s" : ""}` },
+                home.studentsOnly && { label: "ÉTUDIANTS SEULEMENT", value: "Oui" },
               ].filter(Boolean);
               return specs.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 border border-slate-100/50 p-4 rounded-2xl mt-6 text-left">
+                <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y divide-slate-200">
                   {specs.map((spec, idx) => (
-                    <div key={idx}>
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">{spec.label}</span>
-                      <span className="text-sm font-extrabold text-slate-800 mt-0.5 block">{spec.value}</span>
+                    <div key={idx} className={`p-4 ${idx % 2 === 0 ? "bg-slate-50" : "bg-white"}`}>
+                      <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{spec.label}</div>
+                      <div className="font-bold text-slate-900">{spec.value}</div>
                     </div>
                   ))}
                 </div>
               ) : null;
             })()}
-
-            {home.rules?.length > 0 && (
-              <div className="border-t border-slate-100 pt-5 mt-6 text-left">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-3">
-                  RÈGLES DE LA MAISON
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {home.rules.map((rule, idx) => (
-                    <span key={idx} className="bg-emerald-50 text-[#10b981] border border-emerald-100 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                      {rule}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
+          {/* House Rules */}
+          {home.rules?.length > 0 && (
+            <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">Règles de la maison</h3>
+              <div className="flex flex-wrap gap-3">
+                {home.rules.map((rule, idx) => (
+                  <span key={idx} className="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-sm font-medium">
+                    {rule}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Location Map */}
           {home.location && (
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm text-left">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4">
-                LOCALISATION
-              </span>
-              <div className="relative rounded-2xl overflow-hidden h-64 bg-slate-100 border border-slate-100 shadow-inner">
+            <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="p-6 pb-0">
+                <h3 className="text-lg font-bold mb-4">Localisation</h3>
+              </div>
+              <div className="relative h-[400px] border-t border-slate-200">
+                <a
+                  href={`https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-4 left-4 z-10 bg-white px-4 py-2 rounded shadow-md border border-slate-200 flex items-center gap-2 text-emerald-600 font-bold hover:bg-slate-50 transition-colors text-sm"
+                >
+                  <FaExternalLinkAlt className="text-[14px]" />
+                  Ouvrir dans Maps
+                </a>
                 <iframe
                   title="Location Map"
                   src={googleMapsUrl}
-                  className="absolute inset-0 w-full h-full border-0"
+                  className="w-full h-full border-0"
                   loading="lazy"
                   allowFullScreen
                   referrerPolicy="no-referrer-when-downgrade"
@@ -448,194 +512,166 @@ function HomeDetails() {
           )}
         </div>
 
-        {/* RIGHT: Availability + Owner + CTAs */}
-        <div className="space-y-6">
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                DISPONIBILITÉ
-              </span>
-              <span className="bg-emerald-50 text-[#10b981] px-3 py-1 rounded-full text-[10px] font-extrabold">
-                {spotsLeft}/{maxCapacity} places
-              </span>
+        {/* Right: Sidebar */}
+        <div className="space-y-6 lg:sticky lg:top-24">
+          {/* Availability */}
+          <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">DISPONIBILITÉ</span>
+              <span className="text-emerald-600 font-bold text-sm">{spotsLeft}/{maxCapacity} places</span>
             </div>
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-6">
-              <div className="bg-[#10b981] h-full rounded-full transition-all duration-550" style={{ width: `${Math.min(100, (spotsLeft / maxCapacity) * 100)}%` }} />
+            <div className="w-full bg-slate-100 h-2 rounded-full">
+              <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${maxCapacity > 0 ? (spotsLeft / maxCapacity) * 100 : 0}%` }} />
             </div>
-            <div className="text-left">
-              <h3 className="font-extrabold text-slate-800 text-sm mb-4">
-                Occupation actuelle
-                {home.occupants?.length > 0 && (
-                  <span className="text-[#10b981] text-xs font-bold ml-2">({home.occupants.length})</span>
-                )}
-              </h3>
-              {home.occupants?.length > 0 ? (
-                <div className="space-y-2">
-                  {home.occupants.map((occ) => (
-                    <div key={occ.id_user} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-2xl">
-                      <img
-                        className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm"
-                        src={bustCache(occ.photo_profil) || `https://ui-avatars.com/api/?name=${encodeURIComponent((occ.prenom||'')+' '+(occ.nom||''))}&background=10b981&color=fff&size=36&bold=true`}
-                        alt={occ.prenom}
-                      />
-                      <div className="text-left flex-1">
-                        <p className="font-bold text-slate-800 text-xs">{occ.prenom} {occ.nom}</p>
-                        <span className="text-[10px] text-slate-400 font-semibold">Occupant</span>
-                      </div>
-                      <button
-                        type="button"
-                        title={`Contacter ${occ.prenom}`}
-                        onClick={async () => {
-                          try {
-                            const res = await fetchData(API_URLS.CONVERSATIONS, {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ id_destinataire: occ.id_user }),
-                            });
-                            const convId = res.id_conversation || res.data?.id_conversation;
-                            if (convId) navigate(`/chat/${convId}`);
-                          } catch {}
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-[#10b981] hover:border-emerald-200 hover:bg-emerald-50 transition-all cursor-pointer shrink-0"
-                      >
-                        <FaCommentAlt size={13} />
-                      </button>
+            <div className="text-[12px] text-slate-500">Occupation actuelle ({currentOccupants}/{maxCapacity})</div>
+            {home.occupants?.length > 0 ? (
+              <div className="space-y-2">
+                {home.occupants.map((occ) => (
+                  <div key={occ.id_user} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <img
+                      className="w-10 h-10 rounded-full object-cover"
+                      src={bustCache(occ.photo_profil) || `https://ui-avatars.com/api/?name=${encodeURIComponent((occ.prenom||'')+' '+(occ.nom||''))}&background=10b981&color=fff&size=40&bold=true`}
+                      alt={occ.prenom}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-sm text-slate-800 truncate">{occ.prenom} {occ.nom}</div>
+                      <div className="text-[12px] text-slate-500">Occupant</div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
-                    <FaUsers className="w-6 h-6" />
+                    <button
+                      type="button"
+                      title={`Contacter ${occ.prenom}`}
+                      onClick={async () => {
+                        try {
+                          const res = await fetchData(API_URLS.CONVERSATIONS, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ id_destinataire: occ.id_user }),
+                          });
+                          const convId = res.id_conversation || res.data?.id_conversation;
+                          if (convId) navigate(`/chat/${convId}`);
+                        } catch {}
+                      }}
+                      className="text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer border-none bg-transparent"
+                    >
+                      <FaCommentAlt size={16} />
+                    </button>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm">Aucun occupant</h4>
-                    <span className="text-xs text-slate-400 font-semibold block mt-0.5">sur {maxCapacity} place{maxCapacity > 1 ? "s" : ""} disponibles</span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-[12px] text-slate-500 italic">Aucun occupant actuellement</div>
+            )}
+          </div>
+
+          {/* Owner Profile */}
+          <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-4 pb-4 border-b border-slate-200">
+              <div className="relative">
+                {home.posterPhoto ? (
+                  <img className="w-12 h-12 rounded-full object-cover" src={bustCache(home.posterPhoto)} alt="" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base">
+                    {posterInitials}
                   </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full border-2 border-white">
+                  <FaCheck className="text-[10px]" />
                 </div>
-              )}
+              </div>
+              <div>
+                <div className="text-lg font-bold leading-tight">{home.poster || "Propriétaire"}</div>
+                <div className="text-slate-500 text-sm">Propriétaire</div>
+              </div>
             </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm">
-            <div className="relative shrink-0">
-              {home.posterPhoto ? (
-                <img src={bustCache(home.posterPhoto)} alt="" className="w-12 h-12 rounded-full object-cover border border-emerald-100" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#10b981] border border-emerald-100 shadow-inner flex items-center justify-center font-extrabold text-base">
-                  {posterInitials}
-                </div>
-              )}
-              <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow">
-                <FaCheck className="w-2 h-2 text-white" />
-              </span>
+            <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-3">
+              <FaShieldAlt className="text-emerald-600 shrink-0" />
+              <div className="text-[12px] leading-snug">
+                <span className="font-bold text-emerald-700">Annonce vérifiée</span><br />
+                <span className="text-slate-500">Logement authentifié par UniConnect</span>
+              </div>
             </div>
-            <div>
-              <h4 className="font-extrabold text-slate-800 text-sm">{home.poster || "Propriétaire vérifié"}</h4>
-              <span className="text-xs text-slate-400 font-semibold block mt-0.5">Propriétaire</span>
+            <div className="space-y-3">
+              <button
+                onClick={handleRequestJoin}
+                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              >
+                <FaUserPlus />
+                Demander à rejoindre
+              </button>
+              <button
+                onClick={handleContactOwner}
+                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              >
+                <FaEnvelope />
+                Contacter le propriétaire
+              </button>
+              <button
+                onClick={handleShare}
+                className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-100 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              >
+                <FaShareAlt />
+                Partager
+              </button>
             </div>
-          </div>
-
-          <div className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-4 flex items-center gap-3 text-left shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-              <FaShieldAlt className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-bold text-emerald-800 text-xs">Annonce vérifiée</p>
-              <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Logement authentifié par UniConnect</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleRequestJoin}
-              className="w-full bg-[#10b981] hover:bg-[#0b9062] active:scale-[0.98] text-white py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
-            >
-              Demander à rejoindre
-            </button>
-            <button
-              onClick={handleContactOwner}
-              className="w-full border-2 border-[#10b981] hover:bg-emerald-50/50 active:scale-[0.98] text-[#10b981] py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer bg-white"
-            >
-              <FaCommentAlt className="w-4 h-4 shrink-0" />
-              Contacter le propriétaire
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="w-full border-2 border-slate-200 hover:bg-slate-50 active:scale-[0.98] text-slate-600 py-3 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer bg-white"
-            >
-              <FaShareAlt className="w-3.5 h-3.5 shrink-0" />
-              Partager
-            </button>
-
             <button
               onClick={handleReportListing}
-              className="flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-red-500 font-bold mt-2 transition-colors cursor-pointer self-center"
+              className="w-full py-2 text-red-500 text-[12px] font-bold flex items-center justify-center gap-1 opacity-70 hover:opacity-100 transition-opacity cursor-pointer border-none bg-transparent"
             >
-              <FaFlag className="w-3.5 h-3.5 shrink-0" />
+              <FaFlag className="text-[16px]" />
               Signaler l'annonce
             </button>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4 text-center">
-              Évaluation du logement
-            </span>
-
-            {/* Stars */}
-            <div className="flex items-center justify-center gap-1 mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  disabled={!!userRating || submitting}
-                  onClick={() => handleRateHebergement(star)}
-                  onMouseEnter={() => !userRating && setHoverRating(star)}
-                  onMouseLeave={() => !userRating && setHoverRating(0)}
-                  className={`text-lg transition-colors ${
-                    userRating ? "cursor-default" : "cursor-pointer"
-                  } ${(hoverRating || userRating) >= star ? "text-amber-400" : "text-slate-200"}`}
-                >
-                  {(hoverRating || userRating) >= star ? <FaStar /> : <FaRegStar />}
-                </button>
-              ))}
+          {/* Rating */}
+          <div data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+            <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">ÉVALUATION DU LOGEMENT</h3>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star} className="text-slate-200">
+                    <FaStarEmpty />
+                  </span>
+                ))}
+              </div>
+              <span className="text-slate-500 text-sm italic">
+                {avgRating > 0 ? `${avgRating.toFixed(1)} / 5 (${totalEval} avis)` : "Aucune évaluation"}
+              </span>
             </div>
-
-            {/* Avg rating */}
-            <p className="text-xs text-slate-400 font-semibold text-center">
-              {avgRating > 0
-                ? `${avgRating.toFixed(1)} / 5 (${totalEval} avis)`
-                : "Aucune évaluation"}
-            </p>
-
-            {/* Comment textarea + submit (only if not yet rated) */}
             {!userRating && loggedInUser && (
-              <div className="mt-3 space-y-2">
+              <>
+                <div className="flex items-center justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      disabled={!!userRating || submitting}
+                      onClick={() => handleRateHebergement(star)}
+                      onMouseEnter={() => !userRating && setHoverRating(star)}
+                      onMouseLeave={() => !userRating && setHoverRating(0)}
+                      className={`text-lg transition-colors ${
+                        userRating ? "cursor-default" : "cursor-pointer"
+                      } ${(hoverRating || userRating) >= star ? "text-amber-400" : "text-slate-200"}`}
+                    >
+                      {(hoverRating || userRating) >= star ? <FaStarFilled /> : <FaStarEmpty />}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Écrivez un commentaire..."
-                  rows={2}
-                  className="w-full text-xs border border-slate-200 rounded-xl p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-400 placeholder-slate-300"
+                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+                  placeholder="Écrire un commentaire..."
+                  rows={3}
                 />
-                <p className="text-[10px] text-slate-400 text-center">
-                  Cliquez sur une étoile pour publier
-                </p>
-              </div>
+                <div className="text-center text-[11px] text-slate-400 italic">Cliquez sur une étoile pour publier</div>
+              </>
             )}
-
-            {/* Your vote summary */}
             {userRating > 0 && (
-              <p className="text-[10px] text-emerald-600 font-bold text-center mt-2">
-                Votre note : {userRating}/5
-              </p>
+              <p className="text-[12px] text-emerald-600 font-bold text-center">Votre note : {userRating}/5</p>
             )}
-
-            {/* Scrollable comments list */}
             {evaluations.length > 0 && (
-              <div className="mt-3 max-h-36 overflow-y-auto space-y-2 scrollbar-thin pr-1">
+              <div className="max-h-36 overflow-y-auto space-y-2">
                 {evaluations.map((ev) => (
-                  <div key={ev.id_evaluation} className="bg-slate-50 rounded-xl p-2.5 text-left">
+                  <div key={ev.id_evaluation} className="bg-slate-50 rounded-xl p-2.5">
                     <div className="flex items-center gap-2 mb-1">
                       <button
                         onClick={() => navigate(`/profile/${ev.auteur?.id_user}`)}
@@ -655,7 +691,7 @@ function HomeDetails() {
                       </button>
                       <span className="ml-auto flex gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <FaStar key={s} className={`w-2.5 h-2.5 ${s <= ev.note ? "text-amber-400" : "text-slate-200"}`} />
+                          <FaStarFilled key={s} className={`w-2.5 h-2.5 ${s <= ev.note ? "text-amber-400" : "text-slate-200"}`} />
                         ))}
                       </span>
                     </div>

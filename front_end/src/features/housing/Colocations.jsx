@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
 import { useNavigate, Link } from "react-router-dom";
 import API_BASE, { API_URLS, fetchData } from "../../api/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -7,14 +10,11 @@ import {
   FaSearch,
   FaTimes,
   FaChevronDown,
-  FaVectorSquare,
   FaHome,
   FaCheck,
   FaChevronLeft,
   FaChevronRight,
   FaMapMarkerAlt,
-  FaArrowRight,
-  FaUsers,
 } from "react-icons/fa";
 
 // ── Card ─────────────────────────────────────────────────────────────────────
@@ -83,6 +83,7 @@ const ColocationCard = ({ c, onClick, isFavori, onToggleFavori }) => {
   return (
     <div
       onClick={onClick}
+      data-item
       className={`group bg-white rounded-[24px] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between p-4 font-poppins relative`}
     >
       {/* Visual Header / Image Container with exact overlays */}
@@ -536,11 +537,34 @@ const Colocations = () => {
     setFavoriFilter(false);
   };
 
+  useEffect(() => {
+    const sections = gsap.utils.toArray("[data-anim]");
+    sections.forEach((section) => {
+      const anim = section.getAttribute("data-anim");
+      const items = section.querySelectorAll("[data-item]");
+      if (anim === "stagger-fade-up" && items.length) {
+        gsap.fromTo(items,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1,
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+      if (anim === "fade-up") {
+        gsap.fromTo(section,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+            scrollTrigger: { trigger: section, start: "top 82%" } }
+        );
+      }
+    });
+    return () => ScrollTrigger.getAll().forEach(st => st.kill());
+  }, []);
+
   return (
     <section className="min-h-screen bg-gray-100 py-4 mt-32 px-4 sm:px-8 font-poppins">
       <div className="max-w-7xl mx-auto">
         {/* ── HEADER ── */}
-        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ">
+        <div data-anim="fade-up" className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ">
           <h1 className="text-4xl font-extrabold text-[#0b1c30] leading-tight tracking-tight">
             Annonces <span className="text-emerald-600">Colocation</span>
           </h1>
@@ -755,7 +779,7 @@ const Colocations = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div data-anim="stagger-fade-up" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visible.map((c) => (
               <ColocationCard
                 key={c.id}

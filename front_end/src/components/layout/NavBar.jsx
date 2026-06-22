@@ -8,84 +8,22 @@ import {
   FaCog,
   FaShieldAlt,
   FaSignOutAlt,
-  FaBell,
-  FaCheck,
-  FaTrash,
-  FaInfoCircle,
-  FaCheckDouble,
   FaChartBar,
-  FaCommentDots,
 } from "react-icons/fa";
-import { fetchData, API_URLS } from "../../api/api";
 import { AuthContext } from "../../context/AuthContext";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-
   const navigate = useNavigate();
   const { token, user: loggedInUser, logout } = useContext(AuthContext);
   const location = useLocation();
-
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem("unicons_notifications");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Error parsing notifications", e);
-      }
-    }
-    return [
-      {
-        id: 1,
-        title: "Annonce Publiée",
-        text: "Félicitations ! Votre colocation 'Studio Lumineux Agdal' a été approuvée et est en ligne. 🎉",
-        time: "Il y a 5 min",
-        unread: true,
-        type: "success",
-      },
-      {
-        id: 2,
-        title: "Demande de Coloc",
-        text: "Ahmed a envoyé une demande pour rejoindre votre colocation à Agdal. 🏠",
-        time: "Il y a 1 heure",
-        unread: true,
-        type: "request",
-      },
-      {
-        id: 3,
-        title: "Cours Confirmé",
-        text: "Prof. Bensaid a accepté votre cours de révision en Algèbre pour demain à 14h. 📚",
-        time: "Il y a 2 heures",
-        unread: false,
-        type: "info",
-      },
-      {
-        id: 4,
-        title: "Profil Incomplet",
-        text: "Pensez à ajouter votre niveau d'études dans les paramètres pour de meilleures suggestions. ⚙️",
-        time: "Il y a 1 jour",
-        unread: false,
-        type: "warning",
-      },
-    ];
-  });
 
   const bustCache = (url) => {
     if (!url) return null;
     try { const u = new URL(url); u.searchParams.set("t", Date.now()); return u.toString(); } catch { return url; }
   };
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem(
-      "unicons_notifications",
-      JSON.stringify(notifications),
-    );
-  }, [notifications]);
 
   const profileMenuLinkClass = (pathMatch) => {
     const isActive =
@@ -122,7 +60,6 @@ const Navbar = () => {
     const timer = setTimeout(() => {
       setMenuOpen(false);
       setDropdownOpen(false);
-      setNotificationsOpen(false);
     }, 0);
     return () => clearTimeout(timer);
   }, [location]);
@@ -132,26 +69,6 @@ const Navbar = () => {
   const navLinkStyles = `font-semibold text-lg transition-colors duration-300 hover:text-emerald-500 ${
     isScrolledOrNotHome ? "text-slate-800" : "text-white"
   }`;
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
-
-  const toggleNotificationRead = (id) => {
-    setNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, unread: !n.unread } : n)),
-    );
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter((n) => n.id !== id));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
 
   return (
     <header className="fixed w-full top-0 z-50 transition-all duration-500">
@@ -217,175 +134,11 @@ const Navbar = () => {
         <div className="flex items-center ml-25 gap-3">
           {token && loggedInUser ? (
             <div className="flex items-center gap-3">
-              {/* NOTIFICATION BELL & DRAWER */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotificationsOpen(!notificationsOpen);
-                    setDropdownOpen(false);
-                  }}
-                  className={`relative p-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    isScrolledOrNotHome
-                      ? "text-slate-650 hover:text-[#10b981]"
-                      : "text-white/80 hover:text-white "
-                  }`}
-                  aria-label="Notifications"
-                >
-                  <FaBell className="w-5 h-5 shrink-0" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] font-black animate-pulse shadow-xs border border-white">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* NOTIFICATIONS DRAWER DROP DOWN */}
-                {notificationsOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40 cursor-default"
-                      onClick={() => setNotificationsOpen(false)}
-                    />
-                    <div className="absolute right-[-60px] md:right-0 mt-3 w-80 sm:w-[350px] rounded-2xl bg-white border border-slate-100 shadow-xl p-4 z-50 animate-in fade-in slide-in-from-top-3 duration-250 text-slate-800 font-poppins">
-                      {/* Drawer Header */}
-                      <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                        <span className="font-extrabold text-[10px] text-slate-450 uppercase tracking-widest">
-                          Alertes ({unreadCount})
-                        </span>
-                        {unreadCount > 0 && (
-                          <button
-                            type="button"
-                            onClick={markAllAsRead}
-                            className="text-[9px] font-black text-[#10b981] hover:text-[#0b9062] transition flex items-center gap-1 cursor-pointer border-none bg-transparent"
-                          >
-                            <FaCheckDouble className="w-2.5 h-2.5" /> Tout lire
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Drawer List */}
-                      <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
-                        {notifications.length > 0 ? (
-                          notifications.map((notif) => (
-                            <div
-                              key={notif.id}
-                              onClick={() => toggleNotificationRead(notif.id)}
-                              className={`group relative p-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs overflow-hidden flex gap-3 items-start
-                              ${
-                                notif.unread
-                                  ? "bg-emerald-50/20 border-emerald-100/60 hover:bg-emerald-50/40"
-                                  : "bg-white border-slate-100 hover:bg-slate-50"
-                              }`}
-                            >
-                              {/* Left icon marker depending on type */}
-                              <div
-                                className={`mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center shrink-0
-                                ${
-                                  notif.type === "success"
-                                    ? "bg-emerald-50 text-emerald-600"
-                                    : notif.type === "request"
-                                      ? "bg-blue-50 text-blue-600"
-                                      : notif.type === "warning"
-                                        ? "bg-amber-50 text-amber-600"
-                                        : "bg-slate-50 text-slate-500"
-                                }`}
-                              >
-                                {notif.type === "success" ? (
-                                  <FaCheck className="w-3 h-3" />
-                                ) : (
-                                  <FaInfoCircle className="w-3 h-3" />
-                                )}
-                              </div>
-
-                              {/* Title / Description */}
-                              <div className="flex-1 min-w-0 pr-6">
-                                <h4
-                                  className={`text-[10px] font-black tracking-tight leading-tight uppercase mb-0.5
-                                  ${
-                                    notif.unread
-                                      ? "text-slate-800"
-                                      : "text-slate-500"
-                                  }`}
-                                >
-                                  {notif.title}
-                                </h4>
-                                <p
-                                  className={`text-[10px] leading-relaxed font-semibold mb-1
-                                  ${
-                                    notif.unread
-                                      ? "text-slate-650"
-                                      : "text-slate-450"
-                                  }`}
-                                >
-                                  {notif.text}
-                                </p>
-                                <span className="text-[8px] font-bold text-slate-400 block uppercase tracking-wider">
-                                  {notif.time}
-                                </span>
-                              </div>
-
-                              {/* Quick action buttons */}
-                              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteNotification(notif.id);
-                                  }}
-                                  className="w-5 h-5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-500 flex items-center justify-center transition border-none bg-transparent cursor-pointer"
-                                  title="Supprimer"
-                                >
-                                  <FaTrash className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
-
-                              {/* Pulsing indicator */}
-                              {notif.unread && (
-                                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse group-hover:hidden" />
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          /* Elegant Empty State illustration */
-                          <div className="py-8 px-4 flex flex-col items-center justify-center text-center">
-                            <div className="w-14 h-14 rounded-full bg-slate-50 border border-slate-100/50 flex items-center justify-center text-slate-350 mb-3 shadow-inner">
-                              <FaBell className="w-6 h-6 animate-pulse" />
-                            </div>
-                            <h4 className="font-extrabold text-[10px] text-slate-700 uppercase tracking-widest mb-1">
-                              Aucune Alerte
-                            </h4>
-                            <p className="text-[10px] text-slate-450 font-semibold leading-relaxed max-w-[200px]">
-                              Vous êtes à jour ! Vos nouvelles alertes
-                              s'afficheront ici.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Drawer Footer */}
-                      {notifications.length > 0 && (
-                        <div className="border-t border-slate-100 pt-3 mt-3 flex justify-center">
-                          <button
-                            type="button"
-                            onClick={clearAllNotifications}
-                            className="text-[9px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition cursor-pointer border-none bg-transparent"
-                          >
-                            Vider les notifications
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-
               {/* PROFILE DROPDOWN */}
               <div className="relative">
                 <button
                   onClick={() => {
                     setDropdownOpen(!dropdownOpen);
-                    setNotificationsOpen(false);
                   }}
                   className={`relative rounded-full transition-all duration-300 cursor-pointer ${
                     isScrolledOrNotHome

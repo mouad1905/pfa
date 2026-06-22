@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import API_BASE, { API_URLS, fetchData } from "../../api/api";
@@ -111,7 +111,6 @@ export default function Settings() {
 
     try {
       const url = `${API_BASE}/users/${loggedInUser.id_user}`;
-      let body;
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       };

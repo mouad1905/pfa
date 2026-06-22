@@ -4,10 +4,9 @@ import { AuthContext } from "../../context/AuthContext";
 import {
   FaChartLine,
   FaComment,
-  FaUsers,
-  FaFolderOpen,
   FaCog,
   FaShieldAlt,
+  FaUser,
 } from "react-icons/fa";
 
 function bustCache(url, t) {
@@ -25,26 +24,23 @@ function avatarFallback(prenom, nom, size = 40) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent((prenom || "") + "+" + (nom || ""))}&background=0D9488&color=fff&size=${size}`;
 }
 
-const sidebarLinks = [
-  {
-    icon: <FaChartLine size={18} />,
-    label: "Tableau de bord",
-    path: "/dashboard",
-  },
-  { icon: <FaComment size={18} />, label: "Messages", path: "/chat" },
-  { icon: <FaUsers size={18} />, label: "Communautés", path: "/colocations" },
-  { icon: <FaFolderOpen size={18} />, label: "Ressources", path: "/revisions" },
-  { icon: <FaCog size={18} />, label: "Paramètres", path: "/settings" },
-  { icon: <FaShieldAlt size={18} />, label: "Sécurité", path: "/security" },
-];
-
 const AppLayout = () => {
   const { user: loggedInUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
+  const sidebarLinks = [
+    ...(loggedInUser?.role !== "etudiant"
+      ? [{ icon: <FaChartLine size={18} />, label: "Tableau de bord", path: "/dashboard" }]
+      : []),
+    { icon: <FaUser size={18} />, label: "Profil", path: "/profile" },
+    { icon: <FaComment size={18} />, label: "Messages", path: "/chat" },
+    { icon: <FaCog size={18} />, label: "Paramètres", path: "/settings" },
+    { icon: <FaShieldAlt size={18} />, label: "Sécurité", path: "/security" },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-[#f8f9fa] text-[#191c1d] font-['Inter',sans-serif] pt-28">
+    <div className="flex  min-h-screen bg-[#f8f9fa] text-[#191c1d] font-['Inter',sans-serif] pt-28">
       <aside className="h-[calc(100vh-116px)] w-[300px] sticky left-0 top-20 bg-[#f8f9fa] shadow-sm flex-col p-4 border-r border-[#bccac2] hidden md:flex z-40">
         <div className="mb-8 px-2">
           <h1 className="font-bold text-2xl text-[#006b53] tracking-tight">

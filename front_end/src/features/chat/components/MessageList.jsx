@@ -1,4 +1,3 @@
-import React from "react";
 import { FaExclamationTriangle, FaCommentAlt } from "react-icons/fa";
 import MessageBubble from "./MessageBubble";
 import { isOwnMessage, shouldShowDateSeparator, formatDateSeparator } from "../utils";

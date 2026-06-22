@@ -1,4 +1,3 @@
-import React from "react";
 import { FaCommentDots } from "react-icons/fa";
 
 export default function EmptyChatState() {

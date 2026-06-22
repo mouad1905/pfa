@@ -8,7 +8,6 @@ import {
   FaBan, 
   FaSpinner, 
   FaTrashAlt, 
-  FaClock, 
   FaEye,
   FaMapMarkerAlt,
   FaUser

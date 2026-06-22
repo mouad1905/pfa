@@ -307,7 +307,13 @@ const ManageSignales = () => {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-150">
                                 <div>
                                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Détails du signalement</h4>
-                                  <div className="p-4 bg-white rounded-xl border border-slate-100 shadow-xs">
+                                  <div className="p-4 bg-white rounded-xl border border-slate-100 shadow-xs space-y-3">
+                                    {s.id_hebergement && (
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <span className="font-bold text-slate-500">ID Annonce:</span>
+                                        <span className="font-mono text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md">#{s.id_hebergement}</span>
+                                      </div>
+                                    )}
                                     <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed italic">
                                       {s.details ? `"${s.details}"` : "Aucun détail textuel supplémentaire fourni."}
                                     </p>

@@ -1,4 +1,3 @@
-import React from "react";
 import { FaArrowLeft, FaCircle, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getRoleInfo, getAvatarUrl } from "../utils";

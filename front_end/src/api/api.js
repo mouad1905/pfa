@@ -13,11 +13,7 @@ export const API_URLS = {
   USER: `${API_BASE_URL}/user`,
   LOGOUT: `${API_BASE_URL}/logout`,
   MESSAGES: `${API_BASE_URL}/messages`,
-  MESSAGES_INBOX: `${API_BASE_URL}/messages/inbox`,
-  MESSAGES_SENT: `${API_BASE_URL}/messages/sent`,
-  MESSAGES_UNREAD: `${API_BASE_URL}/messages/unread-count`,
-  messageRead: (id) => `${API_BASE_URL}/messages/${id}/read`,
-  SAVE_MEDIA: `${API_BASE_URL}/save-media`,
+
   CONVERSATIONS: `${API_BASE_URL}/conversations`,
   conversationMessages: (id) => `${API_BASE_URL}/conversations/${id}/messages`,
   sendConversationMessage: (id) => `${API_BASE_URL}/conversations/${id}/messages`,
