@@ -41,21 +41,21 @@ const StepCreateAccount = ({ data, setData }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Field label="First Name">
+      <Field label="Prénom">
         <Input
           placeholder="John"
           value={data.firstName}
           onChange={set("firstName")}
         />
       </Field>
-      <Field label="Last Name">
+      <Field label="Nom">
         <Input
           placeholder="Doe"
           value={data.lastName}
           onChange={set("lastName")}
         />
       </Field>
-      <Field label="Email Address">
+      <Field label="Adresse Email">
         <Input
           type="email"
           placeholder="john@example.com"
@@ -63,7 +63,7 @@ const StepCreateAccount = ({ data, setData }) => {
           onChange={set("email")}
         />
       </Field>
-      <Field label="Phone Number">
+      <Field label="Numéro de téléphone">
         <Input
           type="tel"
           placeholder="+212 6XX XXX XXX"
@@ -71,15 +71,15 @@ const StepCreateAccount = ({ data, setData }) => {
           onChange={set("phone")}
         />
       </Field>
-      <Field label="Date of Birth">
+      <Field label="Date de naissance">
         <Input type="date" value={data.dob} onChange={set("dob")} />
       </Field>
       <div />
-      <Field label="Password">
+      <Field label="Mot de passe">
         <div className="relative">
           <Input
             type={show ? "text" : "password"}
-            placeholder="Min. 8 characters"
+            placeholder="Min. 8 caractères"
             value={data.password}
             onChange={set("password")}
           />
@@ -92,11 +92,11 @@ const StepCreateAccount = ({ data, setData }) => {
           </button>
         </div>
       </Field>
-      <Field label="Confirm Password">
+      <Field label="Confirmer le mot de passe">
         <div className="relative">
           <Input
             type={showC ? "text" : "password"}
-            placeholder="Repeat password"
+            placeholder="Répéter le mot de passe"
             value={data.confirm}
             onChange={set("confirm")}
           />
@@ -160,25 +160,25 @@ const StepAcademicProfile = ({ data, setData }) => {
           onChange={set("gmailAcademique")}
         />
       </Field>
-      <Field label="Field of Study">
+      <Field label="Domaine d'étude">
         <Input
-          placeholder="e.g. Computer Science"
+                  placeholder="ex. Informatique"
           value={data.field}
           onChange={set("field")}
         />
       </Field>
-      <Field label="Degree Level">
+      <Field label="Niveau d'études">
         <Select value={data.degree} onChange={set("degree")}>
-          <option value="">Select degree</option>
-          <option>Bachelor's (L1 – L3)</option>
-          <option>Master's (M1 – M2)</option>
-          <option>Doctorate (PhD)</option>
-          <option>Engineering</option>
-          <option>Other</option>
+          <option value="">Choisir un niveau</option>
+          <option>Licence (L1 – L3)</option>
+          <option>Master (M1 – M2)</option>
+          <option>Doctorat (PhD)</option>
+          <option>Ingénierie</option>
+          <option>Autre</option>
         </Select>
       </Field>
       <div className="sm:col-span-2">
-        <Field label="Upload Student Card">
+        <Field label="Carte d'étudiant">
           <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 hover:border-[#1ab69d] rounded-xl py-5 px-4 cursor-pointer transition group bg-gray-50 hover:bg-[#f3faf9]">
             <FaUpload className="text-gray-300 group-hover:text-[#1ab69d] text-xl mb-1.5 transition" />
             {data.studentCard ? (
@@ -188,10 +188,10 @@ const StepAcademicProfile = ({ data, setData }) => {
             ) : (
               <>
                 <span className="text-xs font-semibold text-gray-500 group-hover:text-[#1ab69d] transition">
-                  Click to upload
+                  Cliquez pour télécharger
                 </span>
                 <span className="text-[11px] text-gray-400 mt-0.5">
-                  JPG, PNG or PDF — max 5 MB
+                  JPG, PNG ou PDF — max 5 Mo
                 </span>
               </>
             )}
@@ -217,24 +217,24 @@ const StepIdentityVerification = ({ data, setData }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Field label="ID Type">
+      <Field label="Type de pièce d'identité">
         <Select value={data.idType} onChange={set("idType")}>
-          <option value="">Select ID type</option>
-          <option>National ID Card</option>
-          <option>Passport</option>
-          <option>Residence Permit</option>
-          <option>Driver's License</option>
+          <option value="">Choisir un type</option>
+          <option>Carte d'Identité Nationale</option>
+          <option>Passeport</option>
+          <option>Titre de Séjour</option>
+          <option>Permis de Conduire</option>
         </Select>
       </Field>
-      <Field label="ID Number">
+      <Field label="Numéro de pièce">
         <Input
-          placeholder="e.g. AB123456"
+          placeholder="ex. AB123456"
           value={data.idNumber}
           onChange={set("idNumber")}
         />
       </Field>
       <div className="sm:col-span-2">
-        <Field label="Profile Photo">
+        <Field label="Photo de profil">
           <label className="flex items-center gap-3 border-2 border-dashed border-gray-200 hover:border-[#1ab69d] rounded-xl px-4 py-3 cursor-pointer transition group bg-gray-50 hover:bg-[#f3faf9]">
             <div className="w-11 h-11 rounded-full bg-gray-100 group-hover:bg-[#1ab69d]/10 flex items-center justify-center transition shrink-0">
               <FaUser className="text-gray-300 group-hover:text-[#1ab69d] text-lg transition" />
@@ -326,9 +326,9 @@ const CreateAccount = () => {
   });
 
   const stepTitles = [
-    "Create Account",
-    "Academic Profile",
-    "Identity Verification",
+    "Créer un compte",
+    "Profil Académique",
+    "Vérification d'Identité",
   ];
   const formContent = [
     <StepCreateAccount data={step1} setData={setStep1} />,
@@ -339,28 +339,28 @@ const CreateAccount = () => {
   const validateStep = (step) => {
     const missing = [];
     if (step === 1) {
-      if (!step1.firstName.trim()) missing.push("First Name");
-      if (!step1.lastName.trim()) missing.push("Last Name");
+      if (!step1.firstName.trim()) missing.push("Prénom");
+      if (!step1.lastName.trim()) missing.push("Nom");
       if (!step1.email.trim()) missing.push("Email");
-      if (!step1.phone.trim()) missing.push("Phone Number");
-      if (!step1.dob) missing.push("Date of Birth");
-      if (!step1.password) missing.push("Password");
-      if (!step1.confirm) missing.push("Confirm Password");
-      if (step1.password !== step1.confirm) { setError("Passwords do not match"); return false; }
-      if (!step1.terms) missing.push("Terms agreement");
+      if (!step1.phone.trim()) missing.push("Téléphone");
+      if (!step1.dob) missing.push("Date de naissance");
+      if (!step1.password) missing.push("Mot de passe");
+      if (!step1.confirm) missing.push("Confirmation mot de passe");
+      if (step1.password !== step1.confirm) { setError("Les mots de passe ne correspondent pas"); return false; }
+      if (!step1.terms) missing.push("Acceptation des conditions");
     } else if (step === 2) {
-      if (!step2.university.trim()) missing.push("University");
-      if (!step2.gmailAcademique.trim()) missing.push("Gmail Academique");
-      if (!step2.field.trim()) missing.push("Field of Study");
-      if (!step2.degree) missing.push("Degree Level");
+      if (!step2.university.trim()) missing.push("Université");
+      if (!step2.gmailAcademique.trim()) missing.push("Gmail Académique");
+      if (!step2.field.trim()) missing.push("Domaine d'étude");
+      if (!step2.degree) missing.push("Niveau d'études");
     } else if (step === 3) {
-      if (!step3.idType) missing.push("ID Type");
-      if (!step3.idNumber.trim()) missing.push("ID Number");
-      if (!step3.photo) missing.push("Profile Photo");
-      if (!step3.idFile) missing.push("ID Document");
+      if (!step3.idType) missing.push("Type de pièce");
+      if (!step3.idNumber.trim()) missing.push("Numéro de pièce");
+      if (!step3.photo) missing.push("Photo de profil");
+      if (!step3.idFile) missing.push("Document d'identité");
     }
     if (missing.length > 0) {
-      setError(`Required fields: ${missing.join(", ")}`);
+      setError(`Champs obligatoires : ${missing.join(", ")}`);
       return false;
     }
     setError("");
@@ -370,11 +370,11 @@ const CreateAccount = () => {
   const handleRegister = async () => {
     if (!validateStep(3)) return;
     if (step1.password !== step1.confirm) {
-      setError("Passwords do not match");
+      setError("Les mots de passe ne correspondent pas");
       return;
     }
     if (!step1.terms) {
-      setError("You must agree to the terms");
+      setError("Vous devez accepter les conditions");
       return;
     }
 

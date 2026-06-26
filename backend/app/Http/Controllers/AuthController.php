@@ -144,6 +144,13 @@ class AuthController extends Controller
             'message' => 'Déconnexion réussie'
         ]);
     }
+    // Liste des professeurs (public)
+    public function getProfesseurs()
+    {
+        $professeurs = Utilisateur::where('role', 'professeur')->get();
+        return \App\Http\Resources\UtilisateurResource::collection($professeurs);
+    }
+
     // Lister tous les utilisateurs (pour l'admin)
     public function allUsers()
     {

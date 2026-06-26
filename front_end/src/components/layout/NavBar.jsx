@@ -76,11 +76,11 @@ const Navbar = () => {
       <div className="bg-[#0b1716] border-b border-emerald-900/30 py-2 px-4 md:px-12 hidden lg:flex justify-between items-center text-[11px] font-medium text-slate-300">
         <div className="flex gap-6 items-center">
           <span className="flex items-center gap-1">
-            Welcome to{" "}
+            Bienvenue sur{" "}
             <span className="text-emerald-400 font-bold">Uniconnect</span>
           </span>
           <span className="text-slate-600">|</span>
-          <span>Connect, Study, Live Better.</span>
+          <span>Connecte-toi, Étudie, Vis Mieux.</span>
         </div>
         <div className="flex items-center gap-5">
           {!token && (
@@ -88,7 +88,7 @@ const Navbar = () => {
               to="/login"
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors uppercase tracking-wider text-[10px] font-bold"
             >
-              <FaUser className="text-emerald-500" /> Login
+              <FaUser className="text-emerald-500" /> Connexion
             </Link>
           )}
         </div>
@@ -116,7 +116,7 @@ const Navbar = () => {
         {/* NAV LINKS — desktop */}
         <div className="hidden lg:flex items-center gap-8">
           <Link to="/" className={navLinkStyles}>
-            Home
+            Accueil
           </Link>
           <Link to="/colocations" className={navLinkStyles}>
             Colocations
@@ -295,9 +295,9 @@ const Navbar = () => {
             </div>
           ) : (
             /* Logged out state - show "Get Started" button */
-            <Link to="/login">
+            <Link to="/register">
               <button className="bg-[#10b981] hover:bg-[#059669] text-white px-5 py-2 rounded-full font-bold text-sm tracking-tight cursor-pointer transition-all duration-300 flex items-center gap-2 group shadow-lg shadow-emerald-500/20">
-                Get Started
+                Commencer
                 <div className="bg-white/20 p-1.5 rounded-full group-hover:translate-x-1 transition-transform">
                   <FaArrowRight className="text-[10px]" />
                 </div>
@@ -332,7 +332,7 @@ const Navbar = () => {
         >
           {(() => {
             const mobileMenuItems = [
-              { to: "/", label: "Home", match: (p) => p === "/" },
+              { to: "/", label: "Accueil", match: (p) => p === "/" },
               {
                 to: "/colocations",
                 label: "Colocations",

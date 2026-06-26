@@ -81,35 +81,35 @@ export default function UniConnectListing() {
     },
     {
       id: "ac",
-      label: "Air Conditioning",
+      label: "Climatisation",
       icon: <FaSnowflake className="text-slate-800 text-[15px] shrink-0" />,
       active: false,
       desc: "In-unit cooling system",
     },
     {
       id: "heating",
-      label: "Heating",
+      label: "Chauffage",
       icon: <FaFire className="text-slate-800 text-[15px] shrink-0" />,
       active: false,
       desc: "Central or space heating",
     },
     {
       id: "kitchen",
-      label: "Kitchen",
+      label: "Cuisine",
       icon: <FaUtensils className="text-slate-800 text-[15px] shrink-0" />,
       active: false,
       desc: "Full kitchen utilities",
     },
     {
       id: "washing",
-      label: "Washing Machine",
+      label: "Machine à laver",
       icon: <FaTshirt className="text-slate-800 text-[15px] shrink-0" />,
       active: false,
       desc: "In-unit laundry machine",
     },
     {
       id: "parking",
-      label: "Parking",
+      label: "Stationnement",
       icon: <FaCar className="text-slate-800 text-[15px] shrink-0" />,
       active: false,
       desc: "Reserved parking space",
@@ -120,9 +120,9 @@ export default function UniConnectListing() {
   // Step 2: Capacity state
   const [capacity, setCapacity] = useState(3); // Total Rooms
   const [spots, setSpots] = useState(4); // Max Student Capacity
-  const [roomType, setRoomType] = useState("Shared Room");
+  const [roomType, setRoomType] = useState("Chambre Partagée");
   const [occupancy, setOccupancy] = useState(1); // Current occupancy slider
-  const [furnitureStatus, setFurnitureStatus] = useState("Fully Furnished");
+  const [furnitureStatus, setFurnitureStatus] = useState("Entièrement meublé");
   const [area, setArea] = useState(50);
 
   // Step 3: House Rules state
@@ -601,7 +601,7 @@ export default function UniConnectListing() {
                 {[
                   {
                     stepNum: 1,
-                    label: "Basic Details",
+                    label: "Informations de base",
                     icon: <FaEdit className="w-4 h-4 shrink-0" />,
                   },
                   {
@@ -611,7 +611,7 @@ export default function UniConnectListing() {
                   },
                   {
                     stepNum: 3,
-                    label: "House Rules",
+                    label: "Règles de la maison",
                     icon: <FaClipboardList className="w-4 h-4 shrink-0" />,
                   },
                   {
@@ -928,13 +928,13 @@ export default function UniConnectListing() {
                         <div className="flex flex-wrap gap-2">
                           {[
                             {
-                              id: "Single Room",
-                              label: "Single Room",
+                              id: "Chambre Individuelle",
+                              label: "Chambre Individuelle",
                               icon: <FaUser className="text-xs shrink-0" />,
                             },
                             {
-                              id: "Shared Room",
-                              label: "Shared Room",
+                              id: "Chambre Partagée",
+                              label: "Chambre Partagée",
                               icon: <FaUsers className="text-xs shrink-0" />,
                             },
                             {
@@ -1002,7 +1002,7 @@ export default function UniConnectListing() {
                         <div className="lg:col-span-2 flex flex-col gap-3 justify-between">
                           {[
                             {
-                              id: "Fully Furnished",
+                              id: "Entièrement meublé",
                               desc: "Ready to move in with all essentials.",
                             },
                             {
@@ -1068,28 +1068,28 @@ export default function UniConnectListing() {
                         {[
                           {
                             id: "noSmoking",
-                            title: "No Smoking",
+                            title: "Non Fumeur",
                             icon: (
                               <FaSmokingBan className="w-5 h-5 text-slate-500 shrink-0" />
                             ),
                           },
                           {
                             id: "quietHours",
-                            title: "Quiet Hours",
+                            title: "Heures de Calme",
                             icon: (
                               <FaMoon className="w-5 h-5 text-slate-500 shrink-0" />
                             ),
                           },
                           {
                             id: "studyFriendly",
-                            title: "Study Friendly",
+                            title: "Amical Études",
                             icon: (
                               <FaBookOpen className="w-5 h-5 text-slate-500 shrink-0" />
                             ),
                           },
                           {
                             id: "petsAllowed",
-                            title: "Pets Allowed",
+                            title: "Animaux Autorisés",
                             icon: (
                               <FaPaw className="w-5 h-5 text-slate-500 shrink-0" />
                             ),
@@ -1160,8 +1160,8 @@ export default function UniConnectListing() {
                       <div className="space-y-4">
                         {[
                           { value: "all", label: "Mixed / Any" },
-                          { value: "female", label: "Female Only" },
-                          { value: "male", label: "Male Only" },
+                          { value: "female", label: "Filles Uniquement" },
+                          { value: "male", label: "Garçons Uniquement" },
                         ].map((g) => (
                           <label
                             key={g.value}
@@ -1375,7 +1375,7 @@ export default function UniConnectListing() {
                             ),
                           },
                           {
-                            title: "Wide Angles",
+                            title: "Grands Angles",
                             desc: "Shoot from corners to capture the full scale of the rooms. Landscapes are preferred over portraits.",
                             icon: (
                               <FaExpandArrowsAlt className="w-5 h-5 text-[#10b981] shrink-0" />

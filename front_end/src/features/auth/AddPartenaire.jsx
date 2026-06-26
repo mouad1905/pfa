@@ -10,6 +10,12 @@ const SUBJECTS = [
   { icon: "A", label: "Anglais", key: "Anglais" },
   { icon: "F", label: "Français", key: "Français" },
   { icon: "✦", label: "Philosophie", key: "Philosophie" },
+  { icon: "📈", label: "Économie", key: "Économie" },
+  { icon: "⚖", label: "Droit", key: "Droit" },
+  { icon: "🧪", label: "Chimie", key: "Chimie" },
+  { icon: "🗺", label: "Histoire", key: "Histoire" },
+  { icon: "💰", label: "Finance", key: "Finance" },
+  { icon: "📊", label: "Statistiques", key: "Statistiques" },
 ];
 
 const BentoCard = ({ children, className = "" }) => (

@@ -25,6 +25,9 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply font-poppins antialiased text-gray-800 bg-gray-50;
   }

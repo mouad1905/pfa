@@ -28,7 +28,10 @@ import {
   FaTshirt,
   FaParking,
   FaStar as FaStarFilled,
-  FaRegStar as FaStarEmpty
+  FaRegStar as FaStarEmpty,
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight
 } from "react-icons/fa";
 
 const mapApiToHome = (item) => {
@@ -45,7 +48,7 @@ const mapApiToHome = (item) => {
       parsed.rules = item.reglement.split(",").map((r) => r.trim()).filter(Boolean);
     }
   }
-  const furnitureLabel = item.meuble ? "Fully Furnished" : "";
+  const furnitureLabel = item.meuble ? "Entièrement meublé" : "";
   return {
     id: item.id_hebergement,
     title: item.titre || [item.type, item.localisation].filter(Boolean).join(" - ") || "Hébergement",
@@ -182,6 +185,9 @@ function HomeDetails() {
     ? `https://maps.google.com/maps?q=${encodeURIComponent(home.location)},+Morocco&output=embed&z=15`
     : "";
 
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center mt-20">
@@ -208,7 +214,7 @@ function HomeDetails() {
   }
 
   const maxCapacity = Math.max(0, home.maxCapacity ?? 0);
-  const currentOccupants = Math.min(home.occupancy ?? 0, maxCapacity);
+  const currentOccupants = Math.min(home.occupants?.length ?? home.occupancy ?? 0, maxCapacity);
   const spotsLeft = Math.max(0, maxCapacity - currentOccupants);
 
   const posterInitials = (home.poster || "P")
@@ -342,11 +348,12 @@ function HomeDetails() {
     });
   };
 
-  // Pad images to fill bento grid (need at least 5 for full layout)
   const bentoImages = [...displayImages];
-  while (bentoImages.length < 5) {
-    bentoImages.push(bentoImages[0] || "");
-  }
+
+  const openGallery = (idx) => {
+    setGalleryIndex(idx);
+    setGalleryOpen(true);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-4 mt-28 font-poppins text-slate-900">
@@ -366,18 +373,60 @@ function HomeDetails() {
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
             src={bentoImages[0]}
             alt="Main"
+            onClick={() => openGallery(0)}
           />
         </div>
         {bentoImages.slice(1, 5).map((img, idx) => (
-          <div data-item key={idx} className="rounded-xl overflow-hidden shadow-sm border border-slate-200">
+          <div data-item key={idx} className="relative rounded-xl overflow-hidden shadow-sm border border-slate-200">
             <img
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
               src={img}
               alt={`Photo ${idx + 2}`}
+              onClick={() => openGallery(idx + 1)}
             />
+            {idx === 3 && bentoImages.length > 5 && (
+              <button
+                onClick={() => openGallery(5)}
+                className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold cursor-pointer hover:bg-black/60 transition"
+              >
+                +{bentoImages.length - 5} Voir tout
+              </button>
+            )}
           </div>
         ))}
       </section>
+
+      {/* Gallery Modal */}
+      {galleryOpen && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
+          <button
+            onClick={() => setGalleryOpen(false)}
+            className="absolute top-4 right-4 text-white text-2xl z-10 cursor-pointer hover:opacity-70"
+          >
+            <FaTimes />
+          </button>
+          <button
+            onClick={() => setGalleryIndex((galleryIndex - 1 + bentoImages.length) % bentoImages.length)}
+            className="absolute left-4 text-white text-3xl z-10 cursor-pointer hover:opacity-70"
+          >
+            <FaChevronLeft />
+          </button>
+          <img
+            src={bentoImages[galleryIndex]}
+            alt={`Photo ${galleryIndex + 1}`}
+            className="max-w-full max-h-full object-contain px-16"
+          />
+          <button
+            onClick={() => setGalleryIndex((galleryIndex + 1) % bentoImages.length)}
+            className="absolute right-4 text-white text-3xl z-10 cursor-pointer hover:opacity-70"
+          >
+            <FaChevronRight />
+          </button>
+          <div className="absolute bottom-4 text-white text-sm font-medium">
+            {galleryIndex + 1} / {bentoImages.length}
+          </div>
+        </div>
+      )}
 
       {/* Property Header */}
       <section data-anim="fade-up" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -500,7 +549,7 @@ function HomeDetails() {
                   Ouvrir dans Maps
                 </a>
                 <iframe
-                  title="Location Map"
+                  title="Carte"
                   src={googleMapsUrl}
                   className="w-full h-full border-0"
                   loading="lazy"

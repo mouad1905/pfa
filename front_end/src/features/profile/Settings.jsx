@@ -201,144 +201,155 @@ export default function Settings() {
   return (
     <div className="h-screen bg-gray-50 p-4">
       <div className="bg-white rounded-2xl shadow-md p-5 h-full flex flex-col">
-          <h2 className="text-2xl font-bold mb-4 shrink-0">Paramètres du compte</h2>
+        <h2 className="text-2xl font-bold mb-4 shrink-0">
+          Paramètres du compte
+        </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-3 flex-1 overflow-y-auto">
-            {/* Photo de profil */}
-            <div className="flex items-center gap-4 mb-3">
-              <div className="relative">
-                {avatarSrc ? (
-                  <img
-                    src={avatarSrc}
-                    className="w-16 h-16 rounded-full object-cover border"
-                    alt=""
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 border flex items-center justify-center text-emerald-600 text-lg font-bold">
-                    {((loggedInUser?.prenom?.[0] || "") + (loggedInUser?.nom?.[0] || "")).toUpperCase()}
-                  </div>
-                )}
-                <label className="absolute bottom-0 right-0 bg-emerald-600 hover:bg-emerald-700 text-white w-6 h-6 rounded-full flex items-center justify-center cursor-pointer shadow-md transition border-none">
-                  <span class="text-lg leading-none">+</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-              <div>
-                <h3 className="font-semibold">Photo de profil</h3>
-                <p className="text-sm text-gray-500">JPG, PNG ou WEBP</p>
-                {photoFile && (
-                  <button
-                    type="button"
-                    onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
-                    className="text-sm text-red-500 hover:text-red-600 mt-1 cursor-pointer border-none bg-transparent"
-                  >
-                    Supprimer la photo
-                  </button>
-                )}
-              </div>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-3 flex-1 overflow-y-auto"
+        >
+          {/* Photo de profil */}
+          <div className="flex items-center gap-4 mb-3">
+            <div className="relative">
+              {avatarSrc ? (
+                <img
+                  src={avatarSrc}
+                  className="w-16 h-16 rounded-full object-cover border"
+                  alt=""
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-emerald-100 border flex items-center justify-center text-emerald-600 text-lg font-bold">
+                  {(
+                    (loggedInUser?.prenom?.[0] || "") +
+                    (loggedInUser?.nom?.[0] || "")
+                  ).toUpperCase()}
+                </div>
+              )}
+              <label className="absolute bottom-0 right-0 bg-emerald-600 hover:bg-emerald-700 text-white w-6 h-6 rounded-full flex items-center justify-center cursor-pointer shadow-md transition border-none">
+                <span class="text-lg leading-none">+</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+              </label>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Prénom</label>
-                <input
-                  type="text"
-                  name="prenom"
-                  value={formData.prenom}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 border rounded-lg"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Nom</label>
-                <input
-                  type="text"
-                  name="nom"
-                  value={formData.nom}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 border rounded-lg"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  disabled
-                  className="w-full mt-1 p-3 border rounded-lg bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Téléphone</label>
-                <input
-                  type="tel"
-                  name="telephone"
-                  value={formData.telephone}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 border rounded-lg"
-                />
-              </div>
-            </div>
-
-            {isStudent && (
-              <div>
-                <label className="text-sm font-medium">Niveau d'études</label>
-                <select
-                  name="niveau_etude"
-                  value={formData.niveau_etude}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 border rounded-lg bg-white"
-                >
-                  <option value="">Sélectionnez votre niveau</option>
-                  <option value="Bac+1">Bac+1</option>
-                  <option value="Bac+2">Bac+2</option>
-                  <option value="Bac+3">Bac+3</option>
-                  <option value="Bac+4">Bac+4</option>
-                  <option value="Bac+5">Bac+5</option>
-                </select>
-              </div>
-            )}
-
             <div>
-              <label className="text-sm font-medium">Description</label>
-              <textarea
-                rows={2}
-                name="about"
-                value={formData.about}
+              <h3 className="font-semibold">Photo de profil</h3>
+              <p className="text-sm text-gray-500">JPG, PNG ou WEBP</p>
+              {photoFile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                  }}
+                  className="text-sm text-red-500 hover:text-red-600 mt-1 cursor-pointer border-none bg-transparent"
+                >
+                  Supprimer la photo
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Prénom</label>
+              <input
+                type="text"
+                name="prenom"
+                value={formData.prenom}
                 onChange={handleChange}
-                className="w-full mt-1 p-3 border rounded-lg resize-none"
+                className="w-full mt-1 p-3 border rounded-lg"
+                required
               />
             </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(`/profile/${loggedInUser.id_user}`)}
-                className="px-5 py-2 border rounded-lg hover:bg-gray-50 cursor-pointer"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg cursor-pointer"
-              >
-                {loading ? "Enregistrement..." : "Enregistrer"}
-              </button>
+            <div>
+              <label className="text-sm font-medium">Nom</label>
+              <input
+                type="text"
+                name="nom"
+                value={formData.nom}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border rounded-lg"
+                required
+              />
             </div>
-          </form>
-        </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                disabled
+                className="w-full mt-1 p-3 border rounded-lg bg-gray-100"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Téléphone</label>
+              <input
+                type="tel"
+                name="telephone"
+                value={formData.telephone}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border rounded-lg"
+              />
+            </div>
+          </div>
+
+          {isStudent && (
+            <div>
+              <label className="text-sm font-medium">Niveau d'études</label>
+              <select
+                name="niveau_etude"
+                value={formData.niveau_etude}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 border rounded-lg bg-white"
+              >
+                <option value="">Sélectionnez votre niveau</option>
+                <option value="Bac+1">Bac+1</option>
+                <option value="Bac+2">Bac+2</option>
+                <option value="Bac+3">Bac+3</option>
+                <option value="Bac+4">Bac+4</option>
+                <option value="Bac+5">Bac+5</option>
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="text-sm font-medium">Description</label>
+            <textarea
+              rows={4}
+              name="about"
+              value={formData.about}
+              onChange={handleChange}
+              className="w-full mt-1 p-3 border rounded-lg resize-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(`/profile/${loggedInUser.id_user}`)}
+              className="px-5 py-2 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg cursor-pointer"
+            >
+              {loading ? "Enregistrement..." : "Enregistrer"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

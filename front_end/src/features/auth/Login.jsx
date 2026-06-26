@@ -46,8 +46,8 @@ const LoginPage = () => {
         );
       }
     } catch (err) {
-      console.error("Error during login:", err);
-      setError("An error occurred during login. Is the server running?");
+    console.error("Error during login:", err);
+    setError("Une erreur est survenue lors de la connexion. Le serveur est-il en marche ?");
     }
   };
 
@@ -60,7 +60,7 @@ const LoginPage = () => {
           <div className="hidden md:block lg:w-135 overflow-hidden">
             <img
               src="./src/assets/images/loginPicture.jpg"
-              alt="Login Visual"
+              alt="Connexion"
               className="w-full h-full object-cover"
             />
           </div>
@@ -69,7 +69,7 @@ const LoginPage = () => {
           <div className="w-full md:w-2/3 p-8 md:p-12">
             <div className="text-left mb-8 flex flex-row items-center gap-4">
               <FaSignInAlt className="text-3xl text-[#10b981] " />
-              <h2 className="text-3xl font-bold text-[#10b981]">Log In</h2>
+              <h2 className="text-3xl font-bold text-[#10b981]">Connexion</h2>
             </div>
 
             <form className="space-y-6" onSubmit={handleLogin}>
@@ -86,7 +86,7 @@ const LoginPage = () => {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username or Email"
+                  placeholder="Nom d'utilisateur ou Email"
                   className="w-full border-b border-gray-400 py-3 px-2 outline-none focus:border-[#008080] focus:ring-1 focus:ring-[#008080]/20 focus:rounded-md transition-all duration-500 placeholder-gray-500"
                   required
                 />
@@ -100,7 +100,7 @@ const LoginPage = () => {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
+                  placeholder="Mot de passe"
                   className="w-full border-b border-gray-400 py-3 px-2 outline-none focus:border-[#008080] focus:ring-1 focus:ring-[#008080]/20 focus:rounded-md transition-all duration-500 placeholder-gray-500"
                   required
                 />
@@ -118,7 +118,7 @@ const LoginPage = () => {
                   htmlFor="remember_me"
                   className="text-gray-700 cursor-pointer text-sm font-medium"
                 >
-                  Remember Me!
+                  Se souvenir de moi !
                 </label>
               </div>
 
@@ -128,7 +128,7 @@ const LoginPage = () => {
                   type="submit"
                   className="w-full md:w-55 bg-white text-[#10b981] border border-[#008080] font-bold py-3 px-6 rounded-full hover:bg-[#10b981] hover:text-white transition-all cursor-pointer duration-500 shadow-md active:scale-95"
                 >
-                  Submit
+                  Se connecter
                 </button>
               </div>
             </form>
@@ -136,12 +136,12 @@ const LoginPage = () => {
             {/* Registration Link */}
             <div className="mt-8 text-center md:text-left">
               <p className="text-gray-600">
-                Don't have an account?{" "}
+                Pas encore de compte ?{" "}
                 <a
                   href="/register"
                   className="text-[#10b981] font-semibold hover:underline"
                 >
-                  Register Here
+                  S'inscrire ici
                 </a>
               </p>
             </div>

@@ -10,7 +10,9 @@ import {
   FaTrashAlt, 
   FaEye,
   FaMapMarkerAlt,
-  FaUser
+  FaUser,
+  FaSearch,
+  FaTimes
 } from "react-icons/fa";
 
 const ManageHomes = () => {
@@ -20,6 +22,7 @@ const ManageHomes = () => {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [search, setSearch] = useState("");
 
   const loadHomes = async () => {
     try {
@@ -119,8 +122,15 @@ const ManageHomes = () => {
   };
 
   const filteredHomes = homes.filter(h => {
-    if (filterStatus === "all") return true;
-    return h.statut === filterStatus;
+    if (filterStatus !== "all" && h.statut !== filterStatus) return false;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const titre = (h.titre || h.type || "").toLowerCase();
+      const proprietaire = h.proprietaire ? `${h.proprietaire.prenom} ${h.proprietaire.nom}`.toLowerCase() : "";
+      const localisation = (h.localisation || h.location || "").toLowerCase();
+      if (!titre.includes(q) && !proprietaire.includes(q) && !localisation.includes(q)) return false;
+    }
+    return true;
   });
 
   return (
@@ -140,6 +150,26 @@ const ManageHomes = () => {
         >
           Rafraîchir les données
         </button>
+      </div>
+
+      {/* SEARCH */}
+      <div className="relative mb-4">
+        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par titre, propriétaire ou localisation…"
+          className="w-full bg-white border border-slate-200 rounded-2xl pl-11 pr-12 py-3 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+          >
+            <FaTimes />
+          </button>
+        )}
       </div>
 
       {/* FILTER TABS */}
@@ -298,10 +328,10 @@ const ManageHomes = () => {
                   );
                 })}
 
-                {filteredHomes.length === 0 && (
+                  {filteredHomes.length === 0 && (
                   <tr>
                     <td colSpan="7" className="p-12 text-center text-slate-400 font-medium">
-                      Aucun hébergement trouvé pour cette catégorie.
+                      {search ? "Aucun hébergement ne correspond à votre recherche." : "Aucun hébergement trouvé pour cette catégorie."}
                     </td>
                   </tr>
                 )}

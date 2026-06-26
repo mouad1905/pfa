@@ -30,9 +30,9 @@ export default function EditHouse() {
   // Step 2: Capacity
   const [capacity, setCapacity] = useState(1);
   const [spots, setSpots] = useState(1);
-  const [roomType, setRoomType] = useState("Shared Room");
+  const [roomType, setRoomType] = useState("Chambre Partagée");
   const [occupancy, setOccupancy] = useState(0);
-  const [furnitureStatus, setFurnitureStatus] = useState("Fully Furnished");
+  const [furnitureStatus, setFurnitureStatus] = useState("Entièrement meublé");
   const [area, setArea] = useState(0);
   const [neighborhood, setNeighborhood] = useState("");
 
@@ -66,9 +66,9 @@ export default function EditHouse() {
         setType(h.type || "appartement");
         setCapacity(parseInt(h.nbr_chambres) || 1);
         setSpots(parseInt(h.max_capacity) || 1);
-        setRoomType(h.type_chambre || "Shared Room");
+        setRoomType(h.type_chambre || "Chambre Partagée");
         setOccupancy(parseInt(h.nb_locataires) || 0);
-        setFurnitureStatus(h.meuble ? "Fully Furnished" : "Unfurnished");
+        setFurnitureStatus(h.meuble ? "Entièrement meublé" : "Non meublé");
         setArea(parseFloat(h.superficie) || 0);
         setGender(h.genre_colocataires || "mixte");
         setStudentsOnly(h.students_only !== false);
@@ -93,28 +93,28 @@ export default function EditHouse() {
           setCustomRules(custom.join(", "));
 
           const defaultAmenities = [
-            { id: "wifi", label: "WiFi", active: false, desc: "High-speed internet" },
-            { id: "electricity", label: "Electricity", active: false, desc: "Power grid" },
-            { id: "water", label: "Water", active: false, desc: "Running water" },
-            { id: "ac", label: "Air Conditioning", active: false, desc: "Cooling system" },
-            { id: "heating", label: "Heating", active: false, desc: "Space heating" },
-            { id: "kitchen", label: "Kitchen", active: false, desc: "Full kitchen" },
-            { id: "washing", label: "Washing Machine", active: false, desc: "In-unit laundry" },
-            { id: "parking", label: "Parking", active: false, desc: "Reserved parking" },
+            { id: "wifi", label: "WiFi", active: false, desc: "Internet haut débit" },
+            { id: "electricity", label: "Électricité", active: false, desc: "Réseau électrique" },
+            { id: "water", label: "Eau", active: false, desc: "Eau courante" },
+            { id: "ac", label: "Climatisation", active: false, desc: "Système de climatisation" },
+            { id: "heating", label: "Chauffage", active: false, desc: "Chauffage central" },
+            { id: "kitchen", label: "Cuisine", active: false, desc: "Cuisine équipée" },
+            { id: "washing", label: "Machine à laver", active: false, desc: "Buanderie sur place" },
+            { id: "parking", label: "Stationnement", active: false, desc: "Place de parking réservée" },
           ];
           const ams = reg.amenities || [];
           defaultAmenities.forEach(a => { if (ams.includes(a.label)) a.active = true; });
           setAmenitiesList(defaultAmenities);
         } else {
           setAmenitiesList([
-            { id: "wifi", label: "WiFi", active: true, desc: "High-speed internet" },
-            { id: "electricity", label: "Electricity", active: true, desc: "Power grid" },
-            { id: "water", label: "Water", active: true, desc: "Running water" },
-            { id: "ac", label: "Air Conditioning", active: false, desc: "Cooling system" },
-            { id: "heating", label: "Heating", active: false, desc: "Space heating" },
-            { id: "kitchen", label: "Kitchen", active: false, desc: "Full kitchen" },
-            { id: "washing", label: "Washing Machine", active: false, desc: "In-unit laundry" },
-            { id: "parking", label: "Parking", active: false, desc: "Reserved parking" },
+            { id: "wifi", label: "WiFi", active: true, desc: "Internet haut débit" },
+            { id: "electricity", label: "Électricité", active: true, desc: "Réseau électrique" },
+            { id: "water", label: "Eau", active: true, desc: "Eau courante" },
+            { id: "ac", label: "Climatisation", active: false, desc: "Système de climatisation" },
+            { id: "heating", label: "Chauffage", active: false, desc: "Chauffage central" },
+            { id: "kitchen", label: "Cuisine", active: false, desc: "Cuisine équipée" },
+            { id: "washing", label: "Machine à laver", active: false, desc: "Buanderie sur place" },
+            { id: "parking", label: "Stationnement", active: false, desc: "Place de parking réservée" },
           ]);
         }
       } catch (err) {
@@ -188,7 +188,7 @@ export default function EditHouse() {
         max_capacity: parseInt(spots) || 1,
         genre_colocataires: gender,
         students_only: studentsOnly,
-        meuble: furnitureStatus === "Fully Furnished",
+        meuble: furnitureStatus === "Entièrement meublé",
         reglement: JSON.stringify({ rules: rulesList, amenities: activeAmenities }),
       };
 
@@ -351,7 +351,7 @@ export default function EditHouse() {
               <div>
                 <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-3">Type de chambre</h4>
                 <div className="flex flex-wrap gap-2">
-                  {["Single Room", "Shared Room", "Studio"].map(r => (
+                  {["Chambre Individuelle", "Chambre Partagée", "Studio"].map(r => (
                     <button type="button" key={r} onClick={() => setRoomType(r)}
                       className={`px-4 py-2.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${roomType === r ? "bg-[#edfdf6] border-[#10b981] text-[#10b981]" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
                       {r}
@@ -388,7 +388,7 @@ export default function EditHouse() {
                     {[
                       { id: "noSmoking", title: "Non fumeur", icon: <FaSmokingBan /> },
                       { id: "quietHours", title: "Heures calmes", icon: <FaMoon /> },
-                      { id: "studyFriendly", title: "Study Friendly", icon: <FaBookOpen /> },
+                      { id: "studyFriendly", title: "Amical Études", icon: <FaBookOpen /> },
                       { id: "petsAllowed", title: "Animaux acceptés", icon: <FaPaw /> },
                     ].map(rule => (
                       <div key={rule.id} onClick={() => setRules(prev => ({ ...prev, [rule.id]: !prev[rule.id] }))}

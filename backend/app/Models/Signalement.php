@@ -15,6 +15,7 @@ class Signalement extends Model
     protected $fillable = [
         'id_auteur',
         'id_cible',
+        'id_hebergement',
         'raison',
         'details',
         'statut'
@@ -28,5 +29,10 @@ class Signalement extends Model
     public function cible()
     {
         return $this->belongsTo(Utilisateur::class, 'id_cible', 'id_user');
+    }
+
+    public function hebergement()
+    {
+        return $this->belongsTo(Hebergement::class, 'id_hebergement', 'id_hebergement');
     }
 }

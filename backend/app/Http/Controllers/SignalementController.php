@@ -11,17 +11,19 @@ class SignalementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_cible' => 'required|exists:utilisateur,id_user',
-            'raison'   => 'required|string|max:50',
-            'details'  => 'nullable|string',
+            'id_cible'      => 'required|exists:utilisateur,id_user',
+            'id_hebergement' => 'nullable|exists:hebergement,id_hebergement',
+            'raison'        => 'required|string|max:50',
+            'details'       => 'nullable|string',
         ]);
 
         $signalement = Signalement::create([
-            'id_auteur' => Auth::id(), // Récupéré via le Token
-            'id_cible'  => $validated['id_cible'],
-            'raison'    => $validated['raison'],
-            'details'   => $validated['details'],
-            'statut'    => 'en_attente'
+            'id_auteur'      => Auth::id(),
+            'id_cible'       => $validated['id_cible'],
+            'id_hebergement' => $validated['id_hebergement'] ?? null,
+            'raison'         => $validated['raison'],
+            'details'        => $validated['details'],
+            'statut'         => 'en_attente'
         ]);
 
         return response()->json([
@@ -52,8 +54,7 @@ class SignalementController extends Controller
     // Lister tous les signalements
     public function index()
     {
-        // On peut charger les relations pour voir qui a signalé qui
-        $signalements = Signalement::with(['auteur', 'cible'])->get();
+        $signalements = Signalement::with(['auteur', 'cible', 'hebergement'])->get();
         return response()->json($signalements);
     }
 

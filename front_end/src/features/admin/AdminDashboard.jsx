@@ -427,7 +427,7 @@ const AdminDashboard = () => {
         <div className="flex items-center justify-around">
           <button className="flex flex-col items-center gap-0.5 text-[#008282]">
             <FaChartBar className="text-lg" />
-            <span className="text-[10px] font-bold">Dashboard</span>
+            <span className="text-[10px] font-bold">Tableau de bord</span>
           </button>
           <button className="flex flex-col items-center gap-0.5 text-slate-400">
             <FaHome className="text-lg" />

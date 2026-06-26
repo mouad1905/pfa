@@ -61,6 +61,9 @@ export default function StudentProfile() {
   const { user: loggedInUser } = useContext(AuthContext);
   const [conversationsCount, setConversationsCount] = useState(0);
   const [userResourcesCount, setUserResourcesCount] = useState(0);
+  const [newNote, setNewNote] = useState(0);
+  const [newComment, setNewComment] = useState("");
+  const [submittingEval, setSubmittingEval] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -88,7 +91,14 @@ export default function StudentProfile() {
     if (!user?.id_user) return;
     const fetchCounts = async () => {
       try {
-        const resourceUrl = isHousingOwner ? API_URLS.MES_HEBERGEMENTS : API_URLS.MES_COURS;
+        let resourceUrl;
+        if (isHousingOwner) {
+          resourceUrl = API_URLS.MES_HEBERGEMENTS;
+        } else if (isProfessor) {
+          resourceUrl = API_URLS.MES_COURS;
+        } else {
+          resourceUrl = API_URLS.FAVORIS;
+        }
         const [convRes, resourceRes] = await Promise.allSettled([
           fetchData(API_URLS.CONVERSATIONS),
           fetchData(resourceUrl),
@@ -163,6 +173,32 @@ export default function StudentProfile() {
   const discussionsCount = conversationsCount;
 
   const about = user.about && user.about.trim() ? user.about : null;
+
+  const handleEvalSubmit = async () => {
+    if (newNote === 0) { Swal.fire("Attention", "Veuillez sélectionner une note.", "warning"); return; }
+    setSubmittingEval(true);
+    try {
+      await fetchData(`http://127.0.0.1:8000/api/evaluations`, {
+        method: "POST",
+        body: JSON.stringify({
+          id_cible: user.id_user,
+          note: newNote,
+          commentaire: newComment.trim() || "",
+        }),
+      });
+      Swal.fire("Merci !", "Votre évaluation a été enregistrée.", "success");
+      setNewNote(0);
+      setNewComment("");
+      // Reload user data to refresh reviews
+      const url = id ? `http://127.0.0.1:8000/api/users/${id}` : API_URLS.USER;
+      const data = await fetchData(url);
+      setUser(data.data || data);
+    } catch (err) {
+      Swal.fire("Erreur", err.message || "Impossible de soumettre l'évaluation.", "error");
+    } finally {
+      setSubmittingEval(false);
+    }
+  };
 
   const handleEditProfile = () => navigate("/settings");
 
@@ -340,7 +376,7 @@ export default function StudentProfile() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
-                  <p className="text-xs opacity-80">{isHousingOwner ? "Annonces" : "Ressources"}</p>
+                  <p className="text-xs opacity-80">{isHousingOwner ? "Annonces" : isProfessor ? "Cours" : "Favoris"}</p>
                   <p className="text-2xl font-bold">{resourcesCount}</p>
                 </div>
                 <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
@@ -417,6 +453,7 @@ export default function StudentProfile() {
             </div>
 
             {/* Reviews (Avis) */}
+            {loggedInUser && (
             <div className="lg:col-span-3">
               <div className="flex items-center gap-4 mb-4">
                 <h3 className="text-xl font-semibold text-[#191c1d]">Avis</h3>
@@ -424,6 +461,39 @@ export default function StudentProfile() {
                   {evaluationsCount}
                 </span>
               </div>
+
+              {/* Formulaire d'évaluation */}
+              {!isOwnProfile && (
+                <div className="bg-white rounded-xl p-6 mb-6 border border-[#bccac2]/30 shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+                  <p className="text-sm font-bold text-[#191c1d] mb-3">Noter {isProfessor ? "ce professeur" : "cet étudiant"}</p>
+                  <div className="flex gap-1 mb-3">
+                    {[1,2,3,4,5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewNote(star)}
+                        className={`text-2xl transition cursor-pointer ${star <= newNote ? "text-[#006b53]" : "text-[#e1e3e4]"}`}
+                      >
+                        <FaStar />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    rows={3}
+                    placeholder={`Partagez votre expérience avec ${isProfessor ? "ce professeur" : "cet étudiant"}...`}
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="w-full p-3 bg-[#f3f4f5] border border-[#bccac2]/30 rounded-lg text-sm outline-none focus:border-[#006b53] transition resize-none"
+                  />
+                  <button
+                    onClick={handleEvalSubmit}
+                    disabled={submittingEval}
+                    className="mt-3 px-6 py-2 bg-[#006b53] text-white text-sm font-medium rounded-lg hover:bg-[#005044] transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {submittingEval ? "Envoi..." : "Envoyer l'évaluation"}
+                  </button>
+                </div>
+              )}
 
               {reviewsList.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -494,12 +564,13 @@ export default function StudentProfile() {
                     Aucun avis pour le moment
                   </p>
                   <p className="text-[#4f606f] max-w-sm mt-2">
-                    Les avis de vos pairs et professeurs apparaîtront ici dès
-                    qu'ils auront évalué vos contributions.
+                    Les avis apparaîtront ici dès que d'autres utilisateurs
+                    auront évalué ce profil.
                   </p>
                 </div>
               )}
             </div>
+            )}
           </section>
         </div>
   );

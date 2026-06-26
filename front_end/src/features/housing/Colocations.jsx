@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useContext } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-gsap.registerPlugin(ScrollTrigger);
+
 import { useNavigate, Link } from "react-router-dom";
 import API_BASE, { API_URLS, fetchData } from "../../api/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -40,7 +38,7 @@ const ColocationCard = ({ c, onClick, isFavori, onToggleFavori }) => {
 
   const spotsText =
     c.maxCapacity > 0
-      ? `${c.occupancy}/${c.maxCapacity} spots`
+      ? `${c.occupancy}/${c.maxCapacity} places`
       : `${c.occupancy} occupé`;
 
   // Formatting price DH / MO
@@ -57,24 +55,24 @@ const ColocationCard = ({ c, onClick, isFavori, onToggleFavori }) => {
       return c.rules
         .map((r) => {
           const ruleLower = r.toLowerCase();
-          if (ruleLower.includes("fumeur")) return "NO SMOKING";
+          if (ruleLower.includes("fumeur")) return "NON FUMEUR";
           if (ruleLower.includes("calme") || ruleLower.includes("bruit"))
-            return "QUIET ZONE";
-          if (ruleLower.includes("animaux")) return "PETS ALLOWED";
+            return "ZONE CALME";
+          if (ruleLower.includes("animaux")) return "ANIMAUX AUTORISÉS";
           if (ruleLower.includes("étude") || ruleLower.includes("etude"))
-            return "STUDY FRIENDLY";
-          if (ruleLower.includes("wifi")) return "WIFI INCLUDED";
+            return "AMICAL ÉTUDES";
+          if (ruleLower.includes("wifi")) return "WIFI INCLUS";
           return r.toUpperCase();
         })
         .slice(0, 3);
     }
     const genre =
       c.gender === "femme"
-        ? "FEMALE ONLY"
+        ? "FILLES UNIQUEMENT"
         : c.gender === "homme"
-          ? "MALE ONLY"
-          : "MIXED";
-    const meuble = c.meuble ? "FULLY FURNISHED" : "";
+          ? "GARÇONS UNIQUEMENT"
+          : "MIXTE";
+    const meuble = c.meuble ? "ENTIÈREMENT MEUBLÉ" : "";
     return [genre, meuble, c.type?.toUpperCase()].filter(Boolean).slice(0, 3);
   })();
 
@@ -361,7 +359,7 @@ const Colocations = () => {
           location: item.localisation,
           rooms: item.nbr_chambres,
           maxCapacity: item.max_capacity ?? 0,
-          occupancy: item.nb_locataires ?? 0,
+          occupancy: item.occupants?.length ?? item.nb_locataires ?? 0,
           area: item.superficie,
           type: item.type,
           roomType: item.type_chambre || "Chambre",
@@ -537,39 +535,18 @@ const Colocations = () => {
     setFavoriFilter(false);
   };
 
-  useEffect(() => {
-    const sections = gsap.utils.toArray("[data-anim]");
-    sections.forEach((section) => {
-      const anim = section.getAttribute("data-anim");
-      const items = section.querySelectorAll("[data-item]");
-      if (anim === "stagger-fade-up" && items.length) {
-        gsap.fromTo(items,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1,
-            scrollTrigger: { trigger: section, start: "top 82%" } }
-        );
-      }
-      if (anim === "fade-up") {
-        gsap.fromTo(section,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
-            scrollTrigger: { trigger: section, start: "top 82%" } }
-        );
-      }
-    });
-    return () => ScrollTrigger.getAll().forEach(st => st.kill());
-  }, []);
-
   return (
-    <section className="min-h-screen bg-gray-100 py-4 mt-32 px-4 sm:px-8 font-poppins">
+    <section className="min-h-screen bg-gray-100 py-4 mt-28 px-4 sm:px-8 font-poppins">
       <div className="max-w-7xl mx-auto">
         {/* ── HEADER ── */}
-        <div data-anim="fade-up" className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ">
+        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ">
           <h1 className="text-4xl font-extrabold text-[#0b1c30] leading-tight tracking-tight">
             Annonces <span className="text-emerald-600">Colocation</span>
           </h1>
 
-          {(!isAuthenticated || user?.role === "locateur" || user?.role === "proprietaire") && (
+          {(!isAuthenticated ||
+            user?.role === "locateur" ||
+            user?.role === "proprietaire") && (
             <div>
               <button
                 onClick={() => {
@@ -779,7 +756,7 @@ const Colocations = () => {
             </button>
           </div>
         ) : (
-          <div data-anim="stagger-fade-up" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visible.map((c) => (
               <ColocationCard
                 key={c.id}

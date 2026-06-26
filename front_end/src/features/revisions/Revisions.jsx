@@ -1,7 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-gsap.registerPlugin(ScrollTrigger);
+
 import { API_URLS, fetchData } from "../../api/api";
 import { FaArrowRight } from "react-icons/fa";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
@@ -106,29 +104,6 @@ const Revisions = () => {
       return planWeight(b) - planWeight(a);
     });
 
-  useEffect(() => {
-    const sections = gsap.utils.toArray("[data-anim]");
-    sections.forEach((section) => {
-      const anim = section.getAttribute("data-anim");
-      const items = section.querySelectorAll("[data-item]");
-      if (anim === "stagger-fade-up" && items.length) {
-        gsap.fromTo(items,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1,
-            scrollTrigger: { trigger: section, start: "top 82%" } }
-        );
-      }
-      if (anim === "fade-up") {
-        gsap.fromTo(section,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
-            scrollTrigger: { trigger: section, start: "top 82%" } }
-        );
-      }
-    });
-    return () => ScrollTrigger.getAll().forEach(st => st.kill());
-  }, []);
-
   return (
     <>
       {/* Google Fonts */}
@@ -147,7 +122,7 @@ const Revisions = () => {
       >
         <div className="max-w-300 mx-auto">
           {/* Hero Header */}
-          <section data-anim="fade-up" className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          <section className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="max-w-2xl">
               <span className="text-emerald-600 text-xs font-semibold uppercase tracking-wider mb-2 block">
                 Réservez un cours
@@ -294,7 +269,7 @@ const Revisions = () => {
           </section>
 
           {/* Instructor Grid */}
-          <section data-anim="stagger-fade-up" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredData.map((profile) => {
               const plan =
                 localStorage.getItem(`unicons_pub_formula_${profile.id}`) ||
@@ -305,7 +280,6 @@ const Revisions = () => {
               return (
                 <div
                   key={profile.id}
-                  data-item
                   className={`group bg-white rounded-xl overflow-hidden border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative ${
                     isGold
                       ? "border-amber-400 shadow-md shadow-amber-100/60 ring-1 ring-amber-300/30"

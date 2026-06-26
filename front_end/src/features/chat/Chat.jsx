@@ -45,9 +45,9 @@ export default function Chat({ noFrame }) {
   };
 
   return (
-    <div className={`${noFrame ? "" : "bg-[#f8fafc]  pb-4 min-h-screen"}`}>
+    <div className={`${noFrame ? "" : "bg-[#f8fafc]"}`}>
       <div
-        className={`${noFrame ? "h-full" : "px-0 h-[calc(100vh-120px)] min-h-[500px]"}`}
+        className={`${noFrame ? "h-full" : "px-0 h-[calc(100vh-112px)] min-h-[500px]"}`}
       >
         <div className="bg-white h-full overflow-hidden flex">
           <Sidebar

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/users/{id}', [AuthController::class, 'showProfile']);
+Route::get('/professeurs', [AuthController::class, 'getProfesseurs']);
 
 // Routes publiques
 Route::get('/hebergements', [HebergementController::class, 'index']);
@@ -61,14 +62,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cours (Professeur / Admin)
     Route::middleware('role:professeur,admin')->group(function () {
+        Route::get('/professeur/statistiques', [CoursController::class, 'getStats']);
         Route::get('/mes-cours', [CoursController::class, 'mesCours']);
         Route::post('/cours', [CoursController::class, 'store']);
+        Route::put('/cours/{id}', [CoursController::class, 'update']);
     });
 
-    // Évaluations (étudiants uniquement — un étudiant évalue un professeur/propriétaire)
-    Route::middleware('role:etudiant')->group(function () {
-        Route::post('/evaluations', [EvaluationController::class, 'store']);
-    });
+    // Évaluations (tous les utilisateurs connectés peuvent évaluer)
+    Route::post('/evaluations', [EvaluationController::class, 'store']);
 
     // Paiements (tous les utilisateurs connectés)
     Route::post('/paiements', [PaiementController::class, 'store']);

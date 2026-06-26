@@ -24,6 +24,7 @@ import ManageUsers from "../features/admin/ManageUsers";
 import ManageSignales from "../features/admin/ManageSignales";
 import AddHouse from "../features/housing/AddHouse";
 import EditHouse from "../features/housing/EditHouse";
+import EditCourse from "../features/revisions/EditCourse";
 import Dashboard from "../features/dashboard/Dashboard";
 import Security from "../features/profile/Security";
 import ScrollToTop from "../components/layout/ScrollToTop";
@@ -34,14 +35,14 @@ import AppLayout from "../components/layout/AppLayout";
 
 function PublicLayout() {
   return (
-    <>
+    <div className="overflow-x-hidden">
       <Navbar />
       <div className="min-h-screen">
         <Outlet />
       </div>
       <Footer />
       <ChatFloat />
-    </>
+    </div>
   );
 }
 
@@ -76,6 +77,7 @@ export default function AppRoutes() {
         <Route path="/register/locateur" element={<LocateurRegister />} />
         <Route path="/addHouse" element={<AddHouse />} />
         <Route path="/editHouse/:id" element={<EditHouse />} />
+        <Route path="/editCours/:id" element={<EditCourse />} />
 
         <Route element={<AppLayout />}>
           <Route path="/profile/:id?" element={<Profile />} />

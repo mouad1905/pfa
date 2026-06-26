@@ -22,7 +22,7 @@ class StoreCoursRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'matiere' => 'required|string|max:100|exists:matiere,nom',
+            'matiere' => 'required|string|max:100',
             'prix' => 'required|numeric|min:0',
             'type_prix' => 'required|in:DH/h',
             'niveau_etude' => 'required|string|max:100',

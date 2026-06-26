@@ -40,21 +40,21 @@ const StepPersonalInfo = ({ data, setData }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Field label="First Name">
+      <Field label="Prénom">
         <Input
-          placeholder="e.g. Ahmed"
+          placeholder="ex. Ahmed"
           value={data.firstName}
           onChange={set("firstName")}
         />
       </Field>
-      <Field label="Last Name">
+      <Field label="Nom">
         <Input
-          placeholder="e.g. Benali"
+          placeholder="ex. Benali"
           value={data.lastName}
           onChange={set("lastName")}
         />
       </Field>
-      <Field label="Email Address">
+      <Field label="Adresse Email">
         <Input
           type="email"
           placeholder="prof@example.com"
@@ -62,7 +62,7 @@ const StepPersonalInfo = ({ data, setData }) => {
           onChange={set("email")}
         />
       </Field>
-      <Field label="Phone Number">
+      <Field label="Numéro de téléphone">
         <Input
           type="tel"
           placeholder="+212 6XX XXX XXX"
@@ -70,15 +70,15 @@ const StepPersonalInfo = ({ data, setData }) => {
           onChange={set("phone")}
         />
       </Field>
-      <Field label="Date of Birth">
+      <Field label="Date de naissance">
         <Input type="date" value={data.dob} onChange={set("dob")} />
       </Field>
       <div />
-      <Field label="Password">
+      <Field label="Mot de passe">
         <div className="relative">
           <Input
             type={show ? "text" : "password"}
-            placeholder="Min. 8 characters"
+            placeholder="Min. 8 caractères"
             value={data.password}
             onChange={set("password")}
           />
@@ -91,11 +91,11 @@ const StepPersonalInfo = ({ data, setData }) => {
           </button>
         </div>
       </Field>
-      <Field label="Confirm Password">
+      <Field label="Confirmer le mot de passe">
         <div className="relative">
           <Input
             type={showC ? "text" : "password"}
-            placeholder="Repeat password"
+            placeholder="Répéter le mot de passe"
             value={data.confirm}
             onChange={set("confirm")}
           />
@@ -120,13 +120,13 @@ const StepPersonalInfo = ({ data, setData }) => {
           htmlFor="terms"
           className="text-xs text-gray-500 cursor-pointer leading-relaxed"
         >
-          I agree to the{" "}
+          J'accepte les{" "}
           <span className="text-[#1ab69d] underline font-medium">
-            Terms of Service
+            Conditions d'utilisation
           </span>{" "}
-          and{" "}
+          et la{" "}
           <span className="text-[#1ab69d] underline font-medium">
-            Privacy Policy
+            Politique de confidentialité
           </span>
           .
         </label>
@@ -145,14 +145,14 @@ const StepAcademicProfile = ({ data, setData }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Field label="University / Institution">
+      <Field label="Université / Institution">
         <Input
-          placeholder="e.g. Université Mohammed V"
+          placeholder="ex. Université Mohammed V"
           value={data.university}
           onChange={set("university")}
         />
       </Field>
-      <Field label="Academic Email">
+      <Field label="Email Académique">
         <Input
           type="email"
           placeholder="prof@university.edu"
@@ -160,22 +160,21 @@ const StepAcademicProfile = ({ data, setData }) => {
           onChange={set("academicEmail")}
         />
       </Field>
-      <Field label="Department">
+      <Field label="Département">
         <Input
-          placeholder="e.g. Computer Science Dept."
+          placeholder="ex. Département Informatique"
           value={data.department}
           onChange={set("department")}
         />
       </Field>
-      <Field label="Academic Rank">
+      <Field label="Niveau d'études">
         <Select value={data.rank} onChange={set("rank")}>
-          <option value="">Select rank</option>
-          <option>Assistant Professor</option>
-          <option>Associate Professor</option>
-          <option>Full Professor</option>
-          <option>Lecturer</option>
-          <option>Visiting Professor</option>
-          <option>Other</option>
+          <option value="">Sélectionnez</option>
+          <option>Licence</option>
+          <option>Master 1</option>
+          <option>Master 2</option>
+          <option>Doctorat</option>
+          <option>Post-Doctorat</option>
         </Select>
       </Field>
       <Field label="Field of Expertise">
@@ -347,9 +346,9 @@ const CreateAccountProf = () => {
   });
 
   const stepTitles = [
-    "Personal Info",
-    "Academic Profile",
-    "Identity Verification",
+    "Informations Personnelles",
+    "Profil Académique",
+    "Vérification d'Identité",
   ];
   const formContent = [
     <StepPersonalInfo data={step1} setData={setStep1} />,
@@ -360,30 +359,30 @@ const CreateAccountProf = () => {
   const validateStep = (step) => {
     const missing = [];
     if (step === 1) {
-      if (!step1.firstName.trim()) missing.push("First Name");
-      if (!step1.lastName.trim()) missing.push("Last Name");
+      if (!step1.firstName.trim()) missing.push("Prénom");
+      if (!step1.lastName.trim()) missing.push("Nom");
       if (!step1.email.trim()) missing.push("Email");
-      if (!step1.phone.trim()) missing.push("Phone Number");
-      if (!step1.dob) missing.push("Date of Birth");
-      if (!step1.password) missing.push("Password");
-      if (!step1.confirm) missing.push("Confirm Password");
-      if (step1.password !== step1.confirm) { setError("Passwords do not match"); return false; }
-      if (!step1.terms) missing.push("Terms agreement");
+      if (!step1.phone.trim()) missing.push("Téléphone");
+      if (!step1.dob) missing.push("Date de naissance");
+      if (!step1.password) missing.push("Mot de passe");
+      if (!step1.confirm) missing.push("Confirmation mot de passe");
+      if (step1.password !== step1.confirm) { setError("Les mots de passe ne correspondent pas"); return false; }
+      if (!step1.terms) missing.push("Acceptation des conditions");
     } else if (step === 2) {
-      if (!step2.university.trim()) missing.push("University");
-      if (!step2.academicEmail.trim()) missing.push("Academic Email");
-      if (!step2.department.trim()) missing.push("Department");
-      if (!step2.rank) missing.push("Academic Rank");
-      if (!step2.expertise.trim()) missing.push("Field of Expertise");
-      if (!step2.experience) missing.push("Years of Experience");
+      if (!step2.university.trim()) missing.push("Université");
+      if (!step2.academicEmail.trim()) missing.push("Email Académique");
+      if (!step2.department.trim()) missing.push("Département");
+      if (!step2.rank) missing.push("Niveau d'études");
+      if (!step2.expertise.trim()) missing.push("Domaine d'expertise");
+      if (!step2.experience) missing.push("Années d'expérience");
     } else if (step === 3) {
-      if (!step3.idType) missing.push("ID Type");
-      if (!step3.idNumber.trim()) missing.push("ID Number");
-      if (!step3.photo) missing.push("Profile Photo");
-      if (!step3.idFile) missing.push("ID Document");
+      if (!step3.idType) missing.push("Type de pièce");
+      if (!step3.idNumber.trim()) missing.push("Numéro de pièce");
+      if (!step3.photo) missing.push("Photo de profil");
+      if (!step3.idFile) missing.push("Document d'identité");
     }
     if (missing.length > 0) {
-      setError(`Required fields: ${missing.join(", ")}`);
+      setError(`Champs obligatoires : ${missing.join(", ")}`);
       return false;
     }
     setError("");
@@ -393,7 +392,7 @@ const CreateAccountProf = () => {
   const handleRegister = async () => {
     if (!validateStep(3)) return;
     if (step1.password !== step1.confirm) {
-      setError("Passwords do not match");
+      setError("Les mots de passe ne correspondent pas");
       return;
     }
     if (!step1.terms) {

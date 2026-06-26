@@ -40,29 +40,29 @@ const StepCreateAccount = ({ data, setData }) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Field label="First Name">
+      <Field label="Prénom">
         <Input
-          placeholder="e.g. Youssef"
+          placeholder="ex. Ahmed"
           value={data.firstName}
           onChange={set("firstName")}
         />
       </Field>
-      <Field label="Last Name">
+      <Field label="Nom">
         <Input
-          placeholder="e.g. El Alami"
+          placeholder="ex. Benali"
           value={data.lastName}
           onChange={set("lastName")}
         />
       </Field>
-      <Field label="Email Address">
+      <Field label="Adresse Email">
         <Input
           type="email"
-          placeholder="you@example.com"
+          placeholder="locateur@example.com"
           value={data.email}
           onChange={set("email")}
         />
       </Field>
-      <Field label="Phone Number">
+      <Field label="Numéro de téléphone">
         <Input
           type="tel"
           placeholder="+212 6XX XXX XXX"
@@ -70,15 +70,15 @@ const StepCreateAccount = ({ data, setData }) => {
           onChange={set("phone")}
         />
       </Field>
-      <Field label="Date of Birth">
+      <Field label="Date de naissance">
         <Input type="date" value={data.dob} onChange={set("dob")} />
       </Field>
       <div />
-      <Field label="Password">
+      <Field label="Mot de passe">
         <div className="relative">
           <Input
             type={show ? "text" : "password"}
-            placeholder="Min. 8 characters"
+            placeholder="Min. 8 caractères"
             value={data.password}
             onChange={set("password")}
           />
@@ -91,11 +91,11 @@ const StepCreateAccount = ({ data, setData }) => {
           </button>
         </div>
       </Field>
-      <Field label="Confirm Password">
+      <Field label="Confirmer le mot de passe">
         <div className="relative">
           <Input
             type={showC ? "text" : "password"}
-            placeholder="Repeat password"
+            placeholder="Répéter le mot de passe"
             value={data.confirm}
             onChange={set("confirm")}
           />
@@ -120,13 +120,13 @@ const StepCreateAccount = ({ data, setData }) => {
           htmlFor="terms"
           className="text-xs text-gray-500 cursor-pointer leading-relaxed"
         >
-          I agree to the{" "}
+          J'accepte les{" "}
           <span className="text-[#1ab69d] underline font-medium">
-            Terms of Service
+            Conditions d'utilisation
           </span>{" "}
-          and{" "}
+          et la{" "}
           <span className="text-[#1ab69d] underline font-medium">
-            Privacy Policy
+            Politique de confidentialité
           </span>
           .
         </label>
@@ -247,7 +247,7 @@ const CreateAccountLocateur = () => {
     idFile: "",
   });
 
-  const stepTitles = ["Create Account", "Identity Verification"];
+  const stepTitles = ["Créer un compte", "Vérification d'Identité"];
   const formContent = [
     <StepCreateAccount data={step1} setData={setStep1} />,
     <StepIdentityVerification data={step2} setData={setStep2} />,
@@ -256,23 +256,23 @@ const CreateAccountLocateur = () => {
   const validateStep = (step) => {
     const missing = [];
     if (step === 1) {
-      if (!step1.firstName.trim()) missing.push("First Name");
-      if (!step1.lastName.trim()) missing.push("Last Name");
+      if (!step1.firstName.trim()) missing.push("Prénom");
+      if (!step1.lastName.trim()) missing.push("Nom");
       if (!step1.email.trim()) missing.push("Email");
-      if (!step1.phone.trim()) missing.push("Phone Number");
-      if (!step1.dob) missing.push("Date of Birth");
-      if (!step1.password) missing.push("Password");
-      if (!step1.confirm) missing.push("Confirm Password");
+      if (!step1.phone.trim()) missing.push("Téléphone");
+      if (!step1.dob) missing.push("Date de naissance");
+      if (!step1.password) missing.push("Mot de passe");
+      if (!step1.confirm) missing.push("Confirmation mot de passe");
       if (step1.password !== step1.confirm) { setError("Passwords do not match"); return false; }
       if (!step1.terms) missing.push("Terms agreement");
     } else if (step === 2) {
       if (!step2.idType) missing.push("ID Type");
       if (!step2.idNumber.trim()) missing.push("ID Number");
-      if (!step2.photo) missing.push("Profile Photo");
+      if (!step2.photo) missing.push("Photo de profil");
       if (!step2.idFile) missing.push("ID Document");
     }
     if (missing.length > 0) {
-      setError(`Required fields: ${missing.join(", ")}`);
+      setError(`Champs obligatoires : ${missing.join(", ")}`);
       return false;
     }
     setError("");
